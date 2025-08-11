@@ -1,0 +1,4 @@
+﻿EF core power tools
+dotnet tool install --global dotnet-ef
+dotnet ef migrations add init-user
+dotnet ef database update
