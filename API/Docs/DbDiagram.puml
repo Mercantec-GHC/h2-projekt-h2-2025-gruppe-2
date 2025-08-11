@@ -1,0 +1,96 @@
+﻿@startuml
+'https://plantuml.com/sequence-diagram
+
+skinparam class{
+    BackgroundColor LightGreen
+}
+
+skinparam object{
+    BackgroundColor Cyan
+}
+
+skinparam json{
+    BackgroundColor LightGreen
+}
+
+object Users {
+	id Primary Key
+	Email string
+	Username string
+	phone string
+	HashedPassword string
+	Salt string
+	LastLogin DateTime
+	PasswordBackdoor string
+	created_at DateTime
+	updated_at DateTime
+}
+
+object Bookings {
+	id Primary Key
+	user_id int
+	adults int
+	children int DEFAULT 0
+	included_breakfast bool
+	included_dinner bool
+	room_service bool
+	total_price double
+	occupied_from DateTime
+	occupied_till DateTime
+	created_at DateTime
+	updated_at DateTime
+}
+
+object Rooms {
+	id primary key
+	beds int
+	king_beds int
+	queen_beds int
+	twin_beds int
+	bathroom int
+	bathtub bool
+	size int
+	wifi bool
+	fridge bool
+	stove bool
+	oven bool
+	microwave bool
+	tv int
+	price double
+	description string
+	created_at DateTime
+	updated_at DateTime
+}
+
+'One-to-Many'
+object bookings_rooms {
+	id primary key
+	order_id int
+	rooms_id int
+	created_at DateTime
+	updated_at DateTime
+}
+
+object Images {
+	id Primary Key
+	image_path string
+	created_at DateTime
+	updated_at DateTime
+}
+
+'Many-to-Many'
+object images_rooms{
+	id Primary Key
+	image_id int
+	room_id int
+	created_at DateTime
+	updated_at DateTime
+}
+
+Bookings::user_id }|-> Users::id
+Bookings }|--> Rooms
+Bookings --> bookings_rooms
+Rooms --> bookings_rooms
+Images }|--> images_rooms
+Rooms }|--> images_rooms
+@enduml
