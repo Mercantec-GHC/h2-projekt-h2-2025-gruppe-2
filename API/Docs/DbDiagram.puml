@@ -13,7 +13,12 @@ skinparam json{
     BackgroundColor LightGreen
 }
 
-object Users {
+object roles {
+	id primary key
+	role_name string
+}
+
+object users {
 	id Primary Key
 	Email string
 	Username string
@@ -22,17 +27,19 @@ object Users {
 	Salt string
 	LastLogin DateTime
 	PasswordBackdoor string
+	role_id int
 	created_at DateTime
 	updated_at DateTime
 }
 
-object Bookings {
+object bookings {
 	id Primary Key
 	user_id int
+	is_user_checked_in bool
 	adults int
 	children int DEFAULT 0
-	included_breakfast bool
-	included_dinner bool
+	breakfast bool
+	dinner bool
 	room_service bool
 	total_price double
 	occupied_from DateTime
@@ -41,7 +48,7 @@ object Bookings {
 	updated_at DateTime
 }
 
-object Rooms {
+object rooms {
 	id primary key
 	beds int
 	king_beds int
@@ -56,6 +63,7 @@ object Rooms {
 	oven bool
 	microwave bool
 	tv int
+	clean bool
 	price double
 	description string
 	created_at DateTime
@@ -87,10 +95,10 @@ object images_rooms{
 	updated_at DateTime
 }
 
-Bookings::user_id }|-> Users::id
-Bookings }|--> Rooms
-Bookings --> bookings_rooms
-Rooms --> bookings_rooms
+bookings }|--> rooms
+rooms --> bookings_rooms
+bookings --> bookings_rooms
+bookings }|--> users
 Images }|--> images_rooms
-Rooms }|--> images_rooms
+rooms }|--> images_rooms
 @enduml
