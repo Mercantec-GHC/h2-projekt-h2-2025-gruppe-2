@@ -1,9 +1,7 @@
 ﻿namespace DomainModels;
 
-public class Booking
+public class Booking : Common
 {
-    public int Id { get; set; }
-    public int UserId { get; set; }
     public int Adults { get; set; }
     public int Children { get; set; }
     public bool RoomService { get; set; }
@@ -12,8 +10,11 @@ public class Booking
     public double TotalPrice { get; set; }
     public DateTime OccupiedFrom { get; set; }
     public DateTime OccupiedTill { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    
+    public string UserId { get; set; } = null!;
+    public User User { get; set; } = null!;
+    
+    public ICollection<Room> Rooms { get; set; } = new List<Room>();
 
     public void CalcTotalPrice(List<int> roomIds)
     {

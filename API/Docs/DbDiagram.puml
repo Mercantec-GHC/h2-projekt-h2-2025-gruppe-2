@@ -73,7 +73,7 @@ object rooms {
 'One-to-Many'
 object bookings_rooms {
 	id primary key
-	order_id int
+	booking_id int
 	rooms_id int
 	created_at DateTime
 	updated_at DateTime
@@ -95,10 +95,9 @@ object images_rooms{
 	updated_at DateTime
 }
 
-bookings }|--> rooms
-rooms --> bookings_rooms
-bookings --> bookings_rooms
-bookings }|--> users
+rooms --|{ "*:* " bookings_rooms
+bookings --> "1:*   " bookings_rooms
+bookings --> users
 Images }|--> images_rooms
-rooms }|--> images_rooms
+rooms }|-->  images_rooms
 @enduml

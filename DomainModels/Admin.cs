@@ -1,8 +1,7 @@
 ﻿namespace DomainModels;
 
-public class Admin : CommonRoles
+public class Admin : Common
 {
-    public required Common CommonLogins { get; set; }
     public void BookRoom(int userId)
     {
         

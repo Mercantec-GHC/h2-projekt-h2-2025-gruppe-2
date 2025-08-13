@@ -1,8 +1,7 @@
 ﻿namespace DomainModels;
 
-public class Room
+public class Room : Common
 {
-    public int Id { get; set; }
     public int Beds { get; set; }
     public int KingBeds { get; set; }
     public int QueenBeds { get; set; }
@@ -17,6 +16,5 @@ public class Room
     public bool Microwave { get; set; }
     public double Price { get; set; }
     public string? Description { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    
 }
