@@ -2,3 +2,7 @@
 dotnet tool install --global dotnet-ef
 dotnet ef migrations add init-user
 dotnet ef database update
+
+Migrations guide:
+Make class -> Add model builder entity to DBContext -> dotnet ef migrations add [MESSAGE] -> dotnet ef database update
+ -> Add scaffolding item... -> API controller with EF core
