@@ -1,4 +1,4 @@
-﻿using DomainModels;
+using DomainModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Data;
@@ -12,7 +12,9 @@ public class AppDBContext : DbContext
 
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<Role> Roles { get; set; } = null!;
-    
+    public DbSet<Booking> Bookings { get; set; } = null!;
+    public DbSet<Room> Rooms { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Konfigurer Role entity
@@ -29,19 +31,32 @@ public class AppDBContext : DbContext
             entity.HasIndex(u => u.Email).IsUnique();
 
             // Konfigurer foreign key til Role
-            entity.HasOne(u => u.Role)
+            entity.HasOne(u => u.Roles)
                 .WithMany(r => r.Users)
                 .HasForeignKey(u => u.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Many-to-one relation med bookings
+            entity.HasMany(u => u.Bookings)
+                .WithOne(b => b.User);
+        });
+
+        modelBuilder.Entity<Booking>(entity =>
+        {
+            entity.HasOne(b => b.User)
+                .WithMany(u => u.Bookings);
+        });
+
+        modelBuilder.Entity<Room>(entity =>
+        {
         });
 
         // Seed roller og test brugere (kun til udvikling)
         SeedRoles(modelBuilder);
     }
-    
+
     private void SeedRoles(ModelBuilder modelBuilder)
     {
-
         var roles = new[]
         {
             new Role
@@ -81,4 +96,5 @@ public class AppDBContext : DbContext
 
         modelBuilder.Entity<Role>().HasData(roles);
     }
+
 }

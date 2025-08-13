@@ -18,6 +18,7 @@ object roles {
 	role_name string
 }
 
+
 object users {
 	id Primary Key
 	Email string
@@ -27,7 +28,7 @@ object users {
 	Salt string
 	LastLogin DateTime
 	PasswordBackdoor string
-	role_id int
+	role_id string
 	created_at DateTime
 	updated_at DateTime
 }
@@ -95,9 +96,10 @@ object images_rooms{
 	updated_at DateTime
 }
 
-rooms --|{ "*:* " bookings_rooms
-bookings --> "1:*   " bookings_rooms
-bookings --> users
+users --> "role:id" roles
+rooms -- "n " bookings_rooms
+bookings -- "1  " bookings_rooms
+bookings "n " -- "1 " users
 Images }|--> images_rooms
 rooms }|-->  images_rooms
 @enduml

@@ -3,6 +3,7 @@ using System;
 using API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    partial class AppDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250813085625_bookings")]
+    partial class bookings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -129,64 +132,6 @@ namespace API.Migrations
                         });
                 });
 
-            modelBuilder.Entity("DomainModels.Room", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("Bathroom")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("Beds")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("Fridge")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("KingBeds")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("Microwave")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("Oven")
-                        .HasColumnType("boolean");
-
-                    b.Property<double>("Price")
-                        .HasColumnType("double precision");
-
-                    b.Property<int>("QueenBeds")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Size")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("Stove")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("Tv")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("TwinBeds")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("WiFi")
-                        .HasColumnType("boolean");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Room");
-                });
-
             modelBuilder.Entity("DomainModels.User", b =>
                 {
                     b.Property<string>("Id")
@@ -247,13 +192,13 @@ namespace API.Migrations
 
             modelBuilder.Entity("DomainModels.User", b =>
                 {
-                    b.HasOne("DomainModels.Role", "Roles")
+                    b.HasOne("DomainModels.Role", "Role")
                         .WithMany("Users")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Roles");
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("DomainModels.Role", b =>

@@ -14,8 +14,9 @@ public class Booking : Common
     public string UserId { get; set; } = null!;
     public User User { get; set; } = null!;
     
-    public ICollection<Room> Rooms { get; set; } = new List<Room>();
+    // public ICollection<Room> Rooms { get; set; } = new List<Room>();
 
+    
     public void CalcTotalPrice(List<int> roomIds)
     {
         TotalPrice = 0;
@@ -44,4 +45,18 @@ public class Booking : Common
 
         return price;
     }
+}
+public class BookingPostDto
+{
+    public string Id { get; set; } = null!;
+    public int Adults { get; set; }
+    public int Children { get; set; }
+    public bool RoomService { get; set; }
+    public bool Breakfast { get; set; }
+    public bool Dinner { get; set; }
+    public string UserId { get; set; } = null!;
+    public DateTime OccupiedFrom { get; set; }
+    public DateTime OccupiedTill { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }

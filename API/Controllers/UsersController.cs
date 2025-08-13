@@ -77,7 +77,7 @@ namespace API.Controllers
         // POST: api/Users
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] User.RegisterDto dto)
+        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
             if (_context.Users.Any(u => u.Email == dto.Email))
                 return BadRequest("En bruger med denne email findes allerede.");
@@ -127,7 +127,7 @@ namespace API.Controllers
         }
         
         [HttpPost("login")]
-        public IActionResult Login(User.LoginDto dto)
+        public IActionResult Login(LoginDto dto)
         {
             var user = _context.Users.FirstOrDefault(u => u.Email == dto.Email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.HashedPassword))

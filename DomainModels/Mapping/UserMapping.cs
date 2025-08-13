@@ -1,16 +1,17 @@
 ﻿namespace DomainModels.Mapping;
+
 using DomainModels;
 
 public class UserMapping
 {
-    public static User.UserGetDto ToUserGetDto(User user)
+    public static UserGetDto ToUserGetDto(User user)
     {
-        return new User.UserGetDto
+        return new UserGetDto
         {
             Id = user.Id,
             Email = user.Email,
             Username = user.Username,
-            RoleName = user.Role?.Name ?? "No role added"
+            RoleName = user.Roles?.Name ?? "No role added"
         };
     }
 }
