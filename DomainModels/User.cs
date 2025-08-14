@@ -18,7 +18,6 @@ public class User : Common
 
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 
-
     /*public void BookRoom()
     {
 

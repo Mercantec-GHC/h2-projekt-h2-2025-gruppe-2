@@ -11,6 +11,8 @@ public class Room : Common
     public int Size { get; set; }
     public int Tv { get; set; }
     public bool Bathroom { get; set; }
+    public bool Clean { get; set; }
+    public bool Bathtub { get; set; }
     public bool WiFi { get; set; }
     public bool Fridge { get; set; }
     public bool Stove { get; set; }
@@ -19,4 +21,5 @@ public class Room : Common
     public double Price { get; set; }
     public string? Description { get; set; }
     
+    public ICollection<BookingsRooms> BookingRooms { get; set; } = new List<BookingsRooms>();
 }

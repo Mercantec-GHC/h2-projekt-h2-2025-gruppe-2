@@ -14,8 +14,7 @@ public class Booking : Common
     public string UserId { get; set; } = null!;
     public User User { get; set; } = null!;
     
-    // public ICollection<Room> Rooms { get; set; } = new List<Room>();
-
+    public ICollection<BookingsRooms> BookingRooms { get; set; } = new List<BookingsRooms>();
     
     public void CalcTotalPrice(List<int> roomIds)
     {

@@ -6,3 +6,7 @@ dotnet ef database update
 Migrations guide:
 Make class -> Add model builder entity to DBContext -> dotnet ef migrations add [MESSAGE] -> dotnet ef database update
  -> Add scaffolding item... -> API controller with EF core
+ 
+UserId got added to BookingRooms table. Hypo: Since we ran the migrations with users, bookings and rooms before
+we added the BookingRooms table, it might have fucked with the structure.
+After testing, UserId was still there.

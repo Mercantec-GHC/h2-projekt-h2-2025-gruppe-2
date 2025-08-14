@@ -98,7 +98,7 @@ object images_rooms{
 
 users --> "role:id" roles
 rooms -- "n " bookings_rooms
-bookings -- "1  " bookings_rooms
+bookings -- "n  " bookings_rooms
 bookings "n " -- "1 " users
 Images }|--> images_rooms
 rooms }|-->  images_rooms
