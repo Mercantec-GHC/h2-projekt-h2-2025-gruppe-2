@@ -54,6 +54,7 @@ public class BookingPostDto
     public bool Breakfast { get; set; }
     public bool Dinner { get; set; }
     public string UserId { get; set; } = null!;
+    public string RoomId { get; set; } = null!;
     public DateTime OccupiedFrom { get; set; }
     public DateTime OccupiedTill { get; set; }
     public DateTime CreatedAt { get; set; }

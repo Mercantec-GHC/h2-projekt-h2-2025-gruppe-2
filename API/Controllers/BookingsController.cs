@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using API.Data;
+using API.Service;
 using DomainModels;
 
 namespace API.Controllers
@@ -23,7 +24,7 @@ namespace API.Controllers
 
         // GET: api/Bookings
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Booking>>> GetBooking()
+        public async Task<ActionResult<IEnumerable<Booking>>> GetBookings()
         {
             return await _context.Bookings.ToListAsync();
         }
@@ -78,26 +79,38 @@ namespace API.Controllers
         [HttpPost]
         public async Task<ActionResult<Booking>> PostBooking([FromBody] BookingPostDto dto)
         {
-            DateTime utcNow = DateTime.UtcNow.AddHours(2);
-            var booking = new Booking
+            TimeService timeHelper = new();
+            DateTime copenhagenTime = timeHelper.GetCopenhagenTime();
+            Booking booking = new Booking
             {
                 Id = Guid.NewGuid().ToString(),
                 Adults = dto.Adults,
                 Children = dto.Children,
                 RoomService = dto.RoomService,
-                Breakfast = dto.Breakfast,
                 Dinner = dto.Dinner,
                 UserId = dto.UserId,
-                OccupiedFrom = utcNow,
-                OccupiedTill = utcNow,
-                CreatedAt = utcNow,
-                UpdatedAt = utcNow,
+                OccupiedFrom = dto.OccupiedFrom,
+                OccupiedTill = dto.OccupiedTill,
+                CreatedAt = copenhagenTime,
+                UpdatedAt = copenhagenTime
             };
             
             _context.Bookings.Add(booking);
             await _context.SaveChangesAsync();
 
-            return Ok(new {message = "Booking er oprettet!"});
+            BookingsRooms bookingsRooms = new BookingsRooms
+            {
+                Id = Guid.NewGuid().ToString(),
+                BookingId = booking.Id,
+                RoomId = dto.RoomId,
+                CreatedAt = copenhagenTime,
+                UpdatedAt = copenhagenTime
+            };
+                
+            _context.BookingsRooms.Add(bookingsRooms);
+            await _context.SaveChangesAsync();
+            
+            return Ok(new { message = "Booking er oprettet!" });
         }
 
         // DELETE: api/Bookings/5

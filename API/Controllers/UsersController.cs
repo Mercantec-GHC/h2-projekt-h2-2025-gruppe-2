@@ -129,7 +129,7 @@ namespace API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto dto)
         {
-            var user = await _context.Users
+            User? user = await _context.Users
                 .Include(u => u.Roles)
                 .FirstOrDefaultAsync(u => u.Email == dto.Email);
                 
@@ -139,22 +139,22 @@ namespace API.Controllers
             user.LastLogin = DateTime.UtcNow.AddHours(2);
             await _context.SaveChangesAsync();
 
-            // Generer JWT token
-            var token = _jwtService.GenerateToken(user);
+            // Generer JWT token josh
+            string token = _jwtService.GenerateToken(user);
 
-            return Ok(new { 
+            return Ok(new {
                 message = "Login godkendt!", 
                 token = token,
                 user = new {
                     id = user.Id,
                     email = user.Email,
                     username = user.Username,
-                    role = user.Roles?.Name ?? "User"
+                    role = user.Roles?.Name ?? "Loser"
                 }
             });
         }
         
-        [Authorize]
+        [Authorize(Roles = "User")]
         [HttpGet("me")]
         public IActionResult GetCurrentUser()
         {
