@@ -157,11 +157,10 @@ public class Program
         app.UseSwagger();
         app.UseSwaggerUI(options => { options.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1"); });
 
+        app.UseAuthentication();
         app.UseAuthorization();
 
         app.MapControllers();
-
-        app.UseAuthentication();
 
         app.Run();
     }
