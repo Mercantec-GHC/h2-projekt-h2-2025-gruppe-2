@@ -1,0 +1,105 @@
+﻿@startuml
+'https://plantuml.com/sequence-diagram
+
+skinparam class{
+    BackgroundColor LightGreen
+}
+
+skinparam object{
+    BackgroundColor Cyan
+}
+
+skinparam json{
+    BackgroundColor LightGreen
+}
+
+object roles {
+	id primary key
+	role_name string
+}
+
+
+object users {
+	id Primary Key
+	Email string
+	Username string
+	phone string
+	HashedPassword string
+	Salt string
+	LastLogin DateTime
+	PasswordBackdoor string
+	role_id string
+	created_at DateTime
+	updated_at DateTime
+}
+
+object bookings {
+	id Primary Key
+	user_id int
+	is_user_checked_in bool
+	adults int
+	children int DEFAULT 0
+	breakfast bool
+	dinner bool
+	room_service bool
+	total_price double
+	occupied_from DateTime
+	occupied_till DateTime
+	created_at DateTime
+	updated_at DateTime
+}
+
+object rooms {
+	id primary key
+	beds int
+	king_beds int
+	queen_beds int
+	twin_beds int
+	bathroom int
+	bathtub bool
+	size int
+	wifi bool
+	fridge bool
+	stove bool
+	oven bool
+	microwave bool
+	tv int
+	clean bool
+	price double
+	description string
+	created_at DateTime
+	updated_at DateTime
+}
+
+'One-to-Many'
+object bookings_rooms {
+	id primary key
+	booking_id int
+	rooms_id int
+	created_at DateTime
+	updated_at DateTime
+}
+
+object Images {
+	id Primary Key
+	image_path string
+	created_at DateTime
+	updated_at DateTime
+}
+
+'Many-to-Many'
+object images_rooms{
+	id Primary Key
+	image_id int
+	room_id int
+	created_at DateTime
+	updated_at DateTime
+}
+
+users --> "role:id" roles
+rooms -- "n " bookings_rooms
+bookings -- "n  " bookings_rooms
+bookings "n " -- "1 " users
+Images }|--> images_rooms
+rooms }|-->  images_rooms
+@enduml

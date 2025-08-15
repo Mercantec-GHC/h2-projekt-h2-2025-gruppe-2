@@ -1,0 +1,65 @@
+﻿@startuml
+skinparam class{
+    BackgroundColor LightGreen
+}
+
+class role {
+	+Name string
+	+Description string
+	+Users users[]
+	+Names (User, CleaningStaff, Reception, Admin)
+}
+
+class guest {
+	+Login()
+	+SignUp()
+}
+
+class user {
+	+Email string
+	+Username string
+	+HashedPassword string
+	+Salt string?
+	+LastLogin dateTime
+	+RoleId string = ""
+	+Role Role?
+
+	+BookRoom()
+	+ResetOwnPassword()
+	+UpdateOwnProfile()
+	+UpdateOwnBooking()
+	+DeleteOwnProfile()
+	+DeleteOwnBooking()
+}
+
+class reception {
+	+SelectUser(int userId)
+	+DeleteBooking(int bookingId)
+	+UpdateBooking(int bookingId)
+	+CheckUserIn(int userId)
+}
+
+class admin {
+	+BookRoom(int userId)
+	+ResetPassword(int userId)
+	+UpdateBooking(int bookingId)
+	+SelectUser(int userId)
+	+UpdateProfile(int userId)
+	+DeleteProfile(int userId)
+	+DeleteBooking(int bookingId)
+	+CleanRoom(int roomId)
+	+GetUncleanRooms()
+	+CheckUserIn(int userId)
+}
+
+class cleaning_staff {
+	+CleanRoom(int roomId)
+	+GetUncleanRooms()
+}
+
+role-->user
+role-->reception
+role-->admin
+role-->cleaning_staff
+role-->guest
+@enduml
