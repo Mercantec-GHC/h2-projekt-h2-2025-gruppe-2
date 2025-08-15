@@ -47,23 +47,19 @@ public class JwtService
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id),
             new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim("userId", user.Id),
-            new Claim("username", user.Username),
-            new Claim("email", user.Email)
+            new Claim(ClaimTypes.Name, user.Username)
         };
 
         // Tilføj rolle claim hvis brugeren har en rolle
         if (user.Roles != null)
         {
             claims.Add(new Claim(ClaimTypes.Role, user.Roles.Name));
-            claims.Add(new Claim("role", user.Roles.Name));
         }
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddMinutes(_expiryMinutes),
+            Expires = DateTime.UtcNow.AddMinutes(_expiryMinutes).AddHours(2),
             Issuer = _issuer,
             Audience = _audience,
             SigningCredentials = new SigningCredentials(
