@@ -154,7 +154,7 @@ namespace API.Controllers
             });
         }
         
-        [Authorize(Roles = "User")]
+        [Authorize(Roles = "User,Admin")]
         [HttpGet("me")]
         public IActionResult GetCurrentUser()
         {

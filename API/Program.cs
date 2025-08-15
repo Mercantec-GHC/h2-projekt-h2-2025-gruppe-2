@@ -17,6 +17,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
         IConfiguration Configuration = builder.Configuration;
 
+        // The JwtService will magically get added to the controller.
         builder.Services.AddScoped<JwtService>();
         string jwtSecretKey = (Configuration["Jwt:SecretKey"]
                                ?? Environment.GetEnvironmentVariable("Jwt:SecretKey"))!;
@@ -157,6 +158,7 @@ public class Program
         app.UseSwagger();
         app.UseSwaggerUI(options => { options.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1"); });
 
+        // Authentication FIRST and then Authorization.
         app.UseAuthentication();
         app.UseAuthorization();
 

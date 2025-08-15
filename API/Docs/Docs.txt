@@ -10,3 +10,11 @@ Make class -> Add model builder entity to DBContext -> dotnet ef migrations add 
 UserId got added to BookingRooms table. Hypo: Since we ran the migrations with users, bookings and rooms before
 we added the BookingRooms table, it might have fucked with the structure.
 After testing, UserId was still there.
+There was a navigation value in the User class that was not suppose to be there.
+
+JWT tomfuckery: First of all, the code that Mathias gave out did not work, because he accidentally made two of the
+same values, which turned the JWT values into arrays.
+Then, because we said "app.Authentication" AFTER "app.Authorization," it did not work, because it is Authenticate,
+AND THEN authorization. The program says fucking nothing about this btw.
+
+If you change the roles authorization of a method, a hot reload is not enough.
