@@ -24,6 +24,7 @@ namespace API.Controllers
 
         // GET: api/Users
         [HttpGet]
+        [Authorize(Roles = "Admin,Reception")]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
             return await _context.Users.ToListAsync();
@@ -31,6 +32,7 @@ namespace API.Controllers
 
         // GET: api/Users/5
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,Reception")]
         public async Task<ActionResult<User>> GetUser(string id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -46,6 +48,7 @@ namespace API.Controllers
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,Reception")]
         public async Task<IActionResult> PutUser(string id, User user)
         {
             if (id != user.Id)
@@ -109,9 +112,10 @@ namespace API.Controllers
 
             return Ok(new { message = "Bruger oprettet!", user.Email, role = userRole.Name });
         }
-        
+
         // DELETE: api/Users/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(string id)
         {
             var user = await _context.Users.FindAsync(id);
