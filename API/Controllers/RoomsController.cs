@@ -13,6 +13,10 @@ using Microsoft.AspNetCore.Authorization;
 namespace API.Controllers
 
 {
+    /// <summary>
+    /// API controller for managing hotel rooms.
+    /// Provides endpoints for creating, reading, updating, and deleting rooms, as well as querying room availability and cleanliness.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class RoomsController : ControllerBase
@@ -20,10 +24,19 @@ namespace API.Controllers
         private readonly AppDBContext _context;
         private TimeService _timeService = new TimeService();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RoomsController"/> class.
+        /// </summary>
+        /// <param name="context">The database context to use for data access.</param>
         public RoomsController(AppDBContext context)
         {
             _context = context;
         }
+
+        /// <summary>
+        /// Gets all rooms.
+        /// </summary>
+        /// <returns>A list of all rooms.</returns>
         // GET: api/Rooms
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Room>>> GetRooms()
@@ -31,7 +44,10 @@ namespace API.Controllers
             return await _context.Rooms.ToListAsync();
         }
 
-        // GET: api/Rooms/unclean
+        /// <summary>
+        /// Gets all rooms that are currently marked as unclean.
+        /// </summary>
+        /// <returns>A list of unclean rooms, or a bad request if an error occurs.</returns>
         [HttpGet("unclean")]
         [Authorize(Roles = "CleaningStaff,Admin,Reception")]
         public async Task<ActionResult<IEnumerable<Room>>> GetUncleanRooms()
@@ -48,6 +64,11 @@ namespace API.Controllers
             }
         }
 
+        /// <summary>
+        /// Gets a specific room by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the room to retrieve.</param>
+        /// <returns>The room with the specified ID, or 404 if not found.</returns>
 
         // GET: api/Rooms/clean
         [HttpGet("clean")]
@@ -115,8 +136,12 @@ namespace API.Controllers
             return room;
         }
 
-        // PUT: api/Rooms/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        /// <summary>
+        /// Updates an existing room.
+        /// </summary>
+        /// <param name="id">The ID of the room to update.</param>
+        /// <param name="room">The updated room object.</param>
+        /// <returns>No content if successful, 400 if the ID does not match, or 404 if not found.</returns>
         [HttpPut("{id}")]
         public async Task<IActionResult> PutRoom(string id, Room room)
         {
@@ -146,8 +171,11 @@ namespace API.Controllers
             return NoContent();
         }
 
-        // POST: api/Rooms
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        /// <summary>
+        /// Creates a new room.
+        /// </summary>
+        /// <param name="dto">The room data transfer object containing room details.</param>
+        /// <returns>A success message, the new room's ID, and the room data.</returns>
         [HttpPost]
         public async Task<ActionResult<Room>> PostRoom([FromBody] RoomPostDto dto)
         {
@@ -183,7 +211,11 @@ namespace API.Controllers
             return Ok(new { message = "Room er oprettet!", id = roomId, room = dto });
         }
 
-        // DELETE: api/Rooms/5
+        /// <summary>
+        /// Deletes a room by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the room to delete.</param>
+        /// <returns>No content if successful, or 404 if not found.</returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRoom(string id)
         {
@@ -239,6 +271,11 @@ namespace API.Controllers
             return Ok(availableRooms);
         }
 
+        /// <summary>
+        /// Checks if a room exists in the database.
+        /// </summary>
+        /// <param name="id">The ID of the room to check.</param>
+        /// <returns>True if the room exists, otherwise false.</returns>
         private bool RoomExists(string id)
         {
             return _context.Rooms.Any(e => e.Id == id);
