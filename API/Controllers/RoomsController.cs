@@ -8,20 +8,22 @@ using Microsoft.EntityFrameworkCore;
 using API.Data;
 using API.Service;
 using DomainModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
+
 {
     [Route("api/[controller]")]
     [ApiController]
     public class RoomsController : ControllerBase
     {
         private readonly AppDBContext _context;
+        private TimeService _timeService = new TimeService();
 
         public RoomsController(AppDBContext context)
         {
             _context = context;
         }
-
         // GET: api/Rooms
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Room>>> GetRooms()
@@ -31,6 +33,7 @@ namespace API.Controllers
 
         // GET: api/Rooms/unclean
         [HttpGet("unclean")]
+        [Authorize(Roles = "CleaningStaff,Admin,Reception")]
         public async Task<ActionResult<IEnumerable<Room>>> GetUncleanRooms()
         {
             try
@@ -41,8 +44,61 @@ namespace API.Controllers
             catch (Exception e)
             {
                 Console.WriteLine(e);
-                return BadRequest("Der skete en fejl: " + e.Message);
+                return BadRequest("An error has occured: " + e.Message);
             }
+        }
+
+
+        // GET: api/Rooms/clean
+        [HttpGet("clean")]
+        [Authorize(Roles = "CleaningStaff,Admin,Reception")]
+        public async Task<ActionResult<IEnumerable<Room>>> GetCleanRooms()
+        {
+            try
+            {
+                var rooms = await _context.Rooms.Where(r => r.Clean == true).ToListAsync();
+                return Ok(new { rooms = rooms });
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return BadRequest("An error has occured: " + e.Message);
+            }
+        }
+
+        // PATCH: api/Rooms/{id}/clean
+        [HttpPatch("{id}/clean")]
+        [Authorize(Roles = "CleaningStaff,Admin")]
+        public async Task<IActionResult> CleanRoom(string id)
+        {
+            var room = await _context.Rooms.FindAsync(id);
+            if (room == null) return NotFound();
+
+            if (room.Clean) return BadRequest("Error. Room already marked clean.");
+
+            room.Clean = true;
+            room.UpdatedAt = _timeService.GetCopenhagenTime();
+            await _context.SaveChangesAsync();
+
+            return Ok(new { room.Id, room.Clean });
+        }
+
+
+        // PATCH: api/Rooms/{id}/unclean
+        [HttpPatch("{id}/unclean")]
+        [Authorize(Roles = "CleaningStaff,Admin")]
+        public async Task<IActionResult> UncleanRoom(string id)
+        {
+            var room = await _context.Rooms.FindAsync(id);
+            if (room == null) return NotFound();
+
+            if (!room.Clean) return BadRequest("Error. Room already marked unclean.");
+
+            room.Clean = false;
+            room.UpdatedAt = _timeService.GetCopenhagenTime();
+            await _context.SaveChangesAsync();
+
+            return Ok(new { room.Id, room.Clean });
         }
 
         // GET: api/Rooms/5
