@@ -143,10 +143,18 @@ namespace API.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Retrieves all available rooms within the specified date range (YYYY-MM-DDTHH:MM:SS/2025-08-18T10:30:00).
+        /// </summary>
+        /// <param name="startDate">The start date of the requested availability period</param>
+        /// <param name="endDate">The end date of the requested availability period</param>
+        /// <returns>A response code and a list of available rooms</returns>
+        /// <response code="200">List of available rooms found</response>
+        /// <response code="400">End date can't be lower than the starting date</response>
         [HttpGet("available")]
         public async Task<ActionResult<IEnumerable<Room>>> GetAvailableRooms(DateTime startDate, DateTime endDate)
         {
-            // 2025-08-14
+            // 2025-08-18T10:30:00
             // Formets to UTC, for PostgreSQL compatability.
             startDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
             endDate = DateTime.SpecifyKind(endDate, DateTimeKind.Utc);
@@ -164,12 +172,12 @@ namespace API.Controllers
 
             // Gets rooms where IDs from the unavailable list are excluded.
             List<Room> availableRooms = await _context.Rooms
-                .AsNoTracking()
+                .AsNoTracking() // Since we are only reading the data, we don't track it.
                 .Where(room => !unavailableRoomIds.Contains(room.Id))
                 .ToListAsync();
 
             if (availableRooms.Count == 0)
-                return NoContent();
+                return Ok("No rooms available in the specified date range.");
 
             return Ok(availableRooms);
         }
