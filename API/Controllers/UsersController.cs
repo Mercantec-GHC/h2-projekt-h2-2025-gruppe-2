@@ -186,6 +186,17 @@ namespace API.Controllers
             });
         }
 
+        /// <summary>
+        /// Updates the role of a specified user.
+        /// </summary>
+        /// <param name="id">The unique identifier for the user whose role is to be changed.</param>
+        /// <param name="roleName">The new role to assign to the user.</param>
+        /// <returns>
+        /// Returns a 200 response if the user's role is updated successfully.
+        /// Returns a 400 response if the user or the specified role is not found, or if the update fails.
+        /// </returns>
+        /// <response code="200">Role for the user was updated successfully.</response>
+        /// <response code="400">User or role was not found, or the update failed.</response>
         [Authorize(Roles = "Admin")]
         [HttpPatch("edit/role")]
         public async Task<IActionResult> ChangeRole(string id, string roleName)
@@ -215,6 +226,18 @@ namespace API.Controllers
                 $"Role for user {id} got updated from {user.Roles.ResolveRoleId(beforeRoleId)} to {user.Roles.ResolveRoleId(user.RoleId)}");
         }
 
+        /// <summary>
+        /// Updates an existing user's information including email, username, and role.
+        /// </summary>
+        /// <param name="dto">
+        /// A data transfer object containing the user's ID, new email, username, and role ID.
+        /// </param>
+        /// <returns>
+        /// An HTTP response with status code and updated user information or error.
+        /// </returns>
+        /// <response code="200">User was updated successfully.</response>
+        /// <response code="400">Email already exists, or an internal error occurred.</response>
+        /// <response code="404">User with the specified ID was not found.</response>
         [Authorize(Roles = "Admin")]
         [HttpPut("edit")]
         public async Task<IActionResult> ChangeUser([FromBody] UserPutDto dto)
@@ -242,6 +265,10 @@ namespace API.Controllers
             {
                 return BadRequest("Internal server error :(: " + ex.Message);
             }
+            catch (Exception ex)
+            {
+                return BadRequest("Unaccounted internal server error :(: " + ex.Message);
+            }
 
             return Ok(new
             {
@@ -256,13 +283,26 @@ namespace API.Controllers
             });
         }
 
+        /// <summary>
+        /// Changes the password of a specified user with BCrypt.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the user whose password will be changed.</param>
+        /// <param name="newPassword">The new plain-text password to be set for the user.</param>
+        /// <returns>
+        /// <para>
+        /// 200 OK if the user's password was successfully changed.<br/>
+        /// 404 NotFound if the user with the specified ID does not exist.<br/>
+        /// 400 BadRequest if an error occurs while updating the password in the database.
+        /// </para>
+        /// </returns>
+
         [Authorize(Roles = "Admin")]
         [HttpPut("edit/password")]
         public async Task<IActionResult> ChangePassword(string userId, string newPassword)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null)
-                return NotFound($"Bruger med id '{userId}' blev ikke fundet.");
+                return NotFound($"User with '{userId}' not found.");
             string salt = BCrypt.Net.BCrypt.GenerateSalt(workFactor);
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword, salt);
 
@@ -277,6 +317,10 @@ namespace API.Controllers
             catch (DbUpdateException ex)
             {
                 return BadRequest("Internal server error :(: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Unaccounted internal server error :(: " + ex.Message);
             }
 
             return Ok(new
