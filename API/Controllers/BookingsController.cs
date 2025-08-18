@@ -11,29 +11,43 @@ using DomainModels;
 
 namespace API.Controllers
 {
+    /// <summary>
+    /// API controller for managing hotel bookings.
+    /// Provides endpoints for creating, reading, updating, and deleting bookings.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class BookingsController : ControllerBase
     {
         private readonly AppDBContext _context;
 
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BookingsController"/> class.
+        /// </summary>
+        /// <param name="context">The database context to use for data access.</param>
         public BookingsController(AppDBContext context)
         {
             _context = context;
         }
 
-        // GET: api/Bookings
+
         /// <summary>
-        /// Gets all bookings
+        /// Gets all bookings.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A list of all bookings.</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Booking>>> GetBookings()
         {
             return await _context.Bookings.ToListAsync();
         }
 
-        // GET: api/Bookings/5
+
+        /// <summary>
+        /// Gets a specific booking by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the booking to retrieve.</param>
+        /// <returns>The booking with the specified ID, or 404 if not found.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<Booking>> GetBooking(string id)
         {
@@ -47,8 +61,13 @@ namespace API.Controllers
             return booking;
         }
 
-        // PUT: api/Bookings/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+
+        /// <summary>
+        /// Updates an existing booking.
+        /// </summary>
+        /// <param name="id">The ID of the booking to update.</param>
+        /// <param name="booking">The updated booking object.</param>
+        /// <returns>No content if successful, 400 if the ID does not match, or 404 if not found.</returns>
         [HttpPut("{id}")]
         public async Task<IActionResult> PutBooking(string id, Booking booking)
         {
@@ -78,13 +97,12 @@ namespace API.Controllers
             return NoContent();
         }
 
-        // POST: api/Bookings
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+
         /// <summary>
-        /// Creates a new booking
+        /// Creates a new booking and links it to a room.
         /// </summary>
-        /// <param name="dto"></param>
-        /// <returns></returns>
+        /// <param name="dto">The booking data transfer object containing booking details and room ID.</param>
+        /// <returns>A success message if the booking is created.</returns>
         [HttpPost]
         public async Task<ActionResult<Booking>> PostBooking([FromBody] BookingPostDto dto)
         {
@@ -122,7 +140,12 @@ namespace API.Controllers
             return Ok(new { message = "Booking er oprettet!" });
         }
 
-        // DELETE: api/Bookings/5
+
+        /// <summary>
+        /// Deletes a booking by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the booking to delete.</param>
+        /// <returns>No content if successful, or 404 if not found.</returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBooking(string id)
         {
@@ -138,6 +161,12 @@ namespace API.Controllers
             return NoContent();
         }
         
+
+        /// <summary>
+        /// Checks if a booking exists in the database.
+        /// </summary>
+        /// <param name="id">The ID of the booking to check.</param>
+        /// <returns>True if the booking exists, otherwise false.</returns>
         private bool BookingExists(string id)
         {
             return _context.Bookings.Any(e => e.Id == id);

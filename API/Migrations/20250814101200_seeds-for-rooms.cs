@@ -7,10 +7,15 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace API.Migrations
 {
-    /// <inheritdoc />
+    /// <summary>
+    /// Migration for creating initial tables and seeding roles and rooms data.
+    /// </summary>
     public partial class seedsforrooms : Migration
     {
-        /// <inheritdoc />
+        /// <summary>
+        /// Applies the migration by creating tables and inserting seed data for roles and rooms.
+        /// </summary>
+        /// <param name="migrationBuilder">The builder used to construct the migration operations.</param>
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -193,7 +198,10 @@ namespace API.Migrations
                 column: "RoleId");
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Reverts the migration by dropping all created tables.
+        /// </summary>
+        /// <param name="migrationBuilder">The builder used to construct the migration operations.</param>
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

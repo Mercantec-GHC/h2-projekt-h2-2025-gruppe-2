@@ -7,46 +7,46 @@ namespace API.Controllers
     public class StatusController : ControllerBase
     {
         /// <summary>
-        /// Tjekker om API'en kører korrekt.
+        /// Checks if the API is running and responsive.
         /// </summary>
-        /// <returns>Status og besked om API'ens tilstand.</returns>
-        /// <response code="200">API'en er kørende.</response>
+        /// <returns>Status and a message indicating the API's health.</returns>
+        /// <response code="200">The API is running.</response>
         [HttpGet("healthcheck")]
         public IActionResult HealthCheck()
         {
-            return Ok(new { status = "OK", message = "API'en er kørende!" });
+            return Ok(new { status = "OK", message = "The API is running!" });
         }
 
         /// <summary>
-        /// Tjekker om databasen er tilgængelig (dummy indtil EFCore er sat op).
+        /// Checks if the database is available.
+        /// This is a placeholder until EF Core is configured.
         /// </summary>
-        /// <returns>Status og besked om databaseforbindelse.</returns>
-        /// <response code="200">Database er kørende eller fejlbesked gives.</response>
-    
+        /// <returns>Status and a message about the database connection.</returns>
+        /// <response code="200">Database is running or an error message is returned.</response>
         [HttpGet("dbhealthcheck")]
         public IActionResult DBHealthCheck()
         {
-            // Indtil vi har opsat EFCore, returnerer vi bare en besked
+            // Until EF Core is set up, just return a message
 
             try {
                 // using (var context = new ApplicationDbContext())
                 // {
                 //     context.Database.CanConnect();
                 // }
-                throw new Exception("I har endnu ikke lært at opsætte EFCore! Det kommer senere!");
+                throw new Exception("EF Core is not configured yet! This will be implemented later.");
             }
             catch (Exception ex)
             {
-                return Ok(new { status = "Error", message = "Fejl ved forbindelse til database: " + ex.Message });
+                return Ok(new { status = "Error", message = "Database connection error: " + ex.Message });
             }
-            return Ok(new { status = "OK", message = "Database er kørende!" });
+            return Ok(new { status = "OK", message = "Database is running!" });
         }
 
         /// <summary>
-        /// Simpelt ping-endpoint til at teste API'en.
+        /// Simple ping endpoint to test API responsiveness.
         /// </summary>
-        /// <returns>Status og "Pong" besked.</returns>
-        /// <response code="200">API'en svarede med Pong.</response>
+        /// <returns>Status and a "Pong" message.</returns>
+        /// <response code="200">The API responded with Pong.</response>
         [HttpGet("ping")]
         public IActionResult Ping()
         {

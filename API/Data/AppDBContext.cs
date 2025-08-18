@@ -3,41 +3,72 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API.Data;
 
+/// <summary>
+/// Entity Framework Core database context for the application.
+/// Manages access to users, roles, bookings, rooms, and booking-room relationships.
+/// </summary>
 public class AppDBContext : DbContext
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AppDBContext"/> class with the specified options.
+    /// </summary>
+    /// <param name="options">The options to be used by the DbContext.</param>
     public AppDBContext(DbContextOptions<AppDBContext> options)
         : base(options)
     {
     }
 
+    /// <summary>
+    /// Gets or sets the users in the system.
+    /// </summary>
     public DbSet<User> Users { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets the roles available in the system.
+    /// </summary>
     public DbSet<Role> Roles { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets the bookings made by users.
+    /// </summary>
     public DbSet<Booking> Bookings { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets the rooms available in the hotel.
+    /// </summary>
     public DbSet<Room> Rooms { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets the relationships between bookings and rooms.
+    /// </summary>
     public DbSet<BookingsRooms> BookingsRooms { get; set; } = null!;
 
+    /// <summary>
+    /// Configures the entity relationships and seeds initial data for roles and rooms.
+    /// </summary>
+    /// <param name="modelBuilder">The builder used to construct the model for the context.</param>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Konfigurer Role entity
+        // Configure Role entity
         modelBuilder.Entity<Role>(entity =>
         {
-            // Navn skal være unikt
+            // Name must be unique
             entity.HasIndex(r => r.Name).IsUnique();
         });
 
-        // Konfigurer User entity
+        // Configure User entity
         modelBuilder.Entity<User>(entity =>
         {
-            // Email skal være unikt
+            // Email must be unique
             entity.HasIndex(u => u.Email).IsUnique();
 
-            // Konfigurer foreign key til Role
+            // Configure foreign key to Role
             entity.HasOne(u => u.Roles)
                 .WithMany(r => r.Users)
                 .HasForeignKey(u => u.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Many-to-one relation med bookings
+            // Many-to-one relation with bookings
             entity.HasMany(u => u.Bookings)
                 .WithOne(b => b.User);
         });
@@ -60,20 +91,23 @@ public class AppDBContext : DbContext
             .WithMany(br => br.BookingRooms)
             .HasForeignKey(br => br.RoomId);
 
-        // Seed roller og test brugere (kun til udvikling)
+        // Seed roles and test rooms (for development only)
         SeedRoles(modelBuilder);
     }
 
+    /// <summary>
+    /// Seeds initial roles and rooms into the database for development purposes.
+    /// </summary>
+    /// <param name="modelBuilder">The model builder used to configure entities.</param>
     private void SeedRoles(ModelBuilder modelBuilder)
     {
         var roles = new[]
         {
             new Role
             {
-                // Nyt tilfældigt guid
                 Id = "1",
                 Name = "User",
-                Description = "Standard bruger med basis rettigheder",
+                Description = "Standard user with basic permissions",
                 CreatedAt = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc),
                 UpdatedAt = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc)
             },
@@ -81,7 +115,7 @@ public class AppDBContext : DbContext
             {
                 Id = "2",
                 Name = "CleaningStaff",
-                Description = "Rengøringspersonale med adgang til rengøringsmoduler",
+                Description = "Cleaning staff with access to cleaning modules",
                 CreatedAt = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc),
                 UpdatedAt = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc)
             },
@@ -89,7 +123,7 @@ public class AppDBContext : DbContext
             {
                 Id = "3",
                 Name = "Reception",
-                Description = "Receptionspersonale med adgang til booking og gæster",
+                Description = "Reception staff with access to bookings and guests",
                 CreatedAt = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc),
                 UpdatedAt = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc)
             },
@@ -97,7 +131,7 @@ public class AppDBContext : DbContext
             {
                 Id = "4",
                 Name = "Admin",
-                Description = "Administrator med fuld adgang til systemet",
+                Description = "Administrator with full system access",
                 CreatedAt = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc),
                 UpdatedAt = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc)
             }
