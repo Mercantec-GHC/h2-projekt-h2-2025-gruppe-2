@@ -35,6 +35,7 @@ namespace API.Controllers
         /// </summary>
         /// <returns>A list of all users.</returns>
         [HttpGet]
+        [Authorize(Roles = "Admin,Reception")]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
             return await _context.Users.ToListAsync();
@@ -46,6 +47,7 @@ namespace API.Controllers
         /// <param name="id">The ID of the user to retrieve.</param>
         /// <returns>The user with the specified ID, or 404 if not found.</returns>
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,Reception")]
         public async Task<ActionResult<User>> GetUser(string id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -65,6 +67,7 @@ namespace API.Controllers
         /// <param name="user">The updated user object.</param>
         /// <returns>No content if successful, 400 if the ID does not match, or 404 if not found.</returns>
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,Reception")]
         public async Task<IActionResult> PutUser(string id, User user)
         {
             if (id != user.Id)
@@ -137,7 +140,10 @@ namespace API.Controllers
         /// </summary>
         /// <param name="id">The ID of the user to delete.</param>
         /// <returns>No content if successful, or 404 if not found.</returns>
+
+        // DELETE: api/Users/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(string id)
         {
             var user = await _context.Users.FindAsync(id);
