@@ -6,7 +6,9 @@ using DomainModels;
 
 namespace API.Service;
 
-/// Service til håndtering af JWT tokens - generering, validering og decoding
+/// <summary>
+/// Service for handling JWT tokens, including generation, validation, and decoding.
+/// </summary>
 public class JwtService
 {
     private readonly IConfiguration _configuration;
@@ -15,6 +17,10 @@ public class JwtService
     private readonly string _audience;
     private readonly int _expiryMinutes;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JwtService"/> class with configuration settings.
+    /// </summary>
+    /// <param name="configuration">The application configuration for JWT settings.</param>
     public JwtService(IConfiguration configuration)
     {
         _configuration = configuration;
@@ -35,9 +41,11 @@ public class JwtService
                                    ?? "60");
     }
 
-    /// Genererer en JWT token for en bruger
-    /// <param name="user">Brugeren der skal have en token</param>
-    /// <returns>JWT token som string</returns>
+    /// <summary>
+    /// Generates a JWT token for a user.
+    /// </summary>
+    /// <param name="user">The user for whom to generate the token.</param>
+    /// <returns>A JWT token as a string.</returns>
     public string GenerateToken(User user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -50,7 +58,7 @@ public class JwtService
             new Claim(ClaimTypes.Name, user.Username)
         };
 
-        // Tilføj rolle claim hvis brugeren har en rolle
+        // Add role claim if the user has a role
         if (user.Roles != null)
         {
             claims.Add(new Claim(ClaimTypes.Role, user.Roles.Name));
@@ -71,9 +79,11 @@ public class JwtService
         return tokenHandler.WriteToken(token);
     }
 
-    /// Validerer en JWT token
-    /// <param name="token">Token der skal valideres</param>
-    /// <returns>ClaimsPrincipal hvis token er gyldig, ellers null</returns>
+    /// <summary>
+    /// Validates a JWT token and returns the claims principal if valid.
+    /// </summary>
+    /// <param name="token">The JWT token to validate.</param>
+    /// <returns>A <see cref="ClaimsPrincipal"/> if the token is valid; otherwise, null.</returns>
     public ClaimsPrincipal? ValidateToken(string token)
     {
         try
@@ -103,18 +113,22 @@ public class JwtService
         }
     }
 
-    /// Udtrækker bruger ID fra en JWT token
-    /// <param name="token">JWT token</param>
-    /// <returns>Bruger ID som string, eller null hvis ikke fundet</returns>
+    /// <summary>
+    /// Extracts the user ID from a JWT token.
+    /// </summary>
+    /// <param name="token">The JWT token.</param>
+    /// <returns>The user ID as a string, or null if not found.</returns>
     public string? GetUserIdFromToken(string token)
     {
         var principal = ValidateToken(token);
         return principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
     }
 
-    /// Udtrækker claims fra en JWT token
-    /// <param name="token">JWT token</param>
-    /// <returns>Dictionary med claims, eller null</returns>
+    /// <summary>
+    /// Extracts all claims from a JWT token as a dictionary.
+    /// </summary>
+    /// <param name="token">The JWT token.</param>
+    /// <returns>A dictionary of claim types and values, or null if the token is invalid.</returns>
     public Dictionary<string, string>? GetClaimsFromToken(string token)
     {
         var principal = ValidateToken(token);
@@ -123,9 +137,11 @@ public class JwtService
         return principal.Claims.ToDictionary(c => c.Type, c => c.Value);
     }
 
-    /// Tjekker om en token er udløbet
-    /// <param name="token">JWT token</param>
-    /// <returns>True hvis token er udløbet, ellers false</returns>
+    /// <summary>
+    /// Checks if a JWT token is expired.
+    /// </summary>
+    /// <param name="token">The JWT token.</param>
+    /// <returns>True if the token is expired; otherwise, false.</returns>
     public bool IsTokenExpired(string token)
     {
         try
