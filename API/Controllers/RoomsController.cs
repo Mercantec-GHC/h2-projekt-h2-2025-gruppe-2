@@ -11,18 +11,19 @@ using DomainModels;
 using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
+
 {
     [Route("api/[controller]")]
     [ApiController]
     public class RoomsController : ControllerBase
     {
         private readonly AppDBContext _context;
+        private TimeService _timeService = new TimeService();
 
         public RoomsController(AppDBContext context)
         {
             _context = context;
         }
-
         // GET: api/Rooms
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Room>>> GetRooms()
@@ -76,7 +77,7 @@ namespace API.Controllers
             if (room.Clean) return BadRequest("Error. Room already marked clean.");
 
             room.Clean = true;
-            room.UpdatedAt = DateTime.UtcNow.AddHours(2);
+            room.UpdatedAt = _timeService.GetCopenhagenTime();
             await _context.SaveChangesAsync();
 
             return Ok(new { room.Id, room.Clean });
@@ -94,7 +95,7 @@ namespace API.Controllers
             if (!room.Clean) return BadRequest("Error. Room already marked unclean.");
 
             room.Clean = false;
-            room.UpdatedAt = DateTime.UtcNow.AddHours(2);
+            room.UpdatedAt = _timeService.GetCopenhagenTime();
             await _context.SaveChangesAsync();
 
             return Ok(new { room.Id, room.Clean });
