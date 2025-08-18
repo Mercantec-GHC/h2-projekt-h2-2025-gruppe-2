@@ -83,15 +83,15 @@ namespace API.Controllers
         {
             if (_context.Users.Any(u => u.Email == dto.Email))
                 return BadRequest("En bruger med denne email findes allerede.");
-            
+
             string salt = BCrypt.Net.BCrypt.GenerateSalt(workFactor);
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password, salt);
-            
+
             // Find standard User rolle
             var userRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "User");
             if (userRole == null)
                 return BadRequest("Standard brugerrolle ikke fundet.");
-            
+
             DateTime utcNow = _timeService.GetCopenhagenTime();
             var user = new User
             {
@@ -111,7 +111,7 @@ namespace API.Controllers
 
             return Ok(new { message = "Bruger oprettet!", user.Email, role = userRole.Name });
         }
-        
+
         // DELETE: api/Users/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(string id)
@@ -127,27 +127,29 @@ namespace API.Controllers
 
             return NoContent();
         }
-        
+
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto dto)
         {
             User? user = await _context.Users
                 .Include(u => u.Roles)
                 .FirstOrDefaultAsync(u => u.Email == dto.Email);
-                
+
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.HashedPassword))
                 return Unauthorized("Forkert email eller adgangskode");
-            
+
             user.LastLogin = _timeService.GetCopenhagenTime();
             await _context.SaveChangesAsync();
 
             // Generer JWT token josh
             string token = _jwtService.GenerateToken(user);
 
-            return Ok(new {
-                message = "Login godkendt!", 
+            return Ok(new
+            {
+                message = "Login godkendt!",
                 token = token,
-                user = new {
+                user = new
+                {
                     id = user.Id,
                     email = user.Email,
                     username = user.Username,
@@ -155,7 +157,7 @@ namespace API.Controllers
                 }
             });
         }
-        
+
         [Authorize(Roles = "User,Admin,CleaningStaff,Reception")]
         [HttpGet("me")]
         public IActionResult GetCurrentUser()
@@ -185,31 +187,102 @@ namespace API.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpPatch("change/role")]
+        [HttpPatch("edit/role")]
         public async Task<IActionResult> ChangeRole(string id, string roleName)
         {
             User? user = await _context.Users.FindAsync(id);
             if (user == null)
                 return BadRequest("User was not found with the id: " + id);
-            
-            
+
+
             Role? role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
             if (role == null)
                 return BadRequest("Role was not found: " + roleName);
-            
+
             var beforeRoleId = user.RoleId;
             user.RoleId = role.Id;
             user.UpdatedAt = _timeService.GetCopenhagenTime();
             var updatedUser = await _context.SaveChangesAsync();
             if (updatedUser == 0)
                 return BadRequest("User was not updated");
-            
+
             await _context.Entry(user).Reference(u => u.Roles).LoadAsync();
-            
+
             if (user.Roles == null)
                 return BadRequest("Roles was not found for user: " + id);
-            
-            return Ok($"Role for user {id} got updated from {user.Roles.ResolveRoleId(beforeRoleId)} to {user.Roles.ResolveRoleId(user.RoleId)}");
+
+            return Ok(
+                $"Role for user {id} got updated from {user.Roles.ResolveRoleId(beforeRoleId)} to {user.Roles.ResolveRoleId(user.RoleId)}");
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("edit")]
+        public async Task<IActionResult> ChangeUser([FromBody] UserPutDto dto)
+        {
+            var user = await _context.Users.FindAsync(dto.Id);
+            if (user == null)
+                return NotFound($"Bruger med id '{dto.Id}' blev ikke fundet.");
+
+            if (!string.Equals(dto.Email, user.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
+                    BadRequest("A user with this email already exists");
+            }
+
+            user.Email = dto.Email;
+            user.Username = dto.Username;
+            user.RoleId = dto.RoleId;
+            user.UpdatedAt = _timeService.GetCopenhagenTime();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                return BadRequest("Internal server error :(: " + ex.Message);
+            }
+
+            return Ok(new
+            {
+                message = "Bruger opdateret!",
+                user = new
+                {
+                    id = user.Id,
+                    email = user.Email,
+                    username = user.Username,
+                    roleId = user.RoleId
+                }
+            });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("edit/password")]
+        public async Task<IActionResult> ChangePassword(string userId, string newPassword)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound($"Bruger med id '{userId}' blev ikke fundet.");
+            string salt = BCrypt.Net.BCrypt.GenerateSalt(workFactor);
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword, salt);
+
+            user.HashedPassword = hashedPassword;
+            user.UpdatedAt = _timeService.GetCopenhagenTime();
+            user.Salt = salt;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                return BadRequest("Internal server error :(: " + ex.Message);
+            }
+
+            return Ok(new
+            {
+                message = "Users password hot changed"
+            });
         }
 
         private bool UserExists(string id)
