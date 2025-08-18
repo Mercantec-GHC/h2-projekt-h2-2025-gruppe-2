@@ -5,6 +5,7 @@ using API.Data;
 using API.Service;
 using DomainModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace API.Controllers
 {
@@ -17,6 +18,7 @@ namespace API.Controllers
     {
         private readonly AppDBContext _context;
         private readonly JwtService _jwtService;
+        private readonly TimeService _timeService = new();
         private const int workFactor = 12;
 
         /// <summary>
@@ -115,7 +117,7 @@ namespace API.Controllers
             if (userRole == null)
                 return BadRequest("Default user role not found.");
             
-            DateTime utcNow = DateTime.UtcNow.AddHours(2);
+            DateTime utcNow = _timeService.GetCopenhagenTime();
             var user = new User
             {
                 Id = Guid.NewGuid().ToString(),
@@ -228,6 +230,34 @@ namespace API.Controllers
         /// </summary>
         /// <param name="id">The ID of the user to check.</param>
         /// <returns>True if the user exists, otherwise false.</returns>
+        [Authorize(Roles = "Admin")]
+        [HttpPatch("change/role")]
+        public async Task<IActionResult> ChangeRole(string id, string roleName)
+        {
+            User? user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return BadRequest("User was not found with the id: " + id);
+            
+            
+            Role? role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+            if (role == null)
+                return BadRequest("Role was not found: " + roleName);
+            
+            var beforeRoleId = user.RoleId;
+            user.RoleId = role.Id;
+            user.UpdatedAt = _timeService.GetCopenhagenTime();
+            var updatedUser = await _context.SaveChangesAsync();
+            if (updatedUser == 0)
+                return BadRequest("User was not updated");
+            
+            await _context.Entry(user).Reference(u => u.Roles).LoadAsync();
+            
+            if (user.Roles == null)
+                return BadRequest("Roles was not found for user: " + id);
+            
+            return Ok($"Role for user {id} got updated from {user.Roles.ResolveRoleId(beforeRoleId)} to {user.Roles.ResolveRoleId(user.RoleId)}");
+        }
+
         private bool UserExists(string id)
         {
             return _context.Users.Any(e => e.Id == id);

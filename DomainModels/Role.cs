@@ -16,4 +16,17 @@ public class Role : Common
         public const string Reception = "Reception";
         public const string Admin = "Admin";
     }
+    
+    public string ResolveRoleId(string roleId)
+    {
+        return roleId switch
+        {
+            "1" => Names.User,
+            "2" => Names.CleaningStaff,
+            "3" => Names.Reception,
+            "4" => Names.Admin,
+            _ => "Unknown"
+        };
+    }
+
 }
