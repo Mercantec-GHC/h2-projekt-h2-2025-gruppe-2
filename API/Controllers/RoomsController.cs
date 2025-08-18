@@ -32,7 +32,7 @@ namespace API.Controllers
 
         // GET: api/Rooms/unclean
         [HttpGet("unclean")]
-        [Authorize(Roles = "CleaningStaff,Admin")]
+        [Authorize(Roles = "CleaningStaff,Admin,Reception")]
         public async Task<ActionResult<IEnumerable<Room>>> GetUncleanRooms()
         {
             try
@@ -50,12 +50,12 @@ namespace API.Controllers
 
         // GET: api/Rooms/clean
         [HttpGet("clean")]
-        [Authorize(Roles = "CleaningStaff,Admin")]
-        public async Task<ActionResult<IEnumerable<Room>>> GetcleanRooms()
+        [Authorize(Roles = "CleaningStaff,Admin,Reception")]
+        public async Task<ActionResult<IEnumerable<Room>>> GetCleanRooms()
         {
             try
             {
-                var rooms = await _context.Rooms.Where(r => r.Clean == false).ToListAsync();
+                var rooms = await _context.Rooms.Where(r => r.Clean == true).ToListAsync();
                 return Ok(new { rooms = rooms });
             }
             catch (Exception e)
@@ -76,7 +76,7 @@ namespace API.Controllers
             if (room.Clean) return BadRequest("Error. Room already marked clean.");
 
             room.Clean = true;
-            room.UpdatedAt = DateTime.UtcNow;
+            room.UpdatedAt = DateTime.UtcNow.AddHours(2);
             await _context.SaveChangesAsync();
 
             return Ok(new { room.Id, room.Clean });
@@ -94,7 +94,7 @@ namespace API.Controllers
             if (!room.Clean) return BadRequest("Error. Room already marked unclean.");
 
             room.Clean = false;
-            room.UpdatedAt = DateTime.UtcNow;
+            room.UpdatedAt = DateTime.UtcNow.AddHours(2);
             await _context.SaveChangesAsync();
 
             return Ok(new { room.Id, room.Clean });
