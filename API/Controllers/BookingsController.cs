@@ -23,6 +23,10 @@ namespace API.Controllers
         }
 
         // GET: api/Bookings
+        /// <summary>
+        /// Gets all bookings
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Booking>>> GetBookings()
         {
@@ -76,6 +80,11 @@ namespace API.Controllers
 
         // POST: api/Bookings
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        /// <summary>
+        /// Creates a new booking
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
         [HttpPost]
         public async Task<ActionResult<Booking>> PostBooking([FromBody] BookingPostDto dto)
         {
@@ -128,7 +137,7 @@ namespace API.Controllers
 
             return NoContent();
         }
-
+        
         private bool BookingExists(string id)
         {
             return _context.Bookings.Any(e => e.Id == id);

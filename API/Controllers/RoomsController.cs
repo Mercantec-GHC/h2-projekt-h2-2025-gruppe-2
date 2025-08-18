@@ -100,7 +100,7 @@ namespace API.Controllers
             DateTime copenhagenTime = timeHelper.GetCopenhagenTime();
             var user = new Room
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = roomId,
                 WiFi = dto.WiFi,
                 Bathroom = dto.Bathroom,
                 Bathtub = dto.Bathtub,
@@ -141,6 +141,37 @@ namespace API.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpGet("available")]
+        public async Task<ActionResult<IEnumerable<Room>>> GetAvailableRooms(DateTime startDate, DateTime endDate)
+        {
+            // 2025-08-14
+            // Formets to UTC, for PostgreSQL compatability.
+            startDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
+            endDate = DateTime.SpecifyKind(endDate, DateTimeKind.Utc);
+
+            if (startDate >= endDate)
+                return BadRequest("startDate must be earlier than endDate.");
+
+            // Gets the IDs of rooms that are occupied from the date range.
+            List<string> unavailableRoomIds = await _context.BookingsRooms
+                .Where(br =>
+                    br.Booking.OccupiedFrom < endDate &&
+                    br.Booking.OccupiedTill > startDate)
+                .Select(br => br.RoomId)
+                .ToListAsync();
+
+            // Gets rooms where IDs from the unavailable list are excluded.
+            List<Room> availableRooms = await _context.Rooms
+                .AsNoTracking()
+                .Where(room => !unavailableRoomIds.Contains(room.Id))
+                .ToListAsync();
+
+            if (availableRooms.Count == 0)
+                return NoContent();
+
+            return Ok(availableRooms);
         }
 
         private bool RoomExists(string id)
