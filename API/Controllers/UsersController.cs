@@ -9,9 +9,6 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace API.Controllers
 {
-    /// <summary>
-    /// API controller for managing users, including registration, authentication, and profile management.
-    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
@@ -21,35 +18,21 @@ namespace API.Controllers
         private readonly TimeService _timeService = new();
         private const int workFactor = 12;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="UsersController"/> class.
-        /// </summary>
-        /// <param name="context">The database context for user data access.</param>
-        /// <param name="jwtService">The JWT service for token generation and validation.</param>
         public UsersController(AppDBContext context, JwtService jwtService)
         {
             _context = context;
             _jwtService = jwtService;
         }
 
-        /// <summary>
-        /// Retrieves all users.
-        /// </summary>
-        /// <returns>A list of all users.</returns>
+        // GET: api/Users
         [HttpGet]
-        [Authorize(Roles = "Admin,Reception")]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
             return await _context.Users.ToListAsync();
         }
 
-        /// <summary>
-        /// Retrieves a specific user by ID.
-        /// </summary>
-        /// <param name="id">The ID of the user to retrieve.</param>
-        /// <returns>The user with the specified ID, or 404 if not found.</returns>
+        // GET: api/Users/5
         [HttpGet("{id}")]
-        [Authorize(Roles = "Admin,Reception")]
         public async Task<ActionResult<User>> GetUser(string id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -62,14 +45,9 @@ namespace API.Controllers
             return user;
         }
 
-        /// <summary>
-        /// Updates an existing user.
-        /// </summary>
-        /// <param name="id">The ID of the user to update.</param>
-        /// <param name="user">The updated user object.</param>
-        /// <returns>No content if successful, 400 if the ID does not match, or 404 if not found.</returns>
+        // PUT: api/Users/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,Reception")]
         public async Task<IActionResult> PutUser(string id, User user)
         {
             if (id != user.Id)
@@ -98,25 +76,22 @@ namespace API.Controllers
             return NoContent();
         }
 
-        /// <summary>
-        /// Registers a new user.
-        /// </summary>
-        /// <param name="dto">The registration data transfer object containing user details.</param>
-        /// <returns>A success message and user information if registration is successful, or an error message if the email is already in use or the default role is missing.</returns>
+        // POST: api/Users
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
             if (_context.Users.Any(u => u.Email == dto.Email))
-                return BadRequest("A user with this email already exists.");
-            
+                return BadRequest("En bruger med denne email findes allerede.");
+
             string salt = BCrypt.Net.BCrypt.GenerateSalt(workFactor);
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password, salt);
-            
-            // Find standard User role
+
+            // Find standard User rolle
             var userRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "User");
             if (userRole == null)
-                return BadRequest("Default user role not found.");
-            
+                return BadRequest("Standard brugerrolle ikke fundet.");
+
             DateTime utcNow = _timeService.GetCopenhagenTime();
             var user = new User
             {
@@ -134,18 +109,11 @@ namespace API.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "User created!", user.Email, role = userRole.Name });
+            return Ok(new { message = "Bruger oprettet!", user.Email, role = userRole.Name });
         }
-        
-        /// <summary>
-        /// Deletes a user by ID.
-        /// </summary>
-        /// <param name="id">The ID of the user to delete.</param>
-        /// <returns>No content if successful, or 404 if not found.</returns>
 
         // DELETE: api/Users/5
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteUser(string id)
         {
             var user = await _context.Users.FindAsync(id);
@@ -159,32 +127,29 @@ namespace API.Controllers
 
             return NoContent();
         }
-        
-        /// <summary>
-        /// Authenticates a user and returns a JWT token if successful.
-        /// </summary>
-        /// <param name="dto">The login data transfer object containing email and password.</param>
-        /// <returns>A JWT token and user information if authentication is successful, or 401 if credentials are invalid.</returns>
+
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto dto)
         {
             User? user = await _context.Users
                 .Include(u => u.Roles)
                 .FirstOrDefaultAsync(u => u.Email == dto.Email);
-                
+
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.HashedPassword))
-                return Unauthorized("Incorrect email or password");
-            
-            user.LastLogin = DateTime.UtcNow.AddHours(2);
+                return Unauthorized("Forkert email eller adgangskode");
+
+            user.LastLogin = _timeService.GetCopenhagenTime();
             await _context.SaveChangesAsync();
 
-            // Generate JWT token
+            // Generer JWT token josh
             string token = _jwtService.GenerateToken(user);
 
-            return Ok(new {
-                message = "Login successful!", 
+            return Ok(new
+            {
+                message = "Login godkendt!",
                 token = token,
-                user = new {
+                user = new
+                {
                     id = user.Id,
                     email = user.Email,
                     username = user.Username,
@@ -192,30 +157,26 @@ namespace API.Controllers
                 }
             });
         }
-        
-        /// <summary>
-        /// Retrieves the currently authenticated user's profile information.
-        /// </summary>
-        /// <returns>The current user's profile data, or 401/404 if not found or unauthorized.</returns>
+
         [Authorize(Roles = "User,Admin,CleaningStaff,Reception")]
         [HttpGet("me")]
         public IActionResult GetCurrentUser()
         {
-            // 1. Get user ID from token (typically set as 'sub' claim in JWT)
+            // 1. Hent ID fra token (typisk sat som 'sub' claim ved oprettelse af JWT)
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (userId == null)
-                return Unauthorized("User ID not found in token.");
+                return Unauthorized("Bruger-ID ikke fundet i token.");
 
-            // 2. Look up the user in the database
+            // 2. Slå brugeren op i databasen
             var user = _context.Users
-                .Include(u => u.Roles)
+                .Include(u => u.Roles) // inkluder relaterede data hvis nødvendigt
                 .FirstOrDefault(u => u.Id == userId);
 
             if (user == null)
-                return NotFound("User not found in the database.");
+                return NotFound("Brugeren blev ikke fundet i databasen.");
 
-            // 3. Return desired data, e.g., for profile page
+            // 3. Returnér ønskede data - fx til profilsiden
             return Ok(new
             {
                 Id = user.Id,
@@ -225,37 +186,103 @@ namespace API.Controllers
             });
         }
 
-        /// <summary>
-        /// Checks if a user exists in the database.
-        /// </summary>
-        /// <param name="id">The ID of the user to check.</param>
-        /// <returns>True if the user exists, otherwise false.</returns>
         [Authorize(Roles = "Admin")]
-        [HttpPatch("change/role")]
+        [HttpPatch("edit/role")]
         public async Task<IActionResult> ChangeRole(string id, string roleName)
         {
             User? user = await _context.Users.FindAsync(id);
             if (user == null)
                 return BadRequest("User was not found with the id: " + id);
-            
-            
+
+
             Role? role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
             if (role == null)
                 return BadRequest("Role was not found: " + roleName);
-            
+
             var beforeRoleId = user.RoleId;
             user.RoleId = role.Id;
             user.UpdatedAt = _timeService.GetCopenhagenTime();
             var updatedUser = await _context.SaveChangesAsync();
             if (updatedUser == 0)
                 return BadRequest("User was not updated");
-            
+
             await _context.Entry(user).Reference(u => u.Roles).LoadAsync();
-            
+
             if (user.Roles == null)
                 return BadRequest("Roles was not found for user: " + id);
-            
-            return Ok($"Role for user {id} got updated from {user.Roles.ResolveRoleId(beforeRoleId)} to {user.Roles.ResolveRoleId(user.RoleId)}");
+
+            return Ok(
+                $"Role for user {id} got updated from {user.Roles.ResolveRoleId(beforeRoleId)} to {user.Roles.ResolveRoleId(user.RoleId)}");
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("edit")]
+        public async Task<IActionResult> ChangeUser([FromBody] UserPutDto dto)
+        {
+            var user = await _context.Users.FindAsync(dto.Id);
+            if (user == null)
+                return NotFound($"Bruger med id '{dto.Id}' blev ikke fundet.");
+
+            if (!string.Equals(dto.Email, user.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
+                    BadRequest("A user with this email already exists");
+            }
+
+            user.Email = dto.Email;
+            user.Username = dto.Username;
+            user.RoleId = dto.RoleId;
+            user.UpdatedAt = _timeService.GetCopenhagenTime();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                return BadRequest("Internal server error :(: " + ex.Message);
+            }
+
+            return Ok(new
+            {
+                message = "Bruger opdateret!",
+                user = new
+                {
+                    id = user.Id,
+                    email = user.Email,
+                    username = user.Username,
+                    roleId = user.RoleId
+                }
+            });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("edit/password")]
+        public async Task<IActionResult> ChangePassword(string userId, string newPassword)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound($"Bruger med id '{userId}' blev ikke fundet.");
+            string salt = BCrypt.Net.BCrypt.GenerateSalt(workFactor);
+            string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword, salt);
+
+            user.HashedPassword = hashedPassword;
+            user.UpdatedAt = _timeService.GetCopenhagenTime();
+            user.Salt = salt;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                return BadRequest("Internal server error :(: " + ex.Message);
+            }
+
+            return Ok(new
+            {
+                message = "Users password hot changed"
+            });
         }
 
         private bool UserExists(string id)
