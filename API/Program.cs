@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
+using Serilog;
 
 namespace API;
 
@@ -16,6 +17,13 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         IConfiguration Configuration = builder.Configuration;
+        
+        // Logger using Serilog;
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.File("Logs/log.txt", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
+
+        builder.Host.UseSerilog();
 
         // The JwtService will magically get added to the controller.
         builder.Services.AddScoped<JwtService>();

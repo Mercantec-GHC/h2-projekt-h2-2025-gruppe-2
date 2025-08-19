@@ -15,13 +15,15 @@ public class JwtService
     private readonly string _secretKey;
     private readonly string _issuer;
     private readonly string _audience;
+    private readonly ILogger<JwtService> _logger;
     private readonly int _expiryMinutes;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="JwtService"/> class with configuration settings.
     /// </summary>
     /// <param name="configuration">The application configuration for JWT settings.</param>
-    public JwtService(IConfiguration configuration)
+    /// <param name="logger">The given logger.</param>
+    public JwtService(IConfiguration configuration, ILogger<JwtService> logger)
     {
         _configuration = configuration;
         _secretKey = _configuration["Jwt:SecretKey"]
@@ -39,6 +41,8 @@ public class JwtService
         _expiryMinutes = int.Parse(_configuration["Jwt:ExpiryMinutes"]
                                    ?? Environment.GetEnvironmentVariable("JWT_EXPIRY_MINUTES")
                                    ?? "60");
+        
+        _logger = logger;
     }
 
     /// <summary>
@@ -48,6 +52,7 @@ public class JwtService
     /// <returns>A JWT token as a string.</returns>
     public string GenerateToken(User user)
     {
+        _logger.LogInformation("Generating JWT token for user {Username} ({Id})", user.Username, user.Id);
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(_secretKey);
 
@@ -107,8 +112,9 @@ public class JwtService
                 validationParameters, out SecurityToken validatedToken);
             return principal;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Generel error validating JWT token: {Message}", ex.Message);
             return null;
         }
     }

@@ -95,6 +95,8 @@ public class UserGetDto
 public class UserPutDto
 {
     public string Id { get; set; } = string.Empty;
+    [EmailAddress(ErrorMessage = "Ugyldig email adresse")]
+    [Required(ErrorMessage = "Email er påkrævet")]
     public string Email { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
     public string RoleId { get; set; } = string.Empty;

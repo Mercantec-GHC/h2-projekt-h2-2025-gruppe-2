@@ -18,3 +18,33 @@ Then, because we said "app.Authentication" AFTER "app.Authorization," it did not
 AND THEN authorization. The program says fucking nothing about this btw.
 
 If you change the roles authorization of a method, a hot reload is not enough.
+
+Setup logging to a file:
+Download the nuget packages "Serilog.AspNetCore" and "Serilog.Sinks.File".
+Setup configuration in the Program.cs file.
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.File("Logs/log.txt", rollingInterval: RollingInterval.Day)
+            .CreateLogger();
+
+        builder.Host.UseSerilog();
+Then, in a controller/service, add:
+    private readonly ILogger<UsersController> _logger;
+    
+    public UsersController(ILogger<UsersController> logger) 
+    {
+    	_logger = logger;
+    }
+    
+    public async Task<ActionResult<User>> GetUser(string id)
+    {
+        _logger.LogInformation($"Getting user with user id: {id}");
+        var user = await _context.Users.FindAsync(id);
+
+        if (user == null)
+        {
+            _logger.LogError($"User with id '{id}' was not found.");
+            return NotFound();
+        }
+
+        return user;
+    }

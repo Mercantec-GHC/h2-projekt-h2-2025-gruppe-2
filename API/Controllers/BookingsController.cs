@@ -20,15 +20,19 @@ namespace API.Controllers
     public class BookingsController : ControllerBase
     {
         private readonly AppDBContext _context;
+        private readonly TimeService _timeHelper = new();
+        private readonly ILogger<BookingsController> _logger;
 
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BookingsController"/> class.
         /// </summary>
         /// <param name="context">The database context to use for data access.</param>
-        public BookingsController(AppDBContext context)
+        /// <param name="logger">Logger context for logging to a file</param>
+        public BookingsController(AppDBContext context, ILogger<BookingsController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
 
@@ -106,8 +110,7 @@ namespace API.Controllers
         [HttpPost]
         public async Task<ActionResult<Booking>> PostBooking([FromBody] BookingPostDto dto)
         {
-            TimeService timeHelper = new();
-            DateTime copenhagenTime = timeHelper.GetCopenhagenTime();
+            DateTime copenhagenTime = _timeHelper.GetCopenhagenTime();
             Booking booking = new Booking
             {
                 Id = Guid.NewGuid().ToString(),
@@ -121,22 +124,36 @@ namespace API.Controllers
                 CreatedAt = copenhagenTime,
                 UpdatedAt = copenhagenTime
             };
-            
-            _context.Bookings.Add(booking);
-            await _context.SaveChangesAsync();
 
-            BookingsRooms bookingsRooms = new BookingsRooms
+            try
             {
-                Id = Guid.NewGuid().ToString(),
-                BookingId = booking.Id,
-                RoomId = dto.RoomId,
-                CreatedAt = copenhagenTime,
-                UpdatedAt = copenhagenTime
-            };
-                
-            _context.BookingsRooms.Add(bookingsRooms);
-            await _context.SaveChangesAsync();
+                _context.Bookings.Add(booking);
+                await _context.SaveChangesAsync();
+
+                BookingsRooms bookingsRooms = new BookingsRooms
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    BookingId = booking.Id,
+                    RoomId = dto.RoomId,
+                    CreatedAt = copenhagenTime,
+                    UpdatedAt = copenhagenTime
+                };
+
+                _context.BookingsRooms.Add(bookingsRooms);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException e)
+            {
+                _logger.LogError("Error updating db with new bookings: " + e.Message);
+                return BadRequest("Error updating db with new bookings: " + e.Message);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Generel error saving new bookings: " + e.Message);
+                return BadRequest("Generel error saving new bookings: " + e.Message);
+            }
             
+            _logger.LogInformation("Bookings added: " + booking);
             return Ok(new { message = "Booking er oprettet!" });
         }
 
@@ -160,7 +177,7 @@ namespace API.Controllers
 
             return NoContent();
         }
-        
+
 
         /// <summary>
         /// Checks if a booking exists in the database.
