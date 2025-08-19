@@ -180,9 +180,8 @@ namespace API.Controllers
         public async Task<ActionResult<Room>> PostRoom([FromBody] RoomPostDto dto)
         {
             string roomId = Guid.NewGuid().ToString();
-            var timeHelper = new TimeService();
-            DateTime copenhagenTime = timeHelper.GetCopenhagenTime();
-            var user = new Room
+            DateTime copenhagenTime = _timeService.GetCopenhagenTime();
+            var room = new Room
             {
                 Id = roomId,
                 WiFi = dto.WiFi,
@@ -205,7 +204,7 @@ namespace API.Controllers
                 UpdatedAt = copenhagenTime
             };
 
-            _context.Rooms.Add(user);
+            _context.Rooms.Add(room);
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Room er oprettet!", id = roomId, room = dto });

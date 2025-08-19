@@ -157,7 +157,9 @@ public class UsersController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(string id)
     {
-        var user = await _context.Users.FindAsync(id);
+        var user = await _context.Users
+            .Include(u => u.Roles)
+            .FirstOrDefaultAsync(u => u.Id == id);;
         if (user == null)
         {
             return NotFound();
@@ -166,7 +168,17 @@ public class UsersController : ControllerBase
         _context.Users.Remove(user);
         await _context.SaveChangesAsync();
 
-        return NoContent();
+        return Ok(new 
+        {
+            message = "User deleted!",
+            user = new
+            {
+                Id = user.Id,
+                Email = user.Email,
+                Username = user.Username,
+                Role = user.Roles?.Name ?? "No role was assigned to this user"
+            }
+        });
     }
 
 
@@ -258,19 +270,36 @@ public class UsersController : ControllerBase
     {
         User? user = await _context.Users.FindAsync(id);
         if (user == null)
+        {
+            _logger.LogError($"User with id '{id}' was not found.");
             return BadRequest("User was not found with the id: " + id);
-
+        }
 
         Role? role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
         if (role == null)
+        {
+            _logger.LogError($"Role with name '{roleName}' was not found.");
             return BadRequest("Role was not found: " + roleName);
+        }
 
         var beforeRoleId = user.RoleId;
         user.RoleId = role.Id;
         user.UpdatedAt = _timeService.GetCopenhagenTime();
-        var updatedUser = await _context.SaveChangesAsync();
-        if (updatedUser == 0)
-            return BadRequest("User was not updated");
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException e)
+        {
+            _logger.LogError("Internal database server error changing role :( " + e.Message);
+            return StatusCode(500, "Internal database server error changing role :( " + e.Message);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError("Unaccounted internal server error changing role :( " + e.Message);
+            return StatusCode(500, "Unaccounted internal server error changing role :( " + e.Message);
+        }
 
         await _context.Entry(user).Reference(u => u.Roles).LoadAsync();
 
@@ -307,7 +336,10 @@ public class UsersController : ControllerBase
         if (!string.Equals(dto.Email, user.Email, StringComparison.OrdinalIgnoreCase))
         {
             if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
-                BadRequest("A user with this email already exists");
+            {
+                _logger.LogError($"User with email '{dto.Email}' already exists.");
+                BadRequest($"A user with email '{dto.Email}' already exists");
+            }
         }
 
         user.Email = dto.Email;
@@ -321,17 +353,18 @@ public class UsersController : ControllerBase
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            return BadRequest("Internal server error :(: " + ex.Message);
+            _logger.LogError("Error changing user and updating db: " + ex.Message);
+            return StatusCode(500, "Error changing user and updating db: " + ex.Message);
         }
         catch (Exception ex)
         {
-            _logger.LogError("Unaccounted internal server error :(: " + ex.Message);
-            return BadRequest("Unaccounted internal server error :(: " + ex.Message);
+            _logger.LogError("Unaccounted internal server error caught changing user info :( " + ex.Message);
+            return StatusCode(500, "Unaccounted internal server error caught changing user info :( " + ex.Message);
         }
 
         return Ok(new
         {
-            message = "Bruger opdateret!",
+            message = "User updated!",
             user = new
             {
                 id = user.Id,
@@ -374,16 +407,16 @@ public class UsersController : ControllerBase
         }
         catch (DbUpdateException ex)
         {
-            return BadRequest("Internal server error :(: " + ex.Message);
+            return StatusCode(500, "Internal server error :(: " + ex.Message);
         }
         catch (Exception ex)
         {
-            return BadRequest("Unaccounted internal server error :(: " + ex.Message);
+            return StatusCode(500, "Unaccounted internal server error :(: " + ex.Message);
         }
 
         return Ok(new
         {
-            message = "Users password hot changed"
+            message = $"Users {userId} password changed"
         });
     }
 

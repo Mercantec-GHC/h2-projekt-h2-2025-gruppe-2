@@ -5,6 +5,7 @@ obj/
 .vscode
 appsettings.json
 appsettings.Development.json
+API/Logs
 
 GitHub-MCP.json
 mcp.json
