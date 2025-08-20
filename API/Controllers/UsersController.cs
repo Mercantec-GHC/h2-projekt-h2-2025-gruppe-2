@@ -420,6 +420,49 @@ public class UsersController : ControllerBase
         });
     }
 
+
+    /// <summary>
+    /// Logged-in user changes own password (requires current password).
+    /// </summary>
+    [HttpPut("me/password")]
+    public async Task<IActionResult> ChangeOwnPassword([FromBody] ChangeOwnPasswordDto dto)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+
+        if (!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.HashedPassword))
+            return BadRequest("Current password incorrect.");
+
+        if (dto.CurrentPassword == dto.NewPassword)
+            return BadRequest("New password must differ from current password.");
+
+        string salt = BCrypt.Net.BCrypt.GenerateSalt(workFactor);
+        user.HashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword, salt);
+        user.Salt = salt;
+        user.UpdatedAt = _timeService.GetCopenhagenTime();
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            return BadRequest("Internal server error :(: " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest("Unaccounted internal server error :(: " + ex.Message);
+        }
+
+        return Ok(new
+        {
+            message = "Users password hot changed"
+        });
+    }
+
     private bool UserExists(string id)
     {
         return _context.Users.Any(e => e.Id == id);
