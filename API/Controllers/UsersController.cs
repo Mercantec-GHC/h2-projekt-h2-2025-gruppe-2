@@ -20,7 +20,7 @@ public class UsersController : ControllerBase
     private readonly JwtService _jwtService;
     private readonly TimeService _timeService = new();
     private readonly ILogger<UsersController> _logger;
-    private const int workFactor = 12;
+    private int _workFactor;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UsersController"/> class.
@@ -28,11 +28,14 @@ public class UsersController : ControllerBase
     /// <param name="context">The database context for user data access.</param>
     /// <param name="jwtService">The JWT service for token generation and validation.</param>
     /// <param name="logger">The logger</param>
-    public UsersController(AppDBContext context, JwtService jwtService, ILogger<UsersController> logger)
+    /// <param name="configuration">Used to get the work factor</param>
+    public UsersController(AppDBContext context, JwtService jwtService, ILogger<UsersController> logger, IConfiguration configuration
+    )
     {
         _context = context;
         _jwtService = jwtService;
         _logger = logger;
+        _workFactor = int.Parse(configuration["HashedPassword:WorkFactor"]!);
     }
 
     /// <summary>
@@ -120,7 +123,7 @@ public class UsersController : ControllerBase
         if (_context.Users.Any(u => u.Email == dto.Email))
             return BadRequest("A user with this email already exists.");
 
-        string salt = BCrypt.Net.BCrypt.GenerateSalt(workFactor);
+        string salt = BCrypt.Net.BCrypt.GenerateSalt(_workFactor);
         string hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password, salt);
 
         // Find standard User role
@@ -394,7 +397,7 @@ public class UsersController : ControllerBase
         var user = await _context.Users.FindAsync(userId);
         if (user == null)
             return NotFound($"User with '{userId}' not found.");
-        string salt = BCrypt.Net.BCrypt.GenerateSalt(workFactor);
+        string salt = BCrypt.Net.BCrypt.GenerateSalt(_workFactor);
         string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword, salt);
 
         user.HashedPassword = hashedPassword;
@@ -439,7 +442,7 @@ public class UsersController : ControllerBase
         if (dto.CurrentPassword == dto.NewPassword)
             return BadRequest("New password must differ from current password.");
 
-        string salt = BCrypt.Net.BCrypt.GenerateSalt(workFactor);
+        string salt = BCrypt.Net.BCrypt.GenerateSalt(_workFactor);
         user.HashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword, salt);
         user.Salt = salt;
         user.UpdatedAt = _timeService.GetCopenhagenTime();

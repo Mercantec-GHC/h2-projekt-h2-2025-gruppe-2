@@ -11,12 +11,12 @@ namespace API.Service;
 /// </summary>
 public class JwtService
 {
-    private readonly IConfiguration _configuration;
+    private readonly int _expiryMinutes;
     private readonly string _secretKey;
     private readonly string _issuer;
     private readonly string _audience;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<JwtService> _logger;
-    private readonly int _expiryMinutes;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="JwtService"/> class with configuration settings.
@@ -41,7 +41,7 @@ public class JwtService
         _expiryMinutes = int.Parse(_configuration["Jwt:ExpiryMinutes"]
                                    ?? Environment.GetEnvironmentVariable("JWT_EXPIRY_MINUTES")
                                    ?? "60");
-        
+
         _logger = logger;
     }
 

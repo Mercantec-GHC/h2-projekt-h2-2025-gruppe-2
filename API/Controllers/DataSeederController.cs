@@ -9,14 +9,15 @@ namespace API.Controllers;
 public class DataSeederController : ControllerBase
 {
     private readonly AppDBContext _context;
-    private readonly DataSeederService _dataSeederService = new();
+    private readonly DataSeederService _dataSeederService;
     private readonly ILogger<DataSeederController> _logger;
     private readonly TimeService _timeService = new TimeService();
 
-    public DataSeederController(AppDBContext context, ILogger<DataSeederController> logger)
+    public DataSeederController(AppDBContext context, ILogger<DataSeederController> logger, DataSeederService dataSeederService)
     {
         _context = context;
         _logger = logger;
+        _dataSeederService = dataSeederService;
     }
 
 

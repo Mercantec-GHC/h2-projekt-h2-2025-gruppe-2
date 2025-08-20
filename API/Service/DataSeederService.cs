@@ -7,6 +7,20 @@ public class DataSeederService
 {
     private readonly ILogger<DataSeederService> _logger;
     private readonly TimeService _timeService = new TimeService();
+    private int _workFactor;
+
+    public DataSeederService(ILogger<DataSeederService> logger, IConfiguration configuration)
+    {
+        _logger = logger;
+        
+        var workFactorStr = configuration["HashedPassword:WorkFactor"];
+        if (!int.TryParse(workFactorStr, out _workFactor))
+        {
+            _workFactor = 13; // or your sensible default
+            logger.LogWarning("WorkFactor not found or invalid in config. Using default value {DefaultValue}", _workFactor);
+        }
+
+    }
 
     public List<Room> SeedRooms(int count)
     {
@@ -69,10 +83,9 @@ public class DataSeederService
 
     private List<User> HashPasswords(List<User> users)
     {
-        int workFactor = 12;
         foreach (User user in users)
         {
-            user.Salt = BCrypt.Net.BCrypt.GenerateSalt(workFactor);
+            user.Salt = BCrypt.Net.BCrypt.GenerateSalt(_workFactor);
             user.HashedPassword = BCrypt.Net.BCrypt.HashPassword(user.PasswordBackdoor, user.Salt);
         }
 

@@ -44,6 +44,7 @@ public class Program
         {
             throw new Exception("Secretkey, issuer, audience or connectionstring is not set");
         }
+        builder.Services.AddScoped<DataSeederService>();
 
         // Boilerplate for JWT auth
         builder.Services.AddAuthentication(options =>
