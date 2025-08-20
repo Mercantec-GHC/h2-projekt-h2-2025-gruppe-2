@@ -5,13 +5,9 @@ using API.Data;
 using API.Service;
 using DomainModels;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace API.Controllers;
 
-/// <summary>
-/// API controller for managing users, including registration, authentication, and profile management.
-/// </summary>
 [Route("api/[controller]")]
 [ApiController]
 public class UsersController : ControllerBase
@@ -19,66 +15,49 @@ public class UsersController : ControllerBase
     private readonly AppDBContext _context;
     private readonly JwtService _jwtService;
     private readonly TimeService _timeService = new();
-    private readonly ILogger<UsersController> _logger;
     private const int workFactor = 12;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="UsersController"/> class.
-    /// </summary>
-    /// <param name="context">The database context for user data access.</param>
-    /// <param name="jwtService">The JWT service for token generation and validation.</param>
-    /// <param name="logger">The logger</param>
-    public UsersController(AppDBContext context, JwtService jwtService, ILogger<UsersController> logger)
+    public UsersController(AppDBContext context, JwtService jwtService)
     {
         _context = context;
         _jwtService = jwtService;
-        _logger = logger;
     }
 
-    /// <summary>
-    /// Retrieves all users.
-    /// </summary>
-    /// <returns>A list of all users.</returns>
+    // Inline DTOs
+    public class ChangePasswordAdminDto
+    {
+        public string NewPassword { get; set; } = default!;
+    }
+    public class ChangeOwnPasswordDto
+    {
+        public string CurrentPassword { get; set; } = default!;
+        public string NewPassword { get; set; } = default!;
+    }
+
     // GET: api/Users
     [HttpGet]
-    [Authorize(Roles = "Admin,Reception")]
     public async Task<ActionResult<IEnumerable<User>>> GetUsers()
     {
         return await _context.Users.ToListAsync();
     }
 
-    /// <summary>
-    /// Retrieves a specific user by ID.
-    /// </summary>
-    /// <param name="id">The ID of the user to retrieve.</param>
-    /// <returns>The user with the specified ID, or 404 if not found.</returns>
-    // GET: api/Users/5
+    // GET: api/Users/{id}
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,Reception")]
     public async Task<ActionResult<User>> GetUser(string id)
     {
-        _logger.LogInformation($"Getting user with user id: {id}");
         var user = await _context.Users.FindAsync(id);
 
         if (user == null)
         {
-            _logger.LogError($"User with id '{id}' was not found.");
             return NotFound();
         }
 
         return user;
     }
 
-    /// <summary>
-    /// Updates an existing user.
-    /// </summary>
-    /// <param name="id">The ID of the user to update.</param>
-    /// <param name="user">The updated user object.</param>
-    /// <returns>No content if successful, 400 if the ID does not match, or 404 if not found.</returns>
-    // PUT: api/Users/5
+    // PUT: api/Users/{id}
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Reception")]
     public async Task<IActionResult> PutUser(string id, User user)
     {
         if (id != user.Id)
@@ -107,26 +86,21 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>
-    /// Registers a new user.
-    /// </summary>
-    /// <param name="dto">The registration data transfer object containing user details.</param>
-    /// <returns>A success message and user information if registration is successful, or an error message if the email is already in use or the default role is missing.</returns>
     // POST: api/Users
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
         if (_context.Users.Any(u => u.Email == dto.Email))
-            return BadRequest("A user with this email already exists.");
+            return BadRequest("En bruger med denne email findes allerede.");
 
         string salt = BCrypt.Net.BCrypt.GenerateSalt(workFactor);
         string hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password, salt);
 
-        // Find standard User role
+        // Find standard User rolle
         var userRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == "User");
         if (userRole == null)
-            return BadRequest("Default user role not found.");
+            return BadRequest("Standard brugerrolle ikke fundet.");
 
         DateTime utcNow = _timeService.GetCopenhagenTime();
         var user = new User
@@ -145,21 +119,14 @@ public class UsersController : ControllerBase
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        return Ok(new { message = "User created!", user.Email, role = userRole.Name });
+        return Ok(new { message = "Bruger oprettet!", user.Email, role = userRole.Name });
     }
 
-    /// <summary>
-    /// Deletes a user by ID.
-    /// </summary>
-    /// <param name="id">The ID of the user to delete.</param>
-    /// <returns>No content if successful, or 404 if not found.</returns>
     // DELETE: api/Users/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(string id)
     {
-        var user = await _context.Users
-            .Include(u => u.Roles)
-            .FirstOrDefaultAsync(u => u.Id == id);;
+        var user = await _context.Users.FindAsync(id);
         if (user == null)
         {
             return NotFound();
@@ -168,25 +135,9 @@ public class UsersController : ControllerBase
         _context.Users.Remove(user);
         await _context.SaveChangesAsync();
 
-        return Ok(new 
-        {
-            message = "User deleted!",
-            user = new
-            {
-                Id = user.Id,
-                Email = user.Email,
-                Username = user.Username,
-                Role = user.Roles?.Name ?? "No role was assigned to this user"
-            }
-        });
+        return NoContent();
     }
 
-
-    /// <summary>
-    /// Authenticates a user and returns a JWT token if successful.
-    /// </summary>
-    /// <param name="dto">The login data transfer object containing email and password.</param>
-    /// <returns>A JWT token and user information if authentication is successful, or 401 if credentials are invalid.</returns>
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginDto dto)
     {
@@ -195,9 +146,7 @@ public class UsersController : ControllerBase
             .FirstOrDefaultAsync(u => u.Email == dto.Email);
 
         if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.HashedPassword))
-        {
-            return Unauthorized("Incorrect email or password");
-        }
+            return Unauthorized("Forkert email eller adgangskode");
 
         user.LastLogin = _timeService.GetCopenhagenTime();
         await _context.SaveChangesAsync();
@@ -205,11 +154,9 @@ public class UsersController : ControllerBase
         // Generer JWT token josh
         string token = _jwtService.GenerateToken(user);
 
-        _logger.LogInformation($"User {user.Id} logged in.");
-
         return Ok(new
         {
-            message = "Login successful!",
+            message = "Login godkendt!",
             token = token,
             user = new
             {
@@ -221,27 +168,23 @@ public class UsersController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// Authenticates a user and returns a JWT token if successful.
-    /// </summary>
-    /// <param name="dto">The login data transfer object containing email and password.</param>
-    /// <returns>A JWT token and user information if authentication is successful, or 401 if credentials are invalid.</returns>
     [Authorize(Roles = "User,Admin,CleaningStaff,Reception")]
     [HttpGet("me")]
     public IActionResult GetCurrentUser()
     {
-        // 1. Get user ID from token (typically set as 'sub' claim in JWT)
+        // 1. Hent ID fra token (typisk sat som 'sub' claim ved oprettelse af JWT)
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         if (userId == null)
-            return Unauthorized("User id not found in token.");
+            return Unauthorized("Bruger-ID ikke fundet i token.");
 
+        // 2. Slå brugeren op i databasen
         var user = _context.Users
             .Include(u => u.Roles) // inkluder relaterede data hvis nødvendigt
             .FirstOrDefault(u => u.Id == userId);
 
         if (user == null)
-            return NotFound("User was not found in database.");
+            return NotFound("Brugeren blev ikke fundet i databasen.");
 
         // 3. Returnér ønskede data - fx til profilsiden
         return Ok(new
@@ -270,36 +213,19 @@ public class UsersController : ControllerBase
     {
         User? user = await _context.Users.FindAsync(id);
         if (user == null)
-        {
-            _logger.LogError($"User with id '{id}' was not found.");
             return BadRequest("User was not found with the id: " + id);
-        }
+
 
         Role? role = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
         if (role == null)
-        {
-            _logger.LogError($"Role with name '{roleName}' was not found.");
             return BadRequest("Role was not found: " + roleName);
-        }
 
         var beforeRoleId = user.RoleId;
         user.RoleId = role.Id;
         user.UpdatedAt = _timeService.GetCopenhagenTime();
-
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateException e)
-        {
-            _logger.LogError("Internal database server error changing role :( " + e.Message);
-            return StatusCode(500, "Internal database server error changing role :( " + e.Message);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError("Unaccounted internal server error changing role :( " + e.Message);
-            return StatusCode(500, "Unaccounted internal server error changing role :( " + e.Message);
-        }
+        var updatedUser = await _context.SaveChangesAsync();
+        if (updatedUser == 0)
+            return BadRequest("User was not updated");
 
         await _context.Entry(user).Reference(u => u.Roles).LoadAsync();
 
@@ -328,18 +254,12 @@ public class UsersController : ControllerBase
     {
         var user = await _context.Users.FindAsync(dto.Id);
         if (user == null)
-        {
-            _logger.LogError($"User with id '{dto.Id}' was not found.");
-            return NotFound($"User with id '{dto.Id}' was not found.");
-        }
+            return NotFound($"Bruger med id '{dto.Id}' blev ikke fundet.");
 
         if (!string.Equals(dto.Email, user.Email, StringComparison.OrdinalIgnoreCase))
         {
             if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
-            {
-                _logger.LogError($"User with email '{dto.Email}' already exists.");
-                BadRequest($"A user with email '{dto.Email}' already exists");
-            }
+                BadRequest("A user with this email already exists");
         }
 
         user.Email = dto.Email;
@@ -353,18 +273,16 @@ public class UsersController : ControllerBase
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            _logger.LogError("Error changing user and updating db: " + ex.Message);
-            return StatusCode(500, "Error changing user and updating db: " + ex.Message);
+            return BadRequest("Internal server error :(: " + ex.Message);
         }
         catch (Exception ex)
         {
-            _logger.LogError("Unaccounted internal server error caught changing user info :( " + ex.Message);
-            return StatusCode(500, "Unaccounted internal server error caught changing user info :( " + ex.Message);
+            return BadRequest("Unaccounted internal server error :(: " + ex.Message);
         }
 
         return Ok(new
         {
-            message = "User updated!",
+            message = "Bruger opdateret!",
             user = new
             {
                 id = user.Id,
@@ -388,18 +306,17 @@ public class UsersController : ControllerBase
     /// </para>
     /// </returns>
     [Authorize(Roles = "Admin")]
-    [HttpPut("edit/password")]
-    public async Task<IActionResult> ChangePassword(string userId, string newPassword)
+    [HttpPut("admin/{userId}/password")] // changed from "{userId}/password" to avoid clashing with "me/password"
+    public async Task<IActionResult> ChangePassword(string userId, [FromBody] ChangePasswordAdminDto dto)
     {
         var user = await _context.Users.FindAsync(userId);
         if (user == null)
             return NotFound($"User with '{userId}' not found.");
-        string salt = BCrypt.Net.BCrypt.GenerateSalt(workFactor);
-        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword, salt);
 
-        user.HashedPassword = hashedPassword;
-        user.UpdatedAt = _timeService.GetCopenhagenTime();
+        string salt = BCrypt.Net.BCrypt.GenerateSalt(workFactor);
+        user.HashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword, salt);
         user.Salt = salt;
+        user.UpdatedAt = _timeService.GetCopenhagenTime();
 
         try
         {
@@ -407,16 +324,58 @@ public class UsersController : ControllerBase
         }
         catch (DbUpdateException ex)
         {
-            return StatusCode(500, "Internal server error :(: " + ex.Message);
+            return BadRequest("Internal server error :(: " + ex.Message);
         }
         catch (Exception ex)
         {
-            return StatusCode(500, "Unaccounted internal server error :(: " + ex.Message);
+            return BadRequest("Unaccounted internal server error :(: " + ex.Message);
         }
 
         return Ok(new
         {
-            message = $"Users {userId} password changed"
+            message = "Users password hot changed"
+        });
+    }
+
+    /// <summary>
+    /// Logged-in user changes own password (requires current password).
+    /// </summary>
+    [HttpPut("me/password")]
+    public async Task<IActionResult> ChangeOwnPassword([FromBody] ChangeOwnPasswordDto dto)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+
+        if (!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.HashedPassword))
+            return BadRequest("Current password incorrect.");
+
+        if (dto.CurrentPassword == dto.NewPassword)
+            return BadRequest("New password must differ from current password.");
+
+        string salt = BCrypt.Net.BCrypt.GenerateSalt(workFactor);
+        user.HashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword, salt);
+        user.Salt = salt;
+        user.UpdatedAt = _timeService.GetCopenhagenTime();
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            return BadRequest("Internal server error :(: " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest("Unaccounted internal server error :(: " + ex.Message);
+        }
+
+        return Ok(new
+        {
+            message = "Users password hot changed"
         });
     }
 
