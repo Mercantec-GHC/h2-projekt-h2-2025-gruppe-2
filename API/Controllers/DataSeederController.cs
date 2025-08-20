@@ -50,4 +50,35 @@ public class DataSeederController : ControllerBase
             Rooms = rooms
         });
     }
+    
+    [HttpPost("users")]
+    public async Task<ActionResult<IEnumerable<Room>>> SeedUsers(int count)
+    {
+        List<User> users = _dataSeederService.SeedUsers(count);
+        try
+        {
+            _context.Users.AddRange(users);
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError("Updating DB error caught seeding users: " + ex.Message);
+            Console.WriteLine("Updating DB error caught seeding users: " + ex.Message);
+            return StatusCode(500, "Updating DB error caught seeding users: " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Generel error caught seeding users: " + ex.Message);
+            Console.WriteLine("Generel error caught seeding users: " + ex.Message);
+            return StatusCode(500, "Generel error caught seeding users: " + ex.Message);
+        }
+        
+        _logger.LogInformation($"{count} seeded users added to database: \n" + users);
+
+        return Ok(new
+        {
+            message = $"{count} seeded users added to database.",
+            Users = users
+        });
+    }
 }

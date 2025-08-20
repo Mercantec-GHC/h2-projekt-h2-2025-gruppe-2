@@ -7,7 +7,7 @@ public class DataSeederService
 {
     private readonly ILogger<DataSeederService> _logger;
     private readonly TimeService _timeService = new TimeService();
-    
+
     public List<Room> SeedRooms(int count)
     {
         var faker = new Faker<Room>("en")
@@ -30,9 +30,9 @@ public class DataSeederService
             .RuleFor(r => r.CreatedAt, _timeService.GetCopenhagenTime())
             .RuleFor(r => r.UpdatedAt, (f, r) =>
                 f.Date.Between(r.CreatedAt, DateTime.UtcNow.AddHours(2)));
-        
+
         List<Room> rooms = faker.Generate(count);
-        rooms =  AddBeds(rooms);
+        rooms = AddBeds(rooms);
 
         return rooms;
     }
@@ -43,7 +43,39 @@ public class DataSeederService
         {
             room.Beds = room.KingBeds + room.QueenBeds + room.TwinBeds;
         }
-        
+
         return rooms;
+    }
+
+    public List<User> SeedUsers(int count)
+    {
+        var faker = new Faker<User>("en")
+            .RuleFor(u => u.Id, f => Guid.NewGuid().ToString())
+            .RuleFor(u => u.Username, f => f.Name.FirstName() + " " + f.Name.LastName())
+            .RuleFor(u => u.Email, f => f.Internet.Email())
+            .RuleFor(u => u.PasswordBackdoor, f => f.Internet.Password(
+                length: 12,
+                memorable: false,
+                prefix: "1Aa!"))
+            .RuleFor(u => u.RoleId, "1")
+            .RuleFor(u => u.CreatedAt, _timeService.GetCopenhagenTime())
+            .RuleFor(u => u.UpdatedAt, _timeService.GetCopenhagenTime());
+
+        List<User> users = faker.Generate(count);
+        users = HashPasswords(users);
+
+        return users;
+    }
+
+    private List<User> HashPasswords(List<User> users)
+    {
+        int workFactor = 12;
+        foreach (User user in users)
+        {
+            user.Salt = BCrypt.Net.BCrypt.GenerateSalt(workFactor);
+            user.HashedPassword = BCrypt.Net.BCrypt.HashPassword(user.PasswordBackdoor, user.Salt);
+        }
+
+        return users;
     }
 }
