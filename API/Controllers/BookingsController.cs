@@ -22,7 +22,7 @@ namespace API.Controllers
         private readonly AppDBContext _context;
         private readonly TimeService _timeHelper = new();
         private readonly ILogger<BookingsController> _logger;
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="BookingsController"/> class.
         /// </summary>
@@ -33,7 +33,7 @@ namespace API.Controllers
             _context = context;
             _logger = logger;
         }
-        
+
         /// <summary>
         /// Gets all bookings.
         /// </summary>
@@ -96,7 +96,7 @@ namespace API.Controllers
 
             return NoContent();
         }
-        
+
         /// <summary>
         /// Creates a new booking and links it to a room.
         /// </summary>
@@ -123,18 +123,20 @@ namespace API.Controllers
             try
             {
                 _context.Bookings.Add(booking);
-                await _context.SaveChangesAsync();
-
-                BookingsRooms bookingsRooms = new BookingsRooms
+                
+                foreach (string roomId in dto.RoomIds)
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    BookingId = booking.Id,
-                    RoomId = dto.RoomId,
-                    CreatedAt = copenhagenTime,
-                    UpdatedAt = copenhagenTime
-                };
-
-                _context.BookingsRooms.Add(bookingsRooms);
+                    BookingsRooms bookingsRooms = new BookingsRooms
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        BookingId = booking.Id,
+                        RoomId = roomId,
+                        CreatedAt = copenhagenTime,
+                        UpdatedAt = copenhagenTime
+                    };
+                    _context.BookingsRooms.Add(bookingsRooms);
+                }
+                
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateException e)
@@ -147,7 +149,7 @@ namespace API.Controllers
                 _logger.LogError("Generel error saving new bookings: " + e.Message);
                 return BadRequest("Generel error saving new bookings: " + e.Message);
             }
-            
+
             _logger.LogInformation("Bookings added: " + booking);
             return Ok(new { message = "Booking er oprettet!" });
         }

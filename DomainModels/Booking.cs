@@ -1,4 +1,6 @@
-﻿namespace DomainModels;
+﻿using System.Globalization;
+
+namespace DomainModels;
 
 public class Booking : Common
 {
@@ -13,9 +15,9 @@ public class Booking : Common
     
     public string UserId { get; set; } = null!;
     public User User { get; set; } = null!;
-    
+
     public ICollection<BookingsRooms> BookingRooms { get; set; } = new List<BookingsRooms>();
-    
+
     public void CalcTotalPrice(List<int> roomIds)
     {
         TotalPrice = 0;
@@ -45,6 +47,7 @@ public class Booking : Common
         return price;
     }
 }
+
 public class BookingPostDto
 {
     public string Id { get; set; } = null!;
@@ -54,7 +57,7 @@ public class BookingPostDto
     public bool Breakfast { get; set; }
     public bool Dinner { get; set; }
     public string UserId { get; set; } = null!;
-    public string RoomId { get; set; } = null!;
+    public List<string> RoomIds { get; set; } = null!;
     public DateTime OccupiedFrom { get; set; }
     public DateTime OccupiedTill { get; set; }
     public DateTime CreatedAt { get; set; }
