@@ -51,32 +51,32 @@ public class User : Common
 
 public class RegisterDto
 {
-    [EmailAddress(ErrorMessage = "Ugyldig email adresse")]
-    [Required(ErrorMessage = "Email er påkrævet")]
+    [EmailAddress(ErrorMessage = "Invalid Email Address")]
+    [Required(ErrorMessage = "Email is required")]
     public string Email { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Brugernavn er påkrævet")]
+    [Required(ErrorMessage = "Username is required")]
     public string Username { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Adgangskode er påkrævet")]
-    [MinLength(8, ErrorMessage = "Adgangskoden skal være mindst 8 tegn lang")]
+    [Required(ErrorMessage = "Password is required")]
+    [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
     [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
         ErrorMessage =
-            "Adgangskoden skal indeholde mindst ét tal, ét stort bogstav, ét lille bogstav og et specialtegn")]
+            "Password must contain at least one number, one uppercase letter, one lowercase letter, and one special character")]
     public string Password { get; set; } = string.Empty;
 }
 
 public class LoginDto
 {
-    [EmailAddress(ErrorMessage = "Ugyldig email adresse")]
-    [Required(ErrorMessage = "Email er påkrævet")]
+    [EmailAddress(ErrorMessage = "Invalid Email Address")]
+    [Required(ErrorMessage = "Email is required")]
     public string Email { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Adgangskode er påkrævet")]
-    [MinLength(8, ErrorMessage = "Adgangskoden skal være mindst 8 tegn lang")]
+    [Required(ErrorMessage = "Password is required")]
+    [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
     [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
         ErrorMessage =
-            "Adgangskoden skal indeholde mindst ét tal, ét stort bogstav, ét lille bogstav og et specialtegn")]
+            "Password must contain at least one number, one uppercase letter, one lowercase letter, and one special character")]
     public string Password { get; set; } = string.Empty;
 }
 
@@ -84,8 +84,8 @@ public class UserGetDto
 {
     public string Id { get; set; } = string.Empty;
 
-    [EmailAddress(ErrorMessage = "Ugyldig email adresse")]
-    [Required(ErrorMessage = "Email er påkrævet")]
+    [EmailAddress(ErrorMessage = "Invalid Email Address")]
+    [Required(ErrorMessage = "Email is required")]
     public string Email { get; set; } = string.Empty;
 
     public string Username { get; set; } = string.Empty;
@@ -95,9 +95,21 @@ public class UserGetDto
 public class UserPutDto
 {
     public string Id { get; set; } = string.Empty;
-    [EmailAddress(ErrorMessage = "Ugyldig email adresse")]
-    [Required(ErrorMessage = "Email er påkrævet")]
+    [EmailAddress(ErrorMessage = "Invalid Email Address")]
+    [Required(ErrorMessage = "Email is required")]
     public string Email { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
     public string RoleId { get; set; } = string.Empty;
+}
+
+public class ChangeOwnPasswordDto
+{
+    public string CurrentPassword { get; set; } = default!;
+
+    [Required(ErrorMessage = "Password is required")]
+    [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
+ErrorMessage =
+    "Password must contain at least one number, one uppercase letter, one lowercase letter, and one special character")]
+    public string NewPassword { get; set; } = default!;
 }
