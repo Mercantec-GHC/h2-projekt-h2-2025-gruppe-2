@@ -22,15 +22,17 @@ namespace API.Controllers
     public class RoomsController : ControllerBase
     {
         private readonly AppDBContext _context;
+        private readonly ILogger<RoomsController> _logger;
         private TimeService _timeService = new TimeService();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RoomsController"/> class.
         /// </summary>
         /// <param name="context">The database context to use for data access.</param>
-        public RoomsController(AppDBContext context)
+        public RoomsController(AppDBContext context, ILogger<RoomsController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         /// <summary>
@@ -231,6 +233,47 @@ namespace API.Controllers
         }
 
         /// <summary>
+        /// Deletes rooms by the given date.
+        /// </summary>
+        /// <param name="startDate">Starting date</param>
+        /// <param name="endDate">Ending date</param>
+        /// <returns>No content if successful, or 404 if not found.</returns>
+        [HttpDelete("rooms")]
+        public async Task<IActionResult> DeleteRoomsByDate(DateTime startDate, DateTime endDate)
+        {
+            DateTime utcStartDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
+            DateTime utcEndDate = DateTime.SpecifyKind(endDate, DateTimeKind.Utc);
+            List<Room> rooms = await _context.Rooms.Where(r =>
+                    r.CreatedAt >= utcStartDate &&
+                    r.CreatedAt <= utcEndDate)
+                .ToListAsync();
+            if (!rooms.Any())
+            {
+                return NotFound(new { message = "No rooms found with the given dates.", startDate, endDate });
+            }
+
+            try
+            {
+                _context.Rooms.RemoveRange(rooms);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError("Updating db error caught deleting rooms by date: " + ex.Message);
+                Console.WriteLine("Updating db error caught deleting rooms by date: " + ex.Message);
+                return StatusCode(500, "Updating db error caught deleting rooms by date: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Generel error caught deleting rooms by date: " + ex.Message);
+                Console.WriteLine("Generel error caught deleting rooms by date: " + ex.Message);
+                return StatusCode(500, "Generel error caught deleting rooms by date: " + ex.Message);
+            }
+
+            return Ok(new {message = "Rooms got deleted!", rooms});
+        }
+
+        /// <summary>
         /// Retrieves all rooms based on availability, within the specified date range (YYYY-MM-DDTHH:MM:SS/2025-08-18T10:30:00).
         /// </summary>
         /// <param name="startDate">The start date of the requested availability period</param>
@@ -240,7 +283,8 @@ namespace API.Controllers
         /// <response code="200">List of available/unavailable rooms found</response>
         /// <response code="400">End date can't be lower than the starting date</response>
         [HttpGet("availability")]
-        public async Task<ActionResult<IEnumerable<Room>>> GetRoomsByAvailability(DateTime startDate, DateTime endDate, bool available = true)
+        public async Task<ActionResult<IEnumerable<Room>>> GetRoomsByAvailability(DateTime startDate, DateTime endDate,
+            bool available = true)
         {
             // 2025-08-18T10:30:00
             // Formets to UTC, for PostgreSQL compatability.
@@ -263,9 +307,11 @@ namespace API.Controllers
                 .AsNoTracking() // Since we are only reading the data, we don't track it.
                 .Where(room => available ? !unavailableRoomIds.Contains(room.Id) : unavailableRoomIds.Contains(room.Id))
                 .ToListAsync();
-            
+
             if (availableRooms.Count == 0)
-                return Ok(available ? "All rooms are unavailable in the specified date range." : "All rooms are available in the specified date range.");
+                return Ok(available
+                    ? "All rooms are unavailable in the specified date range."
+                    : "All rooms are available in the specified date range.");
 
             return Ok(availableRooms);
         }

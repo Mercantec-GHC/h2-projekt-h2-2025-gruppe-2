@@ -22,8 +22,7 @@ namespace API.Controllers
         private readonly AppDBContext _context;
         private readonly TimeService _timeHelper = new();
         private readonly ILogger<BookingsController> _logger;
-
-
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="BookingsController"/> class.
         /// </summary>
@@ -34,8 +33,7 @@ namespace API.Controllers
             _context = context;
             _logger = logger;
         }
-
-
+        
         /// <summary>
         /// Gets all bookings.
         /// </summary>
@@ -45,7 +43,6 @@ namespace API.Controllers
         {
             return await _context.Bookings.ToListAsync();
         }
-
 
         /// <summary>
         /// Gets a specific booking by its ID.
@@ -64,7 +61,6 @@ namespace API.Controllers
 
             return booking;
         }
-
 
         /// <summary>
         /// Updates an existing booking.
@@ -100,8 +96,7 @@ namespace API.Controllers
 
             return NoContent();
         }
-
-
+        
         /// <summary>
         /// Creates a new booking and links it to a room.
         /// </summary>
@@ -157,7 +152,6 @@ namespace API.Controllers
             return Ok(new { message = "Booking er oprettet!" });
         }
 
-
         /// <summary>
         /// Deletes a booking by its ID.
         /// </summary>
@@ -177,7 +171,6 @@ namespace API.Controllers
 
             return NoContent();
         }
-
 
         /// <summary>
         /// Checks if a booking exists in the database.

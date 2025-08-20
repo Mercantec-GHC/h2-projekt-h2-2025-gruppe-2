@@ -1,0 +1,49 @@
+﻿using API.Data;
+using API.Service;
+using Bogus;
+using DomainModels;
+
+public class DataSeederService
+{
+    private readonly ILogger<DataSeederService> _logger;
+    private readonly TimeService _timeService = new TimeService();
+    
+    public List<Room> SeedRooms(int count)
+    {
+        var faker = new Faker<Room>("en")
+            .RuleFor(r => r.Id, f => Guid.NewGuid().ToString())
+            .RuleFor(r => r.KingBeds, f => f.Random.Int(0, 3))
+            .RuleFor(r => r.QueenBeds, f => f.Random.Int(0, 3))
+            .RuleFor(r => r.TwinBeds, f => f.Random.Int(0, 3))
+            .RuleFor(r => r.Size, f => f.Random.Int(10, 30))
+            .RuleFor(r => r.Tv, f => f.Random.Int(0, 2))
+            .RuleFor(r => r.Bathroom, f => f.Random.Bool())
+            .RuleFor(r => r.Clean, f => f.Random.Bool())
+            .RuleFor(r => r.Bathtub, f => f.Random.Bool())
+            .RuleFor(r => r.WiFi, f => f.Random.Bool())
+            .RuleFor(r => r.Fridge, f => f.Random.Bool())
+            .RuleFor(r => r.Stove, f => f.Random.Bool())
+            .RuleFor(r => r.Oven, f => f.Random.Bool())
+            .RuleFor(r => r.Description, f => f.Lorem.Paragraphs(1))
+            .RuleFor(r => r.Microwave, f => f.Random.Bool())
+            .RuleFor(r => r.Price, f => f.Random.Double(200, 2000))
+            .RuleFor(r => r.CreatedAt, _timeService.GetCopenhagenTime())
+            .RuleFor(r => r.UpdatedAt, (f, r) =>
+                f.Date.Between(r.CreatedAt, DateTime.UtcNow.AddHours(2)));
+        
+        List<Room> rooms = faker.Generate(count);
+        rooms =  AddBeds(rooms);
+
+        return rooms;
+    }
+
+    private List<Room> AddBeds(List<Room> rooms)
+    {
+        foreach (Room room in rooms)
+        {
+            room.Beds = room.KingBeds + room.QueenBeds + room.TwinBeds;
+        }
+        
+        return rooms;
+    }
+}
