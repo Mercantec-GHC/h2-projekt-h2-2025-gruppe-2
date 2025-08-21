@@ -27,15 +27,15 @@ public class JwtService
     {
         _configuration = configuration;
         _secretKey = _configuration["Jwt:SecretKey"]
-                     ?? Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
+                     ?? Environment.GetEnvironmentVariable("JwtSecretKey")
                      ?? "NOTSAFENOTSAFENOTSAFENOTSAFENOTSAFENOTSAFENOTSAFENOTSAFE";
 
         _issuer = _configuration["Jwt:Issuer"]
-                  ?? Environment.GetEnvironmentVariable("JWT_ISSUER")
+                  ?? Environment.GetEnvironmentVariable("JwtIssuer")
                   ?? "H2-2025-API";
 
         _audience = _configuration["Jwt:Audience"]
-                    ?? Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+                    ?? Environment.GetEnvironmentVariable("JwtAudience")
                     ?? "H2-2025-Client";
 
         _expiryMinutes = int.Parse(_configuration["Jwt:ExpiryMinutes"]
