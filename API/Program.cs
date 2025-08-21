@@ -131,7 +131,7 @@ public class Program
                         .WithOrigins(
                             "http://localhost:5085",
                             "http://localhost:8052",
-                            "https://h2.mercantec.tech"
+                            "https://karambit.mercantec.tech"
                         )
                         .AllowAnyMethod()
                         .AllowAnyHeader()
