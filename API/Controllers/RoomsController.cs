@@ -340,7 +340,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="userId">The ID of the user</param>
         /// <returns>An internet code and a list of booked rooms</returns>
-        [HttpGet("rooms/userId")]
+        [HttpGet("userId")]
         public async Task<ActionResult<IEnumerable<Room>>> GetRoomsByUserId(string userId)
         {
             try

@@ -4,6 +4,7 @@ using API.Data;
 using API.Service;
 using DomainModels;
 using Microsoft.AspNetCore.Authorization;
+using DomainModels.Mapping;
 
 namespace API.Controllers
 {
@@ -120,7 +121,7 @@ namespace API.Controllers
             try
             {
                 _context.Bookings.Add(booking);
-                
+
                 foreach (string roomId in dto.RoomIds)
                 {
                     BookingsRooms bookingsRooms = new BookingsRooms
@@ -133,7 +134,7 @@ namespace API.Controllers
                     };
                     _context.BookingsRooms.Add(bookingsRooms);
                 }
-                
+
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateException e)
@@ -179,6 +180,25 @@ namespace API.Controllers
         private bool BookingExists(string id)
         {
             return _context.Bookings.Any(e => e.Id == id);
+        }
+
+        [HttpGet("user/bookings")]
+        // [Authorize(Roles = "User,Admin")]
+        public async Task<ActionResult<BookingRoomsDto>> GetBookingsAndRoomsByUserIdAsync(string userId)
+        {
+            var bookings = await _context.Bookings
+                .Include(b => b.User)
+                .Include(b => b.BookingRooms)
+                    .ThenInclude(br => br.Room)
+                .Where(b => b.UserId == userId)
+                .ToListAsync();
+
+            var bookingsDto = BookingMappings.ToBookingRoomsDto(bookings);
+            return Ok(new
+            {
+                message = $"Bookings and rooms for user {userId} retrieved",
+                bookingsDto
+            });
         }
     }
 }
