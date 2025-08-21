@@ -102,6 +102,7 @@ public class UserPutDto
     public string RoleId { get; set; } = string.Empty;
 }
 
+
 public class ChangeOwnPasswordDto
 {
     public string CurrentPassword { get; set; } = default!;
