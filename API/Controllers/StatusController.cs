@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers
 {
+    /// <summary>
+    /// Checks the status of the backend
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class StatusController : ControllerBase

@@ -3,6 +3,9 @@ using DomainModels;
 
 namespace API.Controllers;
 
+/// <summary>
+/// 
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class WeatherForecastController : ControllerBase
@@ -14,6 +17,10 @@ public class WeatherForecastController : ControllerBase
 
     private readonly ILogger<WeatherForecastController> _logger;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="logger"></param>
     public WeatherForecastController(ILogger<WeatherForecastController> logger)
     {
         _logger = logger;

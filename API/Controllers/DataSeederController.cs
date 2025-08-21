@@ -6,13 +6,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API.Controllers;
 
+/// <summary>
+/// Bogus data creator
+/// </summary>
 public class DataSeederController : ControllerBase
 {
     private readonly AppDBContext _context;
     private readonly DataSeederService _dataSeederService;
     private readonly ILogger<DataSeederController> _logger;
-    private readonly TimeService _timeService = new TimeService();
 
+    /// <summary>
+    /// Constructs the DataSeederController
+    /// </summary>
+    /// <param name="context">DB context</param>
+    /// <param name="logger">Logger context</param>
+    /// <param name="dataSeederService">Logic for creating seeds</param>
     public DataSeederController(AppDBContext context, ILogger<DataSeederController> logger, DataSeederService dataSeederService)
     {
         _context = context;
@@ -21,6 +29,13 @@ public class DataSeederController : ControllerBase
     }
 
 
+    /// <summary>
+    /// Creates an amount of rooms.
+    /// </summary>
+    /// <param name="count">Amount of objects to be created</param>
+    /// <returns>A status code and the rooms that got created</returns>
+    /// <response code="200">List of rooms that got created and/or an http code</response>
+    /// <response code="500">Returns an error message indicating what the server problem was</response>
     [HttpPost("rooms")]
     public async Task<ActionResult<IEnumerable<Room>>> SeedRooms(int count)
     {
@@ -52,6 +67,13 @@ public class DataSeederController : ControllerBase
         });
     }
     
+    /// <summary>
+    /// Creates an amount of users
+    /// </summary>
+    /// <param name="count">Amount of objects to be created</param>
+    /// <returns>List of users created and/or a http code</returns>
+    /// <response code="200">List of rooms that got created</response>
+    /// <response code="500">Returns an error message indicating what the server problem was</response>
     [HttpPost("users")]
     public async Task<ActionResult<IEnumerable<Room>>> SeedUsers(int count)
     {

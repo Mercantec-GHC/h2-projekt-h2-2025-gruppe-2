@@ -1,31 +1,38 @@
-﻿using API.Data;
-using API.Service;
-using Bogus;
+﻿using Bogus;
 using DomainModels;
 
+namespace API.Service;
+
+/// <summary>
+/// Adds Bogus data to the DB
+/// </summary>
 public class DataSeederService
 {
     private readonly ILogger<DataSeederService> _logger;
     private readonly TimeService _timeService = new TimeService();
     private int _workFactor;
 
+    /// <summary>
+    /// Constructor for the class
+    /// </summary>
+    /// <param name="logger">Logger configuration</param>
+    /// <param name="configuration">Configuration</param>
     public DataSeederService(ILogger<DataSeederService> logger, IConfiguration configuration)
     {
         _logger = logger;
-        
-        var workFactorStr = configuration["HashedPassword:WorkFactor"];
-        if (!int.TryParse(workFactorStr, out _workFactor))
-        {
-            _workFactor = 13; // or your sensible default
-            logger.LogWarning("WorkFactor not found or invalid in config. Using default value {DefaultValue}", _workFactor);
-        }
-
+        _workFactor = int.Parse(configuration["HashedPassword:WorkFactor"] ??
+                                Environment.GetEnvironmentVariable("WorkFactor") ?? "15");
     }
 
+    /// <summary>
+    /// Creates Bogus room data
+    /// </summary>
+    /// <param name="count">Amount of objects to be created</param>
+    /// <returns>A list of newly created rooms</returns>
     public List<Room> SeedRooms(int count)
     {
         var faker = new Faker<Room>("en")
-            .RuleFor(r => r.Id, f => Guid.NewGuid().ToString())
+            .RuleFor(r => r.Id, Guid.NewGuid().ToString())
             .RuleFor(r => r.KingBeds, f => f.Random.Int(0, 3))
             .RuleFor(r => r.QueenBeds, f => f.Random.Int(0, 3))
             .RuleFor(r => r.TwinBeds, f => f.Random.Int(0, 3))
@@ -61,10 +68,15 @@ public class DataSeederService
         return rooms;
     }
 
+    /// <summary>
+    /// Creates Bogus data for the class User
+    /// </summary>
+    /// <param name="count">The amount of User class to be created</param>
+    /// <returns>A list of Users</returns>
     public List<User> SeedUsers(int count)
     {
         var faker = new Faker<User>("en")
-            .RuleFor(u => u.Id, f => Guid.NewGuid().ToString())
+            .RuleFor(u => u.Id, Guid.NewGuid().ToString())
             .RuleFor(u => u.Username, f => f.Name.FirstName() + " " + f.Name.LastName())
             .RuleFor(u => u.Email, f => f.Internet.Email())
             .RuleFor(u => u.PasswordBackdoor, f => f.Internet.Password(

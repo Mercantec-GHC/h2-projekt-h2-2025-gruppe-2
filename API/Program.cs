@@ -11,8 +11,16 @@ using Serilog;
 
 namespace API;
 
+/// <summary>
+/// 
+/// </summary>
 public class Program
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="args"></param>
+    /// <exception cref="Exception"></exception>
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
@@ -125,9 +133,9 @@ public class Program
         {
             options.AddPolicy(
                 "AllowSpecificOrigins",
-                builder =>
+                policyBuilder =>
                 {
-                    builder
+                    policyBuilder
                         .WithOrigins(
                             "http://localhost:5085",
                             "http://localhost:8052",

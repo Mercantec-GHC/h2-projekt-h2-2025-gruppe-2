@@ -1,13 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using API.Data;
 using API.Service;
 using DomainModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
@@ -102,6 +98,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="dto">The booking data transfer object containing booking details and room ID.</param>
         /// <returns>A success message if the booking is created.</returns>
+        [Authorize(Roles = "User")]
         [HttpPost]
         public async Task<ActionResult<Booking>> PostBooking([FromBody] BookingPostDto dto)
         {

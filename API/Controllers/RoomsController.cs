@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using API.Data;
 using API.Service;
@@ -23,12 +18,13 @@ namespace API.Controllers
     {
         private readonly AppDBContext _context;
         private readonly ILogger<RoomsController> _logger;
-        private TimeService _timeService = new TimeService();
+        private TimeService _timeService = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RoomsController"/> class.
         /// </summary>
         /// <param name="context">The database context to use for data access.</param>
+        /// <param name="logger">Logger configuration</param>
         public RoomsController(AppDBContext context, ILogger<RoomsController> logger)
         {
             _context = context;
@@ -57,7 +53,7 @@ namespace API.Controllers
             try
             {
                 var rooms = await _context.Rooms.Where(r => r.Clean == false).ToListAsync();
-                return Ok(new { rooms = rooms });
+                return Ok(new { rooms });
             }
             catch (Exception e)
             {
@@ -69,9 +65,7 @@ namespace API.Controllers
         /// <summary>
         /// Gets a specific room by its ID.
         /// </summary>
-        /// <param name="id">The ID of the room to retrieve.</param>
         /// <returns>The room with the specified ID, or 404 if not found.</returns>
-
         // GET: api/Rooms/clean
         [HttpGet("clean")]
         [Authorize(Roles = "CleaningStaff,Admin,Reception")]
@@ -80,7 +74,7 @@ namespace API.Controllers
             try
             {
                 var rooms = await _context.Rooms.Where(r => r.Clean == true).ToListAsync();
-                return Ok(new { rooms = rooms });
+                return Ok(new { rooms });
             }
             catch (Exception e)
             {
@@ -90,6 +84,11 @@ namespace API.Controllers
         }
 
         // PATCH: api/Rooms/{id}/clean
+        /// <summary>
+        /// Changes a room to be clean with the given ID
+        /// </summary>
+        /// <param name="id">The rooms ID</param>
+        /// <returns></returns>
         [HttpPatch("{id}/clean")]
         [Authorize(Roles = "CleaningStaff,Admin")]
         public async Task<IActionResult> CleanRoom(string id)
@@ -108,6 +107,11 @@ namespace API.Controllers
 
 
         // PATCH: api/Rooms/{id}/unclean
+        /// <summary>
+        /// Changes a room to be unclean with the given ID
+        /// </summary>
+        /// <param name="id">The rooms ID</param>
+        /// <returns></returns>
         [HttpPatch("{id}/unclean")]
         [Authorize(Roles = "CleaningStaff,Admin")]
         public async Task<IActionResult> UncleanRoom(string id)
@@ -125,6 +129,11 @@ namespace API.Controllers
         }
 
         // GET: api/Rooms/5
+        /// <summary>
+        /// Gets a single room with the given ID
+        /// </summary>
+        /// <param name="id">The rooms ID</param>
+        /// <returns></returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<Room>> GetRoom(string id)
         {

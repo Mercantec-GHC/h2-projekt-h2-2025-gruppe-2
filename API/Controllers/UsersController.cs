@@ -5,7 +5,6 @@ using API.Data;
 using API.Service;
 using DomainModels;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace API.Controllers;
 
@@ -29,13 +28,15 @@ public class UsersController : ControllerBase
     /// <param name="jwtService">The JWT service for token generation and validation.</param>
     /// <param name="logger">The logger</param>
     /// <param name="configuration">Used to get the work factor</param>
-    public UsersController(AppDBContext context, JwtService jwtService, ILogger<UsersController> logger, IConfiguration configuration
+    public UsersController(AppDBContext context, JwtService jwtService, ILogger<UsersController> logger,
+        IConfiguration configuration
     )
     {
         _context = context;
         _jwtService = jwtService;
         _logger = logger;
-        _workFactor = int.Parse(configuration["HashedPassword:WorkFactor"]!);
+        _workFactor = int.Parse(configuration["HashedPassword:WorkFactor"] ??
+                                Environment.GetEnvironmentVariable("WorkFactor") ?? "15");
     }
 
     /// <summary>
@@ -162,7 +163,8 @@ public class UsersController : ControllerBase
     {
         var user = await _context.Users
             .Include(u => u.Roles)
-            .FirstOrDefaultAsync(u => u.Id == id);;
+            .FirstOrDefaultAsync(u => u.Id == id);
+        
         if (user == null)
         {
             return NotFound();
@@ -171,14 +173,14 @@ public class UsersController : ControllerBase
         _context.Users.Remove(user);
         await _context.SaveChangesAsync();
 
-        return Ok(new 
+        return Ok(new
         {
             message = "User deleted!",
             user = new
             {
-                Id = user.Id,
-                Email = user.Email,
-                Username = user.Username,
+                user.Id,
+                user.Email,
+                user.Username,
                 Role = user.Roles?.Name ?? "No role was assigned to this user"
             }
         });
@@ -213,7 +215,7 @@ public class UsersController : ControllerBase
         return Ok(new
         {
             message = "Login successful!",
-            token = token,
+            token,
             user = new
             {
                 id = user.Id,
@@ -227,7 +229,6 @@ public class UsersController : ControllerBase
     /// <summary>
     /// Authenticates a user and returns a JWT token if successful.
     /// </summary>
-    /// <param name="dto">The login data transfer object containing email and password.</param>
     /// <returns>A JWT token and user information if authentication is successful, or 401 if credentials are invalid.</returns>
     [Authorize(Roles = "User,Admin,CleaningStaff,Reception")]
     [HttpGet("me")]
@@ -249,9 +250,9 @@ public class UsersController : ControllerBase
         // 3. Returnér ønskede data - fx til profilsiden
         return Ok(new
         {
-            Id = user.Id,
-            Email = user.Email,
-            CreatedAt = user.CreatedAt,
+            user.Id,
+            user.Email,
+            user.CreatedAt,
             Roles = user.Roles?.Name
         });
     }

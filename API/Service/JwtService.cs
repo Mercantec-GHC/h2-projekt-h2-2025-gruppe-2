@@ -15,7 +15,6 @@ public class JwtService
     private readonly string _secretKey;
     private readonly string _issuer;
     private readonly string _audience;
-    private readonly IConfiguration _configuration;
     private readonly ILogger<JwtService> _logger;
 
     /// <summary>
@@ -25,21 +24,20 @@ public class JwtService
     /// <param name="logger">The given logger.</param>
     public JwtService(IConfiguration configuration, ILogger<JwtService> logger)
     {
-        _configuration = configuration;
-        _secretKey = _configuration["Jwt:SecretKey"]
+        _secretKey = configuration["Jwt:SecretKey"]
                      ?? Environment.GetEnvironmentVariable("JwtSecretKey")
                      ?? "NOTSAFENOTSAFENOTSAFENOTSAFENOTSAFENOTSAFENOTSAFENOTSAFE";
 
-        _issuer = _configuration["Jwt:Issuer"]
+        _issuer = configuration["Jwt:Issuer"]
                   ?? Environment.GetEnvironmentVariable("JwtIssuer")
                   ?? "H2-2025-API";
 
-        _audience = _configuration["Jwt:Audience"]
+        _audience = configuration["Jwt:Audience"]
                     ?? Environment.GetEnvironmentVariable("JwtAudience")
                     ?? "H2-2025-Client";
 
-        _expiryMinutes = int.Parse(_configuration["Jwt:ExpiryMinutes"]
-                                   ?? Environment.GetEnvironmentVariable("JWT_EXPIRY_MINUTES")
+        _expiryMinutes = int.Parse(configuration["Jwt:ExpiryMinutes"]
+                                   ?? Environment.GetEnvironmentVariable("JwtExpiryMinutes")
                                    ?? "60");
 
         _logger = logger;
