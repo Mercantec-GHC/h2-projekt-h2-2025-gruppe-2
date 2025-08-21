@@ -28,16 +28,21 @@ public class Program
         // The JwtService will magically get added to the controller.
         builder.Services.AddScoped<JwtService>();
         string jwtSecretKey = (Configuration["Jwt:SecretKey"]
-                               ?? Environment.GetEnvironmentVariable("Jwt:SecretKey"))!;
+                               ?? Environment.GetEnvironmentVariable("JwtSecretKey"))!;
 
         string jwtIssuer = (Configuration["Jwt:Issuer"]
-                            ?? Environment.GetEnvironmentVariable("Jwt:Issuer"))!;
+                            ?? Environment.GetEnvironmentVariable("JwtIssuer"))!;
 
         string jwtAudience = (Configuration["Jwt:Audience"]
-                              ?? Environment.GetEnvironmentVariable("Jwt:Audience"))!;
+                              ?? Environment.GetEnvironmentVariable("JwtAudience"))!;
 
         string connectionString = (Configuration.GetConnectionString("DefaultConnection")
                                    ?? Environment.GetEnvironmentVariable("DefaultConnection"))!;
+
+        Console.WriteLine("JwtSecretKey: " + jwtSecretKey);
+        Console.WriteLine("JwtIssuer: " + jwtIssuer);
+        Console.WriteLine("JwtAudience: " + jwtAudience);
+        Console.WriteLine("ConnectionString: " + connectionString);
 
         if (string.IsNullOrEmpty(jwtSecretKey) || string.IsNullOrEmpty(jwtIssuer) ||
             string.IsNullOrEmpty(jwtAudience) || string.IsNullOrEmpty(connectionString))
