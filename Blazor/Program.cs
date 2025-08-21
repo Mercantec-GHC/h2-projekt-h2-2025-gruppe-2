@@ -19,7 +19,7 @@ public class Program
         // Læs API endpoint fra miljøvariabler eller brug default
         var envApiEndpoint = Environment.GetEnvironmentVariable("API_ENDPOINT");
         Console.WriteLine($"API ENV Endpoint: {envApiEndpoint}");
-        var apiEndpoint = envApiEndpoint ?? "https://h2api.mercantec.tech/";
+        var apiEndpoint = envApiEndpoint ?? "https://karambit-api.mercantec.tech/";
         Console.WriteLine($"API Endpoint: {apiEndpoint}");
 
         // Registrer HttpClient til API service med konfigurerbar endpoint
