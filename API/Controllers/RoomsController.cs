@@ -279,7 +279,7 @@ namespace API.Controllers
                 return StatusCode(500, "Generel error caught deleting rooms by date: " + ex.Message);
             }
 
-            return Ok(new {message = "Rooms got deleted!", rooms});
+            return Ok(new { message = "Rooms got deleted!", rooms });
         }
 
         /// <summary>
@@ -333,6 +333,37 @@ namespace API.Controllers
         private bool RoomExists(string id)
         {
             return _context.Rooms.Any(e => e.Id == id);
+        }
+
+        /// <summary>
+        /// Returns rooms that a certain user has booked
+        /// </summary>
+        /// <param name="userId">The ID of the user</param>
+        /// <returns>An internet code and a list of booked rooms</returns>
+        [HttpGet("rooms/userId")]
+        public async Task<ActionResult<IEnumerable<Room>>> GetRoomsByUserId(string userId)
+        {
+            try
+            {
+                List<Room> rooms = await _context.Rooms
+                    .Where(r => _context.BookingsRooms
+                        .Any(br => br.RoomId == r.Id &&
+                                   _context.Bookings.Any(b => b.Id == br.BookingId && b.UserId == userId)))
+                    .ToListAsync();
+                
+                return Ok(new
+                {
+                    message = rooms.Count == 0
+                        ? $"User {userId} has not booked any rooms"
+                        : $"User {userId} has booked the following rooms",
+                    rooms
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Generel error caught getting rooms by user id: " + ex.Message);
+                return StatusCode(500, "Generel error caught getting rooms by user id: " + ex.Message);
+            }
         }
     }
 }
