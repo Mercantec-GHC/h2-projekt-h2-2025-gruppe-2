@@ -82,6 +82,68 @@ namespace API.Controllers
                 return BadRequest("An error has occured: " + e.Message);
             }
         }
+        
+        // GET: api/Rooms/5
+        /// <summary>
+        /// Gets a single room with the given ID
+        /// </summary>
+        /// <param name="id">The rooms ID</param>
+        /// <returns></returns>
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Room>> GetRoom(string id)
+        {
+            var room = await _context.Rooms.FindAsync(id);
+
+            if (room == null)
+            {
+                return NotFound();
+            }
+
+            return room;
+        }
+        
+        /// <summary>
+        /// Retrieves all rooms based on availability, within the specified date range (YYYY-MM-DDTHH:MM:SS/2025-08-18T10:30:00).
+        /// </summary>
+        /// <param name="startDate">The start date of the requested availability period</param>
+        /// <param name="endDate">The end date of the requested availability period</param>
+        /// <param name="available">Get the rooms based on if they are available or unavailable</param>
+        /// <returns>A response code and a list of available/unavailable rooms</returns>
+        /// <response code="200">List of available/unavailable rooms found</response>
+        /// <response code="400">End date can't be lower than the starting date</response>
+        [HttpGet("availability")]
+        public async Task<ActionResult<IEnumerable<Room>>> GetRoomsByAvailability(DateTime startDate, DateTime endDate,
+            bool available = true)
+        {
+            // 2025-08-18T10:30:00
+            // Formets to UTC, for PostgreSQL compatability.
+            startDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
+            endDate = DateTime.SpecifyKind(endDate, DateTimeKind.Utc);
+
+            if (startDate >= endDate)
+                return BadRequest("startDate must be earlier than endDate.");
+
+            // Gets the IDs of rooms that are occupied from the date range.
+            List<string> unavailableRoomIds = await _context.BookingsRooms
+                .Where(br =>
+                    br.Booking.OccupiedFrom < endDate &&
+                    br.Booking.OccupiedTill > startDate)
+                .Select(br => br.RoomId)
+                .ToListAsync();
+
+            // Gets rooms where IDs from the unavailable list are included or excluded.
+            List<Room> availableRooms = await _context.Rooms
+                .AsNoTracking() // Since we are only reading the data, we don't track it.
+                .Where(room => available ? !unavailableRoomIds.Contains(room.Id) : unavailableRoomIds.Contains(room.Id))
+                .ToListAsync();
+
+            if (availableRooms.Count == 0)
+                return Ok(available
+                    ? "All rooms are unavailable in the specified date range."
+                    : "All rooms are available in the specified date range.");
+
+            return Ok(availableRooms);
+        }
 
         // PATCH: api/Rooms/{id}/clean
         /// <summary>
@@ -105,7 +167,6 @@ namespace API.Controllers
             return Ok(new { room.Id, room.Clean });
         }
 
-
         // PATCH: api/Rooms/{id}/unclean
         /// <summary>
         /// Changes a room to be unclean with the given ID
@@ -126,25 +187,6 @@ namespace API.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { room.Id, room.Clean });
-        }
-
-        // GET: api/Rooms/5
-        /// <summary>
-        /// Gets a single room with the given ID
-        /// </summary>
-        /// <param name="id">The rooms ID</param>
-        /// <returns></returns>
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Room>> GetRoom(string id)
-        {
-            var room = await _context.Rooms.FindAsync(id);
-
-            if (room == null)
-            {
-                return NotFound();
-            }
-
-            return room;
         }
 
         /// <summary>
@@ -247,7 +289,7 @@ namespace API.Controllers
         /// <param name="startDate">Starting date</param>
         /// <param name="endDate">Ending date</param>
         /// <returns>No content if successful, or 404 if not found.</returns>
-        [HttpDelete("rooms")]
+        [HttpDelete("date")]
         public async Task<IActionResult> DeleteRoomsByDate(DateTime startDate, DateTime endDate)
         {
             DateTime utcStartDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
@@ -280,49 +322,6 @@ namespace API.Controllers
             }
 
             return Ok(new { message = "Rooms got deleted!", rooms });
-        }
-
-        /// <summary>
-        /// Retrieves all rooms based on availability, within the specified date range (YYYY-MM-DDTHH:MM:SS/2025-08-18T10:30:00).
-        /// </summary>
-        /// <param name="startDate">The start date of the requested availability period</param>
-        /// <param name="endDate">The end date of the requested availability period</param>
-        /// <param name="available">Get the rooms based on if they are available or unavailable</param>
-        /// <returns>A response code and a list of available/unavailable rooms</returns>
-        /// <response code="200">List of available/unavailable rooms found</response>
-        /// <response code="400">End date can't be lower than the starting date</response>
-        [HttpGet("availability")]
-        public async Task<ActionResult<IEnumerable<Room>>> GetRoomsByAvailability(DateTime startDate, DateTime endDate,
-            bool available = true)
-        {
-            // 2025-08-18T10:30:00
-            // Formets to UTC, for PostgreSQL compatability.
-            startDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
-            endDate = DateTime.SpecifyKind(endDate, DateTimeKind.Utc);
-
-            if (startDate >= endDate)
-                return BadRequest("startDate must be earlier than endDate.");
-
-            // Gets the IDs of rooms that are occupied from the date range.
-            List<string> unavailableRoomIds = await _context.BookingsRooms
-                .Where(br =>
-                    br.Booking.OccupiedFrom < endDate &&
-                    br.Booking.OccupiedTill > startDate)
-                .Select(br => br.RoomId)
-                .ToListAsync();
-
-            // Gets rooms where IDs from the unavailable list are included or excluded.
-            List<Room> availableRooms = await _context.Rooms
-                .AsNoTracking() // Since we are only reading the data, we don't track it.
-                .Where(room => available ? !unavailableRoomIds.Contains(room.Id) : unavailableRoomIds.Contains(room.Id))
-                .ToListAsync();
-
-            if (availableRooms.Count == 0)
-                return Ok(available
-                    ? "All rooms are unavailable in the specified date range."
-                    : "All rooms are available in the specified date range.");
-
-            return Ok(availableRooms);
         }
 
         /// <summary>
