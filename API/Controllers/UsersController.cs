@@ -72,6 +72,37 @@ public class UsersController : ControllerBase
 
         return user;
     }
+    
+    /// <summary>
+    /// Authenticates a user and returns a JWT token if successful.
+    /// </summary>
+    /// <returns>A JWT token and user information if authentication is successful, or 401 if credentials are invalid.</returns>
+    [Authorize(Roles = "User,Admin,CleaningStaff,Reception")]
+    [HttpGet("me")]
+    public IActionResult GetCurrentUser()
+    {
+        // 1. Get user ID from token (typically set as 'sub' claim in JWT)
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+            return Unauthorized("User id not found in token.");
+
+        var user = _context.Users
+            .Include(u => u.Roles) // inkluder relaterede data hvis nødvendigt
+            .FirstOrDefault(u => u.Id == userId);
+
+        if (user == null)
+            return NotFound("User was not found in database.");
+
+        // 3. Returnér ønskede data - fx til profilsiden
+        return Ok(new
+        {
+            user.Id,
+            user.Email,
+            user.CreatedAt,
+            Roles = user.Roles?.Name
+        });
+    }
 
     /// <summary>
     /// Updates an existing user.
@@ -226,36 +257,7 @@ public class UsersController : ControllerBase
         });
     }
 
-    /// <summary>
-    /// Authenticates a user and returns a JWT token if successful.
-    /// </summary>
-    /// <returns>A JWT token and user information if authentication is successful, or 401 if credentials are invalid.</returns>
-    [Authorize(Roles = "User,Admin,CleaningStaff,Reception")]
-    [HttpGet("me")]
-    public IActionResult GetCurrentUser()
-    {
-        // 1. Get user ID from token (typically set as 'sub' claim in JWT)
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (userId == null)
-            return Unauthorized("User id not found in token.");
-
-        var user = _context.Users
-            .Include(u => u.Roles) // inkluder relaterede data hvis nødvendigt
-            .FirstOrDefault(u => u.Id == userId);
-
-        if (user == null)
-            return NotFound("User was not found in database.");
-
-        // 3. Returnér ønskede data - fx til profilsiden
-        return Ok(new
-        {
-            user.Id,
-            user.Email,
-            user.CreatedAt,
-            Roles = user.Roles?.Name
-        });
-    }
 
     /// <summary>
     /// Updates the role of a specified user.
@@ -269,7 +271,7 @@ public class UsersController : ControllerBase
     /// <response code="200">Role for the user was updated successfully.</response>
     /// <response code="400">User or role was not found, or the update failed.</response>
     [Authorize(Roles = "Admin")]
-    [HttpPatch("edit/role")]
+    [HttpPatch("role/{id}")]
     public async Task<IActionResult> ChangeRole(string id, string roleName)
     {
         User? user = await _context.Users.FindAsync(id);
@@ -312,6 +314,51 @@ public class UsersController : ControllerBase
 
         return Ok(
             $"Role for user {id} got updated from {user.Roles.ResolveRoleId(beforeRoleId)} to {user.Roles.ResolveRoleId(user.RoleId)}");
+    }
+    
+    /// <summary>
+    /// Changes the password of a specified user with BCrypt.
+    /// </summary>
+    /// <param name="id">The unique identifier of the user whose password will be changed.</param>
+    /// <param name="newPassword">The new plain-text password to be set for the user.</param>
+    /// <returns>
+    /// <para>
+    /// 200 OK if the user's password was successfully changed.<br/>
+    /// 404 NotFound if the user with the specified ID does not exist.<br/>
+    /// 400 BadRequest if an error occurs while updating the password in the database.
+    /// </para>
+    /// </returns>
+    [Authorize(Roles = "Admin")]
+    [HttpPatch("password/{id}")]
+    public async Task<IActionResult> ChangePassword(string id, string newPassword)
+    {
+        var user = await _context.Users.FindAsync(id);
+        if (user == null)
+            return NotFound($"User with '{id}' not found.");
+        string salt = BCrypt.Net.BCrypt.GenerateSalt(_workFactor);
+        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword, salt);
+
+        user.HashedPassword = hashedPassword;
+        user.UpdatedAt = _timeService.GetCopenhagenTime();
+        user.Salt = salt;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex)
+        {
+            return StatusCode(500, "Internal server error :(: " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, "Unaccounted internal server error :(: " + ex.Message);
+        }
+
+        return Ok(new
+        {
+            message = $"Users {id} password changed"
+        });
     }
 
     /// <summary>
@@ -378,52 +425,6 @@ public class UsersController : ControllerBase
             }
         });
     }
-
-    /// <summary>
-    /// Changes the password of a specified user with BCrypt.
-    /// </summary>
-    /// <param name="userId">The unique identifier of the user whose password will be changed.</param>
-    /// <param name="newPassword">The new plain-text password to be set for the user.</param>
-    /// <returns>
-    /// <para>
-    /// 200 OK if the user's password was successfully changed.<br/>
-    /// 404 NotFound if the user with the specified ID does not exist.<br/>
-    /// 400 BadRequest if an error occurs while updating the password in the database.
-    /// </para>
-    /// </returns>
-    [Authorize(Roles = "Admin")]
-    [HttpPut("edit/password")]
-    public async Task<IActionResult> ChangePassword(string userId, string newPassword)
-    {
-        var user = await _context.Users.FindAsync(userId);
-        if (user == null)
-            return NotFound($"User with '{userId}' not found.");
-        string salt = BCrypt.Net.BCrypt.GenerateSalt(_workFactor);
-        string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newPassword, salt);
-
-        user.HashedPassword = hashedPassword;
-        user.UpdatedAt = _timeService.GetCopenhagenTime();
-        user.Salt = salt;
-
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateException ex)
-        {
-            return StatusCode(500, "Internal server error :(: " + ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, "Unaccounted internal server error :(: " + ex.Message);
-        }
-
-        return Ok(new
-        {
-            message = $"Users {userId} password changed"
-        });
-    }
-
 
     /// <summary>
     /// Logged-in user changes own password (requires current password).

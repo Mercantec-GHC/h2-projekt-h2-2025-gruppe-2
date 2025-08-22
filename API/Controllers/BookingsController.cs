@@ -42,6 +42,31 @@ namespace API.Controllers
         }
 
         /// <summary>
+        /// Gets all the bookings of a user and the rooms associated with the bookings
+        /// </summary>
+        /// <param name="id">User ID</param>
+        /// <returns>A list of a users bookings and its associated rooms and/or a response code</returns>
+        /// <response code="200">List of bookings and rooms for a user</response>
+        [HttpGet("user/{id}")]
+        // [Authorize(Roles = "User,Admin")]
+        public async Task<ActionResult<BookingRoomsDto>> GetBookingsAndRoomsByUserIdAsync(string id)
+        {
+            List<Booking> bookings = await _context.Bookings
+                .Include(b => b.User)
+                .Include(b => b.BookingRooms)
+                .ThenInclude(br => br.Room)
+                .Where(b => b.UserId == id)
+                .ToListAsync();
+
+            var bookingsDto = BookingMappings.ToBookingRoomsDto(bookings);
+            return Ok(new
+            {
+                message = $"Bookings and rooms for user {id} retrieved",
+                bookingsDto
+            });
+        }
+
+        /// <summary>
         /// Gets a specific booking by its ID.
         /// </summary>
         /// <param name="id">The ID of the booking to retrieve.</param>
@@ -95,7 +120,7 @@ namespace API.Controllers
         }
 
         /// <summary>
-        /// Creates a new booking and links it to a room.
+        /// Creates a new booking and links it to the rooms.
         /// </summary>
         /// <param name="dto">The booking data transfer object containing booking details and room ID.</param>
         /// <returns>A success message if the booking is created.</returns>
@@ -180,25 +205,6 @@ namespace API.Controllers
         private bool BookingExists(string id)
         {
             return _context.Bookings.Any(e => e.Id == id);
-        }
-
-        [HttpGet("user/bookings")]
-        // [Authorize(Roles = "User,Admin")]
-        public async Task<ActionResult<BookingRoomsDto>> GetBookingsAndRoomsByUserIdAsync(string userId)
-        {
-            var bookings = await _context.Bookings
-                .Include(b => b.User)
-                .Include(b => b.BookingRooms)
-                    .ThenInclude(br => br.Room)
-                .Where(b => b.UserId == userId)
-                .ToListAsync();
-
-            var bookingsDto = BookingMappings.ToBookingRoomsDto(bookings);
-            return Ok(new
-            {
-                message = $"Bookings and rooms for user {userId} retrieved",
-                bookingsDto
-            });
         }
     }
 }
