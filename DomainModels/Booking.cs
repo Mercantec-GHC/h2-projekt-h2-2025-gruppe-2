@@ -63,3 +63,16 @@ public class BookingPostDto
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
+
+public class BookingRoomsDto()
+{
+    public string BookingId { get; set; }
+    public int Adults { get; set; }
+    public int Children { get; set; }
+    public bool RoomService { get; set; }
+    public bool Breakfast { get; set; }
+    public bool Dinner { get; set; }
+    public DateTime OccupiedFrom { get; set; }
+    public DateTime OccupiedTill { get; set; }
+    public List<string> RoomIds { get; set; }
+}
