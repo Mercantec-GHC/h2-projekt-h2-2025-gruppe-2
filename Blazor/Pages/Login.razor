@@ -51,7 +51,7 @@
         try
         {
             var (status, msg) = await ApiService.RegisterUser(_loginModel._email, _loginModel._username, _loginModel._password);
-            await JS.InvokeVoidAsync("alert" + msg);
+            await JS.InvokeVoidAsync("alert", msg);
         }
         catch (Exception ex)
         {

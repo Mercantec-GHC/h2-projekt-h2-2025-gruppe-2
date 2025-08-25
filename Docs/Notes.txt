@@ -1,1 +1,8 @@
+25/08
 EditForm and validations require a Class and Properties, not fields. You can set a field to be a property by adding "{ get; set; }".
+
+I accidentially wrote:
+await JS.InvokeVoidAsync("alert" + msg);
+Instead of:
+await JS.InvokeVoidAsync("alert", msg);
+The error message was confusing, so I had a lot of trouble with it.

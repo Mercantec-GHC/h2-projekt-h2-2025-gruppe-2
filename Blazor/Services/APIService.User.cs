@@ -24,18 +24,13 @@ public partial class APIService
                 var errorMsg = await response.Content.ReadAsStringAsync();
                 Console.WriteLine("Test: " + errorMsg);
                 return (false,
-                    "Failed to create new user! Code: " + response.StatusCode + " Message: " + errorMsg);
+                    "Failed to create new user! Code: " + response.StatusCode + ", " + errorMsg);
             }
-        }
-        catch (HttpRequestException ex)
-        {
-            Console.WriteLine(ex.Message);
-            return (false, "HttpRequestException caught:  " + ex.Message);
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
-            return (false, "Generel exception caught:  " + ex.Message);
+            return (false, "Generel exception caught, please contact support:  " + ex.Message);
         }
     }
 }
