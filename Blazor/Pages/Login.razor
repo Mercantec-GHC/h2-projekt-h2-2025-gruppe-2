@@ -1,0 +1,86 @@
+﻿@page "/login"
+@using System.ComponentModel.DataAnnotations
+@inject APIService ApiService
+
+@if (!string.IsNullOrEmpty(_alertMessage))
+{
+    <div class="alert alert-success" role="alert">
+        @_alertMessage
+    </div>
+}
+
+<EditForm Model="@_loginModel" OnValidSubmit="RegisterUser">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+    <label>
+        Email
+    </label>
+    <InputText @bind-Value="_loginModel._email"></InputText>
+
+    <label>
+        Password
+    </label>
+    <InputText @bind-Value="_loginModel._password"></InputText>
+
+    <label>
+        Repeat Password
+    </label>
+    <InputText @bind-Value="_loginModel._samePassword"></InputText>
+
+    <label>
+        Username
+    </label>
+    <InputText @bind-Value="_loginModel._username"></InputText>
+
+    <button type="submit">Click</button>
+</EditForm>
+
+@code {
+    LoginModel _loginModel = new();
+    [Inject] public IJSRuntime JS { get; set; }
+    
+    private string? _alertMessage;
+
+    private async Task RegisterUser()
+    {
+        Console.WriteLine("Email: " + _loginModel._email);
+        Console.WriteLine("Password: " + _loginModel._password);
+        Console.WriteLine("Same password: " + _loginModel._samePassword);
+        Console.WriteLine("user: " + _loginModel._username);
+        
+        try
+        {
+            var (status, msg) = await ApiService.RegisterUser(_loginModel._email, _loginModel._username, _loginModel._password);
+            await JS.InvokeVoidAsync("alert" + msg);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Generel exception caught registering user: " + ex.Message);
+            await JS.InvokeVoidAsync("alert", "Generel exception caught registering user: " + ex.Message);
+            return;
+        }
+    }
+    
+    public class LoginModel
+    {
+        [EmailAddress(ErrorMessage = "Invalid Email Address")]
+        [Required(ErrorMessage = "Email is required")]
+        public string _email { get; set; } = "";
+
+        [Required(ErrorMessage = "Password is required")]
+        [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
+            ErrorMessage =
+                "Password must contain at least one number, one uppercase letter, one lowercase letter, and one special character")]
+        public string _password { get; set; } = "";
+
+
+        [Required(ErrorMessage = "Please confirm password")]
+        [Compare("_password", ErrorMessage = "Passwords do not match")]
+        public string _samePassword { get; set; } = "";
+
+        [Required(ErrorMessage = "Enter identifiable name")]
+        public string _username = "";
+    }
+
+}

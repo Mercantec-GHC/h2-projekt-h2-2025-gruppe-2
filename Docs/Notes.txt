@@ -1,0 +1,1 @@
+EditForm and validations require a Class and Properties, not fields. You can set a field to be a property by adding "{ get; set; }".
