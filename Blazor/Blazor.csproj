@@ -16,4 +16,10 @@
     <ProjectReference Include="..\DomainModels\DomainModels.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Services\APIService.User.cs">
+      <DependentUpon>APIService.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
 </Project>
