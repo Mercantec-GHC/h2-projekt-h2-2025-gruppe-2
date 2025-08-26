@@ -1,67 +1,62 @@
-﻿@page "/login"
-@using System.ComponentModel.DataAnnotations
+﻿@using System.ComponentModel.DataAnnotations
 @inject APIService ApiService
 @inject LocalStorageService LocalStorageService
 
-@if (!string.IsNullOrEmpty(_alertMessage))
-{
-    <div class="alert alert-success" role="alert">
-        @_alertMessage
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1>Login</h1>
+            </div>
+            <EditForm Model="@_loginDto" OnValidSubmit="LoginUser">
+                <DataAnnotationsValidator/>
+                <ValidationSummary/>
+
+                <label>
+                    Email
+                </label>
+                <InputText @bind-Value="_loginDto.Email"/>
+
+                <label>
+                    Password
+                </label>
+                <InputText @bind-Value="_loginDto.Password"/>
+
+                <button>Click</button>
+            </EditForm>
+
+            <h1>Register</h1>
+            <EditForm Model="@_loginModel" OnValidSubmit="RegisterUser">
+                <DataAnnotationsValidator/>
+                <ValidationSummary/>
+                <label>
+                    Email
+                </label>
+                <InputText @bind-Value="_loginModel._email"></InputText>
+
+                <label>
+                    Password
+                </label>
+                <InputText @bind-Value="_loginModel._password"></InputText>
+
+                <label>
+                    Repeat Password
+                </label>
+                <InputText @bind-Value="_loginModel._samePassword"></InputText>
+
+                <label>
+                    Username
+                </label>
+                <InputText @bind-Value="_loginModel._username"></InputText>
+
+                <button type="submit">Click</button>
+            </EditForm>
+            <div class="modal-body"></div>
+            <button class="btn btn-danger" @onclick="LogUserOut">Logout</button>
+        </div>
     </div>
-}
+</div>
 
-@if (_isUserLoggedIn)
-{
-    <h1>User logged in!</h1>
-}
-
-<h1>Login</h1>
-<EditForm Model="@_loginDto" OnValidSubmit="LoginUser">
-    <DataAnnotationsValidator/>
-    <ValidationSummary/>
-
-    <label>
-        Email
-    </label>
-    <InputText @bind-Value="_loginDto.Email"/>
-
-    <label>
-        Password
-    </label>
-    <InputText @bind-Value="_loginDto.Password"/>
-
-    <button>Click</button>
-</EditForm>
-
-<h1>Register</h1>
-<EditForm Model="@_loginModel" OnValidSubmit="RegisterUser">
-    <DataAnnotationsValidator/>
-    <ValidationSummary/>
-    <label>
-        Email
-    </label>
-    <InputText @bind-Value="_loginModel._email"></InputText>
-
-    <label>
-        Password
-    </label>
-    <InputText @bind-Value="_loginModel._password"></InputText>
-
-    <label>
-        Repeat Password
-    </label>
-    <InputText @bind-Value="_loginModel._samePassword"></InputText>
-
-    <label>
-        Username
-    </label>
-    <InputText @bind-Value="_loginModel._username"></InputText>
-
-    <button type="submit">Click</button>
-</EditForm>
-
-<button @onclick="LoadToken">Cliclk</button>
-<button class="btn btn-danger" @onclick="LogUserOut">Logout</button>
 
 @code {
     LoginModel _loginModel = new();
@@ -123,11 +118,6 @@
         }
     }
 
-    private async Task LoadToken()
-    {
-        Console.WriteLine("Test: " + await LocalStorageService.GetItemFromStorageAsync("authToken"));
-    }
-
     private async Task LoginUser()
     {
         Console.WriteLine($"Logging in with {_loginDto.Email} and {_loginDto.Password}");
@@ -157,7 +147,7 @@
         StateHasChanged();
     }
 
-    public class LoginModel
+    private class LoginModel
     {
         [EmailAddress(ErrorMessage = "Invalid Email Address")]
         [Required(ErrorMessage = "Email is required")]

@@ -62,17 +62,41 @@ public partial class APIService
         catch (NullReferenceException ex)
         {
             Console.WriteLine("Failed to parse JSON response, JSON is null: " + ex.Message);
-            return (false, "Failed to parse JSON response, JSON is null: " + ex.Message, "");      
+            return (false, "Failed to parse JSON response, JSON is null: " + ex.Message, "");
         }
         catch (JsonException ex)
         {
             Console.WriteLine("Failed to parse JSON response: " + ex.Message);
-            return (false, "Failed to parse JSON response: " + ex.Message, "");       
+            return (false, "Failed to parse JSON response: " + ex.Message, "");
         }
         catch (Exception ex)
         {
             Console.WriteLine("Generel exception caught, please contact support:" + ex.Message);
             return (false, "Generel exception caught, please contact support:  " + ex.Message, "");
+        }
+    }
+
+    public async Task<(bool status, string msg)> ValidateToken(string token)
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "api/Users/me");
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await _httpClient.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var tokenResponse = await response.Content.ReadFromJsonAsync<UserLoginDto>();
+                return (true, "Token is valid");
+            }
+
+            return (false, "Token is invalid");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return (false, "Generel exception caught, validating token: " + ex.Message);
         }
     }
 }
