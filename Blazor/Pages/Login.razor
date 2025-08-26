@@ -75,15 +75,15 @@
     protected override async Task OnInitializedAsync()
     {
         var token = await LocalStorageService.GetItemFromStorageAsync("authToken");
-        if (!string.IsNullOrEmpty(token))
-        {
-            _isUserLoggedIn = true;
-            Console.WriteLine("User is logged in");
-        }
-        else
+        if (string.IsNullOrEmpty(token))
         {
             Console.WriteLine("User is not logged in");
+            _isUserLoggedIn = false;
+            return;
         }
+
+        _isUserLoggedIn = true;
+        Console.WriteLine("User is logged in");
     }
 
     private async Task LogUserOut()
