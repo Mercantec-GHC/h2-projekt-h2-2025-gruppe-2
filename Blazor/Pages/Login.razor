@@ -1,0 +1,171 @@
+﻿@page "/login"
+@using System.ComponentModel.DataAnnotations
+@inject APIService ApiService
+@inject LocalStorageService LocalStorageService
+
+@if (!string.IsNullOrEmpty(_alertMessage))
+{
+    <div class="alert alert-success" role="alert">
+        @_alertMessage
+    </div>
+}
+
+@if (_isUserLoggedIn)
+{
+    <h1>User logged in!</h1>
+}
+
+<h1>Login</h1>
+<EditForm Model="@_loginDto" OnValidSubmit="LoginUser">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+
+    <label>
+        Email
+    </label>
+    <InputText @bind-Value="_loginDto.Email"/>
+
+    <label>
+        Password
+    </label>
+    <InputText @bind-Value="_loginDto.Password"/>
+
+    <button>Click</button>
+</EditForm>
+
+<h1>Register</h1>
+<EditForm Model="@_loginModel" OnValidSubmit="RegisterUser">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+    <label>
+        Email
+    </label>
+    <InputText @bind-Value="_loginModel._email"></InputText>
+
+    <label>
+        Password
+    </label>
+    <InputText @bind-Value="_loginModel._password"></InputText>
+
+    <label>
+        Repeat Password
+    </label>
+    <InputText @bind-Value="_loginModel._samePassword"></InputText>
+
+    <label>
+        Username
+    </label>
+    <InputText @bind-Value="_loginModel._username"></InputText>
+
+    <button type="submit">Click</button>
+</EditForm>
+
+<button @onclick="LoadToken">Cliclk</button>
+<button class="btn btn-danger" @onclick="LogUserOut">Logout</button>
+
+@code {
+    LoginModel _loginModel = new();
+    LoginDto _loginDto = new();
+    bool _isUserLoggedIn;
+    [Inject] public required IJSRuntime JS { get; set; }
+    Dictionary<string, string> _claims;
+
+    private string? _alertMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await LocalStorageService.GetItemFromStorageAsync("authToken");
+        if (string.IsNullOrEmpty(token))
+        {
+            Console.WriteLine("User is not logged in");
+            _isUserLoggedIn = false;
+            return;
+        }
+
+        _isUserLoggedIn = true;
+        Console.WriteLine("User is logged in");
+    }
+
+    private async Task LogUserOut()
+    {
+        await LocalStorageService.RemoveItemFromStorageAsync("authToken");
+        _isUserLoggedIn = false;
+        StateHasChanged();
+    }
+
+    private async Task RegisterUser()
+    {
+        Console.WriteLine("Email: " + _loginModel._email);
+        Console.WriteLine("Password: " + _loginModel._password);
+        Console.WriteLine("Same password: " + _loginModel._samePassword);
+        Console.WriteLine("user: " + _loginModel._username);
+
+        try
+        {
+            var (status, msg) = await ApiService.RegisterUser(_loginModel._email, _loginModel._username, _loginModel._password);
+            await JS.InvokeVoidAsync("alert", msg);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Generel exception caught registering user: " + ex.Message);
+            await JS.InvokeVoidAsync("alert", "Generel exception caught registering user: " + ex.Message);
+            return;
+        }
+    }
+
+    private async Task LoadToken()
+    {
+        Console.WriteLine("Test: " + await LocalStorageService.GetItemFromStorageAsync("authToken"));
+    }
+
+    private async Task LoginUser()
+    {
+        Console.WriteLine($"Logging in with {_loginDto.Email} and {_loginDto.Password}");
+
+        try
+        {
+            var (status, msg, token) = await ApiService.LoginUser(_loginDto.Email, _loginDto.Password);
+            await JS.InvokeVoidAsync("alert", msg);
+            if (status)
+            {
+                if (!string.IsNullOrEmpty(token))
+                {
+                    await LocalStorageService.SaveItemToStorageAsync("authToken", token);
+                    _isUserLoggedIn = true;
+                }
+                else
+                    await JS.InvokeVoidAsync("alert", "Token is null");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Generel exception caught loging user in: " + ex.Message);
+            await JS.InvokeVoidAsync("alert", "Generel exception caught loging user in: " + ex.Message);
+            return;
+        }
+
+        StateHasChanged();
+    }
+
+    public class LoginModel
+    {
+        [EmailAddress(ErrorMessage = "Invalid Email Address")]
+        [Required(ErrorMessage = "Email is required")]
+        public string _email { get; set; } = "";
+
+        [Required(ErrorMessage = "Password is required")]
+        [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
+            ErrorMessage =
+                "Password must contain at least one number, one uppercase letter, one lowercase letter, and one special character")]
+        public string _password { get; set; } = "";
+
+        [Required(ErrorMessage = "Please confirm password")]
+        [Compare("_password", ErrorMessage = "Passwords do not match")]
+        public string _samePassword { get; set; } = "";
+
+        [Required(ErrorMessage = "Enter identifiable name")]
+        public string _username = "";
+    }
+
+}

@@ -1,0 +1,14 @@
+25/08
+EditForm and validations require a Class and Properties, not fields. You can set a field to be a property by adding "{ get; set; }".
+
+I accidentially wrote:
+await JS.InvokeVoidAsync("alert" + msg);
+Instead of:
+await JS.InvokeVoidAsync("alert", msg);
+The error message was confusing, so I had a lot of trouble with it.
+
+Our JavaScript functions are loaded very inconsistently, and after multiple tests of moving them in and out of specific
+files, I dont know what to do.
+Edit: They are now back in the script.js file, which they were originally, but now they dont cause problems for some fucking reason.
+
+Need to know how we should handle the JWT once it is on the local storage.
