@@ -1,12 +1,18 @@
 ﻿@page "/login"
 @using System.ComponentModel.DataAnnotations
 @inject APIService ApiService
+@inject LocalStorageService LocalStorageService
 
 @if (!string.IsNullOrEmpty(_alertMessage))
 {
     <div class="alert alert-success" role="alert">
         @_alertMessage
     </div>
+}
+
+@if (_isUserLoggedIn)
+{
+    <h1>User logged in!</h1>
 }
 
 <h1>Login</h1>
@@ -26,7 +32,6 @@
 
     <button>Click</button>
 </EditForm>
-
 
 <h1>Register</h1>
 <EditForm Model="@_loginModel" OnValidSubmit="RegisterUser">
@@ -55,28 +60,38 @@
     <button type="submit">Click</button>
 </EditForm>
 
-
-<script>
-    window.loginHelpers = {
-        saveToken: function (name, value) {
-            console.log("Saving " + value + " as " + name);
-            localStorage.setItem(name, value.toString());
-        },
-
-        loadScore: function () {
-            const score = localStorage.getItem("CurrencyGuesserHighScore");
-            return score ? parseInt(score) : 0;
-        }
-    };
-
-</script>
+<button @onclick="LoadToken">Cliclk</button>
+<button class="btn btn-danger" @onclick="LogUserOut">Logout</button>
 
 @code {
     LoginModel _loginModel = new();
     LoginDto _loginDto = new();
+    bool _isUserLoggedIn;
     [Inject] public required IJSRuntime JS { get; set; }
+    Dictionary<string, string> _claims;
 
     private string? _alertMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await LocalStorageService.GetItemFromStorageAsync("authToken");
+        if (string.IsNullOrEmpty(token))
+        {
+            Console.WriteLine("User is not logged in");
+            _isUserLoggedIn = false;
+            return;
+        }
+
+        _isUserLoggedIn = true;
+        Console.WriteLine("User is logged in");
+    }
+
+    private async Task LogUserOut()
+    {
+        await LocalStorageService.RemoveItemFromStorageAsync("authToken");
+        _isUserLoggedIn = false;
+        StateHasChanged();
+    }
 
     private async Task RegisterUser()
     {
@@ -98,9 +113,9 @@
         }
     }
 
-    private async Task SaveToLocalStorage(string name, string value)
+    private async Task LoadToken()
     {
-        await JS.InvokeVoidAsync("loginHelpers.saveToken", name, value);
+        Console.WriteLine("Test: " + await LocalStorageService.GetItemFromStorageAsync("authToken"));
     }
 
     private async Task LoginUser()
@@ -110,17 +125,16 @@
         try
         {
             var (status, msg, token) = await ApiService.LoginUser(_loginDto.Email, _loginDto.Password);
+            await JS.InvokeVoidAsync("alert", msg);
             if (status)
             {
-                await JS.InvokeVoidAsync("alert", msg);
                 if (!string.IsNullOrEmpty(token))
-                    await SaveToLocalStorage("authToken", token);
+                {
+                    await LocalStorageService.SaveItemToStorageAsync("authToken", token);
+                    _isUserLoggedIn = true;
+                }
                 else
                     await JS.InvokeVoidAsync("alert", "Token is null");
-            }
-            else
-            {
-                await JS.InvokeVoidAsync("alert", msg);
             }
         }
         catch (Exception ex)
@@ -129,6 +143,8 @@
             await JS.InvokeVoidAsync("alert", "Generel exception caught loging user in: " + ex.Message);
             return;
         }
+
+        StateHasChanged();
     }
 
     public class LoginModel
@@ -143,7 +159,6 @@
             ErrorMessage =
                 "Password must contain at least one number, one uppercase letter, one lowercase letter, and one special character")]
         public string _password { get; set; } = "";
-
 
         [Required(ErrorMessage = "Please confirm password")]
         [Compare("_password", ErrorMessage = "Passwords do not match")]
