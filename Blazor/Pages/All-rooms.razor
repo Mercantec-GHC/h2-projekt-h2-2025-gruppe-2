@@ -23,7 +23,8 @@ else
         @foreach (var r in rooms)
         {
             <div class="col">
-                <div class="card h-100 shadow-sm">
+                <a href="@($"/room/{r.Id}")"
+                   class="card h-100 shadow-sm text-decoration-none text-reset d-block card-hover">
                     <img class="card-img-top room-img"
                          alt="Room @r.Id"
                          src="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fcache.marriott.com%2Fmarriottassets%2Fmarriott%2FLONPL%2Flonpl-guestroom-0117-hor-clsc.jpg%3Finterpolation%3Dprogressive-bilinear%26&f=1&nofb=1&ipt=ebe42a9838514aada588f06e57dcb5cd12e793934a0fcacb6a5e5df2d252dbf8" />
@@ -39,10 +40,9 @@ else
                             </li>
                             <li><strong>Price:</strong> @r.Price.ToString("C")</li>
                         </ul>
-                        <div class="mt-auto">
-                        </div>
+                        <div class="mt-auto"></div>
                     </div>
-                </div>
+                </a>
             </div>
         }
     </div>

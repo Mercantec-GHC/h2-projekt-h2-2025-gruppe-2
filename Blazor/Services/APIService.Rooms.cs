@@ -12,3 +12,12 @@ public partial class APIService
         return res ?? new();
     }
 }
+
+public partial class APIService
+{
+    public async Task<Room> GetRoomById(int id, CancellationToken ct = default)
+    {
+        var res = await _httpClient.GetFromJsonAsync<Room>($"api/Rooms/{id}");
+        return res ?? new();
+    }
+}
