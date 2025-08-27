@@ -100,7 +100,10 @@ public class UsersController : ControllerBase
             user.Id,
             user.Email,
             user.CreatedAt,
-            Roles = user.Roles?.Name
+            role = user.Roles?.Name,
+            username = user.Username,
+            user.LastLogin,
+            user.UpdatedAt
         });
     }
 
