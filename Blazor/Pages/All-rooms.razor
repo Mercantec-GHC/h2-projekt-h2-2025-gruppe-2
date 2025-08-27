@@ -1,0 +1,71 @@
+@page "/all-rooms"
+@using DomainModels
+@using Blazor.Services
+@inject APIService API
+
+<h3 class="mb-3">Rooms</h3>
+
+@if (error is not null)
+{
+    <div class="alert alert-danger">@error</div>
+}
+else if (loading)
+{
+    <div class="text-muted">Counting all your available rooms!...</div>
+}
+else if (rooms.Count == 0)
+{
+    <div class="alert alert-info">No rooms found D:</div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+        @foreach (var r in rooms)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <img class="card-img-top room-img"
+                         alt="Room @r.Id"
+                         src="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fcache.marriott.com%2Fmarriottassets%2Fmarriott%2FLONPL%2Flonpl-guestroom-0117-hor-clsc.jpg%3Finterpolation%3Dprogressive-bilinear%26&f=1&nofb=1&ipt=ebe42a9838514aada588f06e57dcb5cd12e793934a0fcacb6a5e5df2d252dbf8" />
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title mb-2">Room @r.Id</h5>
+                        <ul class="list-unstyled small flex-grow-1 mb-3">
+                            <li><strong>Beds:</strong> @r.Beds</li>
+                            <li>
+                                <strong>WiFi:</strong>
+                                <span class="badge @(r.WiFi ? "bg-primary" : "bg-secondary")">
+                                    @(r.WiFi ? "Yes" : "No")
+                                </span>
+                            </li>
+                            <li><strong>Price:</strong> @r.Price.ToString("C")</li>
+                        </ul>
+                        <div class="mt-auto">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    List<Room> rooms = new();
+    bool loading = true;
+    string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            rooms = await API.GetRooms();
+        }
+        catch (Exception ex)
+        {
+            error = "Failed: " + ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+}
