@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace DomainModels;
 
@@ -125,5 +126,6 @@ public class UserLoginDto
     public string id { get; set; }
     public string email { get; set; }
     public string username { get; set; }
+    [JsonPropertyName("roles")]
     public string role { get; set; }
 }

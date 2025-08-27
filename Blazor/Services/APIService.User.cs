@@ -88,6 +88,10 @@ public partial class APIService
             if (response.IsSuccessStatusCode)
             {
                 var tokenResponse = await response.Content.ReadFromJsonAsync<UserLoginDto>();
+                Console.WriteLine("Token: " + tokenResponse.email);
+                Console.WriteLine("Token: " + tokenResponse.id);
+                Console.WriteLine("Token: " + tokenResponse.role);
+                Console.WriteLine("Token: " + tokenResponse.username);
                 return (true, "Token is valid");
             }
 

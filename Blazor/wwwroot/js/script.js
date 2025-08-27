@@ -11,5 +11,13 @@ window.loginHelpers = {
     
     deleteItem: function (name) {
         localStorage.removeItem(name);
+    },
+    
+    saveItemToSession: function (name, value) {
+        sessionStorage.setItem(name, value.toString());
+    },
+    
+    getItemFromSession: function (name, value) {
+        sessionStorage.getItem(name);
     }
 };
