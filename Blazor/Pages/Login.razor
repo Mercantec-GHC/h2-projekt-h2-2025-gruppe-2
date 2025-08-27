@@ -1,7 +1,7 @@
 ﻿@page "/login"
 @using System.ComponentModel.DataAnnotations
 @inject APIService ApiService
-@inject LocalStorageService LocalStorageService
+@inject StorageService StorageService
 
 @if (!string.IsNullOrEmpty(_alertMessage))
 {
@@ -74,7 +74,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var token = await LocalStorageService.GetItemFromStorageAsync("authToken");
+        var token = await StorageService.GetItemFromStorageAsync("authToken");
         if (string.IsNullOrEmpty(token))
         {
             Console.WriteLine("User is not logged in");
@@ -82,7 +82,7 @@
             return;
         }
 
-        var (status, msg) = await ApiService.ValidateToken(token);
+        var (status, msg, dtoBody) = await ApiService.ValidateToken(token);
         if (!status)
         {
             Console.WriteLine("User was not logged in: " + msg);
@@ -98,7 +98,7 @@
 
     private async Task LogUserOut()
     {
-        await LocalStorageService.RemoveItemFromStorageAsync("authToken");
+        await StorageService.RemoveItemFromStorageAsync("authToken");
         _isUserLoggedIn = false;
         StateHasChanged();
     }
@@ -125,7 +125,7 @@
 
     private async Task LoadToken()
     {
-        Console.WriteLine("Test: " + await LocalStorageService.GetItemFromStorageAsync("authToken"));
+        Console.WriteLine("Test: " + await StorageService.GetItemFromStorageAsync("authToken"));
     }
 
     private async Task LoginUser()
@@ -140,7 +140,7 @@
             {
                 if (!string.IsNullOrEmpty(token))
                 {
-                    await LocalStorageService.SaveItemToStorageAsync("authToken", token);
+                    await StorageService.SaveItemToStorageAsync("authToken", token);
                     _isUserLoggedIn = true;
                 }
                 else

@@ -76,7 +76,7 @@ public partial class APIService
         }
     }
 
-    public async Task<(bool status, string msg)> ValidateToken(string token)
+    public async Task<(bool status, string msg, UserLoginDto? userDto)> ValidateToken(string token)
     {
         try
         {
@@ -88,19 +88,15 @@ public partial class APIService
             if (response.IsSuccessStatusCode)
             {
                 var tokenResponse = await response.Content.ReadFromJsonAsync<UserLoginDto>();
-                Console.WriteLine("Token: " + tokenResponse.email);
-                Console.WriteLine("Token: " + tokenResponse.id);
-                Console.WriteLine("Token: " + tokenResponse.role);
-                Console.WriteLine("Token: " + tokenResponse.username);
-                return (true, "Token is valid");
+                return (true, "Ok", tokenResponse);
             }
 
-            return (false, "Token is invalid");
+            return (false, "Token is invalid", null);
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            return (false, "Generel exception caught, validating token: " + ex.Message);
+            return (false, "Generel exception caught, validating token: " + ex.Message, null);
         }
     }
 }

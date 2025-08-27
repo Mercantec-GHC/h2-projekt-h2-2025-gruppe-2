@@ -1,6 +1,6 @@
 ﻿@using System.ComponentModel.DataAnnotations
 @inject APIService ApiService
-@inject LocalStorageService LocalStorageService
+@inject StorageService StorageService
 
 <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -8,22 +8,29 @@
             <div class="modal-header">
                 <h1>Login</h1>
             </div>
-            <EditForm Model="@_loginDto" OnValidSubmit="LoginUser">
-                <DataAnnotationsValidator/>
-                <ValidationSummary/>
+            @if (!_isUserLoggedIn)
+            {
+                <EditForm Model="@_loginDto" OnValidSubmit="LoginUser">
+                    <DataAnnotationsValidator/>
+                    <ValidationSummary/>
 
-                <label>
-                    Email
-                </label>
-                <InputText @bind-Value="_loginDto.Email"/>
+                    <label>
+                        Email
+                    </label>
+                    <InputText @bind-Value="_loginDto.Email"/>
 
-                <label>
-                    Password
-                </label>
-                <InputText @bind-Value="_loginDto.Password"/>
+                    <label>
+                        Password
+                    </label>
+                    <InputText @bind-Value="_loginDto.Password"/>
 
-                <button>Click</button>
-            </EditForm>
+                    <button>Click</button>
+                </EditForm>
+            }
+            else
+            {
+                <button class="btn btn-danger" @onclick="LogUserOut">Logout</button>
+            }
 
             <h1>Register</h1>
             <EditForm Model="@_loginModel" OnValidSubmit="RegisterUser">
@@ -52,7 +59,6 @@
                 <button type="submit">Click</button>
             </EditForm>
             <div class="modal-body"></div>
-            <button class="btn btn-danger" @onclick="LogUserOut">Logout</button>
         </div>
     </div>
 </div>
@@ -69,7 +75,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var token = await LocalStorageService.GetItemFromStorageAsync("authToken");
+        var token = await StorageService.GetItemFromStorageAsync("authToken");
         if (string.IsNullOrEmpty(token))
         {
             Console.WriteLine("User is not logged in");
@@ -77,7 +83,7 @@
             return;
         }
 
-        var (status, msg) = await ApiService.ValidateToken(token);
+        var (status, msg, bodyDto) = await ApiService.ValidateToken(token);
         if (!status)
         {
             Console.WriteLine("User was not logged in: " + msg);
@@ -93,7 +99,7 @@
 
     private async Task LogUserOut()
     {
-        await LocalStorageService.RemoveItemFromStorageAsync("authToken");
+        await StorageService.RemoveItemFromStorageAsync("authToken");
         _isUserLoggedIn = false;
         StateHasChanged();
     }
@@ -130,7 +136,7 @@
             {
                 if (!string.IsNullOrEmpty(token))
                 {
-                    await LocalStorageService.SaveItemToStorageAsync("authToken", token);
+                    await StorageService.SaveItemToStorageAsync("authToken", token);
                     _isUserLoggedIn = true;
                 }
                 else

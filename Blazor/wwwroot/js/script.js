@@ -1,23 +1,27 @@
 window.loginHelpers = {
-    saveToken: function (name, value) {
+    saveItemToLocal: function (name, value) {
         console.log("Saving " + value + " as " + name);
         localStorage.setItem(name, value.toString());
     },
 
-    loadItem: function (name) {
+    getItemFromLocal: function (name) {
         console.log("Loading " + name);
-        return localStorage.getItem(name) ?? "";
+        return localStorage.getItem(name) ?? "piss";
     },
-    
-    deleteItem: function (name) {
+
+    deleteItemFromLocal: function (name) {
         localStorage.removeItem(name);
     },
-    
+
     saveItemToSession: function (name, value) {
-        sessionStorage.setItem(name, value.toString());
+        sessionStorage.setItem(name, value);
+    },
+
+    getItemFromSession: function (name) {
+        sessionStorage.getItem(name) ?? "piss";
     },
     
-    getItemFromSession: function (name, value) {
-        sessionStorage.getItem(name);
-    }
+    deleteItemFromSession: function (name) {
+        sessionStorage.removeItem(name);
+    },
 };

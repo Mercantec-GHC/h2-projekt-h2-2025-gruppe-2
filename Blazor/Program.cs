@@ -1,7 +1,4 @@
-using System;
-using System.Net.Http;
 using Blazor.Services;
-using DomainModels;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.JSInterop;
@@ -28,8 +25,8 @@ public class Program
             client.BaseAddress = new Uri(apiEndpoint);
             Console.WriteLine($"APIService BaseAddress: {client.BaseAddress}");
         });
-        builder.Services.AddScoped<LocalStorageService>(sp =>
-            new LocalStorageService(sp.GetRequiredService<IJSRuntime>()));
+        builder.Services.AddScoped<StorageService>(sp =>
+            new StorageService(sp.GetRequiredService<IJSRuntime>()));
 
         await builder.Build().RunAsync();
     }
