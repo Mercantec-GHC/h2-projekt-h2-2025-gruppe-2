@@ -9,16 +9,16 @@
             <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#loginModal">Login</button>
             <a href="https://mercantec.notion.site/h2" target="_blank">Notion</a>
         </div>
-        
-        @* Has to be outside the above div, otherwise the overlay stays ontop of the modal, due to the CSS of the top-row. *@
         <LoginModal/>
+
+        @* Has to be outside the above div, otherwise the overlay stays ontop of the modal, due to the CSS of the top-row. *@
         @if (!string.IsNullOrEmpty(_alertMessage))
         {
             <div class="alert alert-success" role="alert">
                 @_alertMessage
             </div>
         }
-        
+
         <article class="content px-4">
             @Body
         </article>

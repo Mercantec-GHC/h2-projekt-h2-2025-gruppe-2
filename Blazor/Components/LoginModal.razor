@@ -5,60 +5,72 @@
 <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h1>Login</h1>
-            </div>
-            @if (!_isUserLoggedIn)
-            {
-                <EditForm Model="@_loginDto" OnValidSubmit="LoginUser">
+            <div class="container">
+
+                <div class="modal-header">
+                    <h1>Login</h1>
+                </div>
+                @if (!_isUserLoggedIn)
+                {
+                    @if (!_loading)
+                    {
+                        <EditForm Model="@_loginDto" OnValidSubmit="LoginUser">
+                            <DataAnnotationsValidator/>
+                            <ValidationSummary/>
+
+                            <label>
+                                Email
+                            </label>
+                            <InputText class="form-control" @bind-Value="_loginDto.Email"/>
+
+                            <label>
+                                Password
+                            </label>
+                            <InputText class="form-control" @bind-Value="_loginDto.Password"/>
+
+                            <button class="btn btn-primary mt-2">Click</button>
+                        </EditForm>
+                    }
+                    else
+                    {
+                        <div class="spinner-border mt-2" role="status">
+                            <span class="visually-hidden">&nbsp;</span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <button class="btn btn-danger mt-2" @onclick="LogUserOut" style="width: fit-content">Logout</button>
+                }
+
+                <EditForm Model="@_loginModel" OnValidSubmit="RegisterUser">
+                    <h1>Register</h1>
                     <DataAnnotationsValidator/>
                     <ValidationSummary/>
-
                     <label>
                         Email
                     </label>
-                    <InputText @bind-Value="_loginDto.Email"/>
+                    <InputText class="form-control" @bind-Value="_loginModel.Email"></InputText>
 
                     <label>
                         Password
                     </label>
-                    <InputText @bind-Value="_loginDto.Password"/>
+                    <InputText class="form-control" @bind-Value="_loginModel.Password"></InputText>
 
-                    <button>Click</button>
+                    <label>
+                        Repeat Password
+                    </label>
+                    <InputText class="form-control" @bind-Value="_loginModel.SamePassword"></InputText>
+
+                    <label>
+                        Username
+                    </label>
+                    <InputText class="form-control" @bind-Value="_loginModel.Username"></InputText>
+
+                    <button class="btn btn-primary mt-2" type="submit">Register</button>
                 </EditForm>
-            }
-            else
-            {
-                <button class="btn btn-danger" @onclick="LogUserOut">Logout</button>
-            }
-
-            <h1>Register</h1>
-            <EditForm Model="@_loginModel" OnValidSubmit="RegisterUser">
-                <DataAnnotationsValidator/>
-                <ValidationSummary/>
-                <label>
-                    Email
-                </label>
-                <InputText @bind-Value="_loginModel.Email"></InputText>
-
-                <label>
-                    Password
-                </label>
-                <InputText @bind-Value="_loginModel.Password"></InputText>
-
-                <label>
-                    Repeat Password
-                </label>
-                <InputText @bind-Value="_loginModel.SamePassword"></InputText>
-
-                <label>
-                    Username
-                </label>
-                <InputText @bind-Value="_loginModel.Username"></InputText>
-
-                <button type="submit">Click</button>
-            </EditForm>
-            <div class="modal-body"></div>
+                <div class="modal-body"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -68,6 +80,7 @@
     LoginModel _loginModel = new();
     LoginDto _loginDto = new();
     bool _isUserLoggedIn;
+    bool _loading;
     [Inject] public required IJSRuntime JS { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -84,7 +97,6 @@
         if (!status)
         {
             await LogUserOut();
-            _isUserLoggedIn = false;
             await JS.InvokeVoidAsync("alert", "User was not logged in: " + msg);
             return;
         }
@@ -127,6 +139,8 @@
     private async Task LoginUser()
     {
         Console.WriteLine($"Logging in with {_loginDto.Email} and {_loginDto.Password}");
+        _loading = true;
+        StateHasChanged();
 
         try
         {
@@ -139,7 +153,7 @@
                     await StorageService.SaveItemToStorageAsync("authToken", response.token);
                     var userJson = System.Text.Json.JsonSerializer.Serialize(response.user);
                     await StorageService.SaveItemToSessionAsync("user", userJson);
-                    
+
                     _isUserLoggedIn = true;
                 }
                 else
@@ -150,9 +164,12 @@
         {
             Console.WriteLine("Generel exception caught loging user in: " + ex.Message);
             await JS.InvokeVoidAsync("alert", "Generel exception caught loging user in: " + ex.Message);
+            _loading = false;
+            StateHasChanged();
             return;
         }
 
+        _loading = false;
         StateHasChanged();
     }
 
