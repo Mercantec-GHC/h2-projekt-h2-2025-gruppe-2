@@ -35,6 +35,10 @@ public class StorageService
 
     public async Task RemoveItemFromStorageAsync(string name)
     {
-        await _jsRuntime.InvokeVoidAsync("loginHelpers.deleteItem", name);
+        await _jsRuntime.InvokeVoidAsync("loginHelpers.deleteItemFromLocal", name);
+    }
+    public async Task RemoveItemFromSessionAsync(string name)
+    {
+        await _jsRuntime.InvokeVoidAsync("loginHelpers.deleteItemFromSession", name);
     }
 }

@@ -12,9 +12,20 @@
         
         @* Has to be outside the above div, otherwise the overlay stays ontop of the modal, due to the CSS of the top-row. *@
         <LoginModal/>
+        @if (!string.IsNullOrEmpty(_alertMessage))
+        {
+            <div class="alert alert-success" role="alert">
+                @_alertMessage
+            </div>
+        }
         
         <article class="content px-4">
             @Body
         </article>
     </main>
 </div>
+
+@code {
+    private string? _alertMessage;
+
+}

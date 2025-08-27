@@ -36,7 +36,7 @@ public partial class APIService
         }
     }
 
-    public async Task<(bool status, string msg, string token)> LoginUser(string email, string password)
+    public async Task<(bool status, string msg, LoginResponse? responseDto)> LoginUser(string email, string password)
     {
         try
         {
@@ -49,30 +49,30 @@ public partial class APIService
             if (response.IsSuccessStatusCode)
             {
                 var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
-                return (true, "Login successfull!", loginResponse.token);
+                return (true, "Login successfull!", loginResponse);
             }
             else
             {
                 var errorMsg = await response.Content.ReadAsStringAsync();
                 Console.WriteLine("Test: " + errorMsg);
                 return (false,
-                    "Failed to create new user! Code: " + response.StatusCode + ", " + errorMsg, "");
+                    "Failed to create new user! Code: " + response.StatusCode + ", " + errorMsg, null);
             }
         }
         catch (NullReferenceException ex)
         {
             Console.WriteLine("Failed to parse JSON response, JSON is null: " + ex.Message);
-            return (false, "Failed to parse JSON response, JSON is null: " + ex.Message, "");
+            return (false, "Failed to parse JSON response, JSON is null: " + ex.Message, null);
         }
         catch (JsonException ex)
         {
             Console.WriteLine("Failed to parse JSON response: " + ex.Message);
-            return (false, "Failed to parse JSON response: " + ex.Message, "");
+            return (false, "Failed to parse JSON response: " + ex.Message, null);
         }
         catch (Exception ex)
         {
             Console.WriteLine("Generel exception caught, please contact support:" + ex.Message);
-            return (false, "Generel exception caught, please contact support:  " + ex.Message, "");
+            return (false, "Generel exception caught, please contact support:  " + ex.Message, null);
         }
     }
 

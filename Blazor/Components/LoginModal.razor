@@ -39,22 +39,22 @@
                 <label>
                     Email
                 </label>
-                <InputText @bind-Value="_loginModel._email"></InputText>
+                <InputText @bind-Value="_loginModel.Email"></InputText>
 
                 <label>
                     Password
                 </label>
-                <InputText @bind-Value="_loginModel._password"></InputText>
+                <InputText @bind-Value="_loginModel.Password"></InputText>
 
                 <label>
                     Repeat Password
                 </label>
-                <InputText @bind-Value="_loginModel._samePassword"></InputText>
+                <InputText @bind-Value="_loginModel.SamePassword"></InputText>
 
                 <label>
                     Username
                 </label>
-                <InputText @bind-Value="_loginModel._username"></InputText>
+                <InputText @bind-Value="_loginModel.Username"></InputText>
 
                 <button type="submit">Click</button>
             </EditForm>
@@ -69,9 +69,6 @@
     LoginDto _loginDto = new();
     bool _isUserLoggedIn;
     [Inject] public required IJSRuntime JS { get; set; }
-    Dictionary<string, string> _claims;
-
-    private string? _alertMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -86,34 +83,37 @@
         var (status, msg, bodyDto) = await ApiService.ValidateToken(token);
         if (!status)
         {
-            Console.WriteLine("User was not logged in: " + msg);
             await LogUserOut();
             _isUserLoggedIn = false;
             await JS.InvokeVoidAsync("alert", "User was not logged in: " + msg);
             return;
         }
 
+        var dtoJson = System.Text.Json.JsonSerializer.Serialize(bodyDto);
+        await StorageService.SaveItemToSessionAsync("user", dtoJson);
         _isUserLoggedIn = true;
+        await JS.InvokeVoidAsync("alert", "user in :)");
         Console.WriteLine("User is logged in");
     }
 
     private async Task LogUserOut()
     {
         await StorageService.RemoveItemFromStorageAsync("authToken");
+        await StorageService.RemoveItemFromSessionAsync("user");
         _isUserLoggedIn = false;
         StateHasChanged();
     }
 
     private async Task RegisterUser()
     {
-        Console.WriteLine("Email: " + _loginModel._email);
-        Console.WriteLine("Password: " + _loginModel._password);
-        Console.WriteLine("Same password: " + _loginModel._samePassword);
-        Console.WriteLine("user: " + _loginModel._username);
+        Console.WriteLine("Email: " + _loginModel.Email);
+        Console.WriteLine("Password: " + _loginModel.Password);
+        Console.WriteLine("Same password: " + _loginModel.SamePassword);
+        Console.WriteLine("user: " + _loginModel.Username);
 
         try
         {
-            var (status, msg) = await ApiService.RegisterUser(_loginModel._email, _loginModel._username, _loginModel._password);
+            var (status, msg) = await ApiService.RegisterUser(_loginModel.Email, _loginModel.Username, _loginModel.Password);
             await JS.InvokeVoidAsync("alert", msg);
         }
         catch (Exception ex)
@@ -130,13 +130,16 @@
 
         try
         {
-            var (status, msg, token) = await ApiService.LoginUser(_loginDto.Email, _loginDto.Password);
-            await JS.InvokeVoidAsync("alert", msg);
-            if (status)
+            var (status, msg, response) = await ApiService.LoginUser(_loginDto.Email, _loginDto.Password);
+            // await JS.InvokeVoidAsync("alert", msg);
+            if (status && response != null)
             {
-                if (!string.IsNullOrEmpty(token))
+                if (!string.IsNullOrEmpty(response.token))
                 {
-                    await StorageService.SaveItemToStorageAsync("authToken", token);
+                    await StorageService.SaveItemToStorageAsync("authToken", response.token);
+                    var userJson = System.Text.Json.JsonSerializer.Serialize(response.user);
+                    await StorageService.SaveItemToSessionAsync("user", userJson);
+                    
                     _isUserLoggedIn = true;
                 }
                 else
@@ -157,21 +160,21 @@
     {
         [EmailAddress(ErrorMessage = "Invalid Email Address")]
         [Required(ErrorMessage = "Email is required")]
-        public string _email { get; set; } = "";
+        public string Email { get; set; } = "";
 
         [Required(ErrorMessage = "Password is required")]
         [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
             ErrorMessage =
                 "Password must contain at least one number, one uppercase letter, one lowercase letter, and one special character")]
-        public string _password { get; set; } = "";
+        public string Password { get; set; } = "";
 
         [Required(ErrorMessage = "Please confirm password")]
         [Compare("_password", ErrorMessage = "Passwords do not match")]
-        public string _samePassword { get; set; } = "";
+        public string SamePassword { get; set; } = "";
 
         [Required(ErrorMessage = "Enter identifiable name")]
-        public string _username = "";
+        public string Username = "";
     }
 
 }
