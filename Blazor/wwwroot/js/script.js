@@ -18,7 +18,7 @@ window.loginHelpers = {
     },
 
     getItemFromSession: function (name) {
-        sessionStorage.getItem(name) ?? "piss";
+        return sessionStorage.getItem(name) ?? "piss";
     },
     
     deleteItemFromSession: function (name) {

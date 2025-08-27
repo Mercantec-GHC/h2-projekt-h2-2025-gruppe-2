@@ -3,7 +3,24 @@
 @inject APIService ApiService
 @inject StorageService StorageService
 
+@if (_user != null)
+{
+    
+}
+else
+{
+    <h2>Log in to view details</h2>
+}
+
 @code {
 
+    User _user;
 
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await StorageService.GetItemFromSessionStorageAsync("user");
+        Console.WriteLine("User string: " + user);
+        UserLoginDto loginDto = System.Text.Json.JsonSerializer.Deserialize<UserLoginDto>(user);
+        Console.WriteLine("LoginDto: " + loginDto.email);
+    }
 }
