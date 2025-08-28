@@ -6,7 +6,7 @@ window.loginHelpers = {
 
     getItemFromLocal: function (name) {
         console.log("Loading " + name);
-        return localStorage.getItem(name) ?? "piss";
+        return localStorage.getItem(name);
     },
 
     deleteItemFromLocal: function (name) {
@@ -18,7 +18,7 @@ window.loginHelpers = {
     },
 
     getItemFromSession: function (name) {
-        return sessionStorage.getItem(name) ?? "piss";
+        return sessionStorage.getItem(name);
     },
     
     deleteItemFromSession: function (name) {

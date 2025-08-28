@@ -1,11 +1,15 @@
 ﻿@page "/login"
 @using System.ComponentModel.DataAnnotations
+@using System.Text.Json
 @inject APIService ApiService
 @inject StorageService StorageService
 
 @if (_user != null)
 {
-    
+    <p>@_user.id</p>
+    <p>@_user.email</p>
+    <p>@_user.username</p>
+    <p>@_user.role</p>
 }
 else
 {
@@ -14,13 +18,32 @@ else
 
 @code {
 
-    User _user;
+    UserLoginDto? _user;
 
     protected override async Task OnInitializedAsync()
     {
         var user = await StorageService.GetItemFromSessionStorageAsync("user");
-        Console.WriteLine("User string: " + user);
-        UserLoginDto loginDto = System.Text.Json.JsonSerializer.Deserialize<UserLoginDto>(user);
-        Console.WriteLine("LoginDto: " + loginDto.email);
+        if (string.IsNullOrEmpty(user))
+        {
+            Console.WriteLine("No user session token");
+            return;
+        }
+
+        try
+        {
+            _user = JsonSerializer.Deserialize<UserLoginDto>(user)!;
+        }
+        catch (JsonException ex)
+        {
+            Console.WriteLine("Json exception caught serializing to UserLoginDto: " + ex.Message);
+            return;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Generel exception caught serializing to UserLoginDto: " + ex.Message);
+            return;
+        }
+        StateHasChanged();
     }
+
 }
