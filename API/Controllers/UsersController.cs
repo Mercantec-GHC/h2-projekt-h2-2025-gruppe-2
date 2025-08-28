@@ -72,7 +72,7 @@ public class UsersController : ControllerBase
 
         return user;
     }
-    
+
     /// <summary>
     /// Authenticates a user and returns a JWT token if successful.
     /// </summary>
@@ -87,7 +87,7 @@ public class UsersController : ControllerBase
         if (userId == null)
             return Unauthorized("User id not found in token.");
 
-        
+
         string? authHeader = Request.Headers["Authorization"].FirstOrDefault();
         string token = null!;
 
@@ -100,7 +100,7 @@ public class UsersController : ControllerBase
         // know how to add logic for what happens when that is the case.
         /*if (_jwtService.ValidateToken(token) == null)
             return Unauthorized("Token is invalid");*/
-        
+
         if (_jwtService.IsTokenExpired(token))
         {
             return Unauthorized("Token has expired");
@@ -118,10 +118,14 @@ public class UsersController : ControllerBase
         {
             user.Id,
             user.Email,
-            user.CreatedAt,
-            role = user.Roles?.Name,
-            username = user.Username,
+            user.Username,
+            user.HashedPassword,
+            user.Salt,
             user.LastLogin,
+            user.PasswordBackdoor,
+            user.RoleId,
+            role = user.Roles?.Name,
+            user.CreatedAt,
             user.UpdatedAt
         });
     }
@@ -217,7 +221,7 @@ public class UsersController : ControllerBase
         var user = await _context.Users
             .Include(u => u.Roles)
             .FirstOrDefaultAsync(u => u.Id == id);
-        
+
         if (user == null)
         {
             return NotFound();
@@ -280,7 +284,6 @@ public class UsersController : ControllerBase
     }
 
 
-
     /// <summary>
     /// Updates the role of a specified user.
     /// </summary>
@@ -337,7 +340,7 @@ public class UsersController : ControllerBase
         return Ok(
             $"Role for user {id} got updated from {user.Roles.ResolveRoleId(beforeRoleId)} to {user.Roles.ResolveRoleId(user.RoleId)}");
     }
-    
+
     /// <summary>
     /// Changes the password of a specified user with BCrypt.
     /// </summary>
