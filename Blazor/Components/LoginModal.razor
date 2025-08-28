@@ -40,32 +40,33 @@
                 }
                 else
                 {
+                    <div>Welcome back Xir!</div>
                     <button class="btn btn-danger mt-2" @onclick="LogUserOut" style="width: fit-content">Logout</button>
                 }
 
-                <EditForm Model="@_loginModel" OnValidSubmit="RegisterUser">
+                <EditForm Model="@_registerModel" OnValidSubmit="RegisterUser">
                     <h1>Register</h1>
                     <DataAnnotationsValidator/>
                     <ValidationSummary/>
                     <label>
                         Email
                     </label>
-                    <InputText class="form-control" @bind-Value="_loginModel.Email"></InputText>
+                    <InputText class="form-control" @bind-Value="_registerModel.Email"></InputText>
 
                     <label>
                         Password
                     </label>
-                    <InputText class="form-control" @bind-Value="_loginModel.Password"></InputText>
+                    <InputText class="form-control" @bind-Value="_registerModel.Password"></InputText>
 
                     <label>
                         Repeat Password
                     </label>
-                    <InputText class="form-control" @bind-Value="_loginModel.SamePassword"></InputText>
+                    <InputText class="form-control" @bind-Value="_registerModel.SamePassword"></InputText>
 
                     <label>
                         Username
                     </label>
-                    <InputText class="form-control" @bind-Value="_loginModel.Username"></InputText>
+                    <InputText class="form-control" @bind-Value="_registerModel.Username"></InputText>
 
                     <button class="btn btn-primary mt-2" type="submit">Register</button>
                 </EditForm>
@@ -77,7 +78,7 @@
 
 
 @code {
-    LoginModel _loginModel = new();
+    RegisterModel _registerModel = new();
     LoginDto _loginDto = new();
     bool _isUserLoggedIn;
     bool _loading;
@@ -93,7 +94,16 @@
             return;
         }
 
-        var (status, msg, bodyDto) = await ApiService.ValidateToken(token);
+        await ValidateJwtTokenAndMakeSessionToken(token);
+        
+        _isUserLoggedIn = true;
+        await JS.InvokeVoidAsync("alert", "user in :)");
+        Console.WriteLine("User is logged in");
+    }
+
+    private async Task ValidateJwtTokenAndMakeSessionToken(string token)
+    {
+        var (status, msg, sessionTokenDto) = await ApiService.ValidateToken(token);
         if (!status)
         {
             await LogUserOut();
@@ -101,11 +111,8 @@
             return;
         }
 
-        var dtoJson = System.Text.Json.JsonSerializer.Serialize(bodyDto);
-        await StorageService.SaveItemToSessionAsync("user", dtoJson);
-        _isUserLoggedIn = true;
-        await JS.InvokeVoidAsync("alert", "user in :)");
-        Console.WriteLine("User is logged in");
+        if (sessionTokenDto == null) throw new NullReferenceException("Session token is null");
+        await StorageService.MakeSessionToken(sessionTokenDto);
     }
 
     private async Task LogUserOut()
@@ -118,14 +125,14 @@
 
     private async Task RegisterUser()
     {
-        Console.WriteLine("Email: " + _loginModel.Email);
-        Console.WriteLine("Password: " + _loginModel.Password);
-        Console.WriteLine("Same password: " + _loginModel.SamePassword);
-        Console.WriteLine("user: " + _loginModel.Username);
+        Console.WriteLine("Email: " + _registerModel.Email);
+        Console.WriteLine("Password: " + _registerModel.Password);
+        Console.WriteLine("Same password: " + _registerModel.SamePassword);
+        Console.WriteLine("user: " + _registerModel.Username);
 
         try
         {
-            var (status, msg) = await ApiService.RegisterUser(_loginModel.Email, _loginModel.Username, _loginModel.Password);
+            var (status, msg) = await ApiService.RegisterUser(_registerModel.Email, _registerModel.Username, _registerModel.Password);
             await JS.InvokeVoidAsync("alert", msg);
         }
         catch (Exception ex)
@@ -145,19 +152,21 @@
         try
         {
             var (status, msg, response) = await ApiService.LoginUser(_loginDto.Email, _loginDto.Password);
-            // await JS.InvokeVoidAsync("alert", msg);
             if (status && response != null)
             {
                 if (!string.IsNullOrEmpty(response.token))
                 {
                     await StorageService.SaveItemToStorageAsync("authToken", response.token);
-                    var userJson = System.Text.Json.JsonSerializer.Serialize(response.user);
-                    await StorageService.SaveItemToSessionAsync("user", userJson);
+                    await ValidateJwtTokenAndMakeSessionToken(response.token);
 
                     _isUserLoggedIn = true;
                 }
                 else
                     await JS.InvokeVoidAsync("alert", "Token is null");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Password or email is wrong");
             }
         }
         catch (Exception ex)
@@ -173,7 +182,7 @@
         StateHasChanged();
     }
 
-    private class LoginModel
+    private class RegisterModel
     {
         [EmailAddress(ErrorMessage = "Invalid Email Address")]
         [Required(ErrorMessage = "Email is required")]

@@ -1,4 +1,5 @@
-﻿using Microsoft.JSInterop;
+﻿using DomainModels;
+using Microsoft.JSInterop;
 
 namespace Blazor.Services;
 
@@ -16,7 +17,7 @@ public class StorageService
         await _jsRuntime.InvokeVoidAsync("loginHelpers.saveItemToLocal", name, value);
     }
     
-    public async Task SaveItemToSessionAsync(string name, string value)
+    private async Task SaveItemToSessionAsync(string name, string value)
     {
         await _jsRuntime.InvokeVoidAsync("loginHelpers.saveItemToSession", name, value);
     }
@@ -40,5 +41,11 @@ public class StorageService
     public async Task RemoveItemFromSessionAsync(string name)
     {
         await _jsRuntime.InvokeVoidAsync("loginHelpers.deleteItemFromSession", name);
+    }
+    
+    public async Task MakeSessionToken(SessionTokenDto sessionTokenDto)
+    {
+        var sessionTokenJson = System.Text.Json.JsonSerializer.Serialize(sessionTokenDto);
+        await SaveItemToSessionAsync("user", sessionTokenJson);
     }
 }

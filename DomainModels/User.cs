@@ -119,7 +119,7 @@ ErrorMessage =
     "Password must contain at least one number, one uppercase letter, one lowercase letter, and one special character")]
     public string NewPassword { get; set; } = default!;
 }
-public class LoginResponse
+public class LoginResponseDto
 {
     public string message { get; set; }
     public string token { get; set; }
@@ -132,4 +132,15 @@ public class UserLoginDto
     public string email { get; set; }
     public string username { get; set; }
     public string role { get; set; }
+}
+
+public class SessionTokenDto : Common
+{
+    public required string Email { get; set; }
+    public required string Username { get; set; }
+    public required string HashedPassword { get; set; }
+    public string? Salt { get; set; }
+    public DateTime LastLogin { get; set; }
+    public string RoleId { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
 }

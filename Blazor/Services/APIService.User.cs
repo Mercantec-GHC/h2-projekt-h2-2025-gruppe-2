@@ -36,7 +36,7 @@ public partial class APIService
         }
     }
 
-    public async Task<(bool status, string msg, LoginResponse? responseDto)> LoginUser(string email, string password)
+    public async Task<(bool status, string msg, LoginResponseDto? responseDto)> LoginUser(string email, string password)
     {
         try
         {
@@ -48,7 +48,7 @@ public partial class APIService
 
             if (response.IsSuccessStatusCode)
             {
-                var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>();
+                var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
                 return (true, "Login successfull!", loginResponse);
             }
             else
@@ -76,7 +76,7 @@ public partial class APIService
         }
     }
 
-    public async Task<(bool status, string msg, UserLoginDto? userDto)> ValidateToken(string token)
+    public async Task<(bool status, string msg, SessionTokenDto? userDto)> ValidateToken(string token)
     {
         try
         {
@@ -87,8 +87,8 @@ public partial class APIService
 
             if (response.IsSuccessStatusCode)
             {
-                var tokenResponse = await response.Content.ReadFromJsonAsync<UserLoginDto>();
-                return (true, "Ok", tokenResponse);
+                var sessionTokenDto = await response.Content.ReadFromJsonAsync<SessionTokenDto>();
+                return (true, "Ok", sessionTokenDto);
             }
 
             return (false, "Token is invalid", null);
@@ -97,6 +97,39 @@ public partial class APIService
         {
             Console.WriteLine(ex);
             return (false, "Generel exception caught, validating token: " + ex.Message, null);
+        }
+    }
+
+    public async Task<(bool status, string msg)> ChangeOwnPassword(string currentPassword, string newPassword,
+        string token)
+    {
+        try
+        {
+            Console.WriteLine("Changing password with: " + token);
+            var request = new HttpRequestMessage(HttpMethod.Put, "api/Users/me/password");
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            request.Content = new StringContent(
+                JsonSerializer.Serialize(new
+                {
+                    currentPassword,
+                    newPassword
+                }),
+                System.Text.Encoding.UTF8,
+                "application/json");
+
+            var response = await _httpClient.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return (true, "Password got changed");
+            }
+
+            return (false, "Token is invalid");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return (false, "Generel exception caught, validating token: " + ex.Message);
         }
     }
 }

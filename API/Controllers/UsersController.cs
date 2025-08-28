@@ -72,7 +72,7 @@ public class UsersController : ControllerBase
 
         return user;
     }
-    
+
     /// <summary>
     /// Authenticates a user and returns a JWT token if successful.
     /// </summary>
@@ -195,7 +195,7 @@ public class UsersController : ControllerBase
         var user = await _context.Users
             .Include(u => u.Roles)
             .FirstOrDefaultAsync(u => u.Id == id);
-        
+
         if (user == null)
         {
             return NotFound();
@@ -258,7 +258,6 @@ public class UsersController : ControllerBase
     }
 
 
-
     /// <summary>
     /// Updates the role of a specified user.
     /// </summary>
@@ -315,7 +314,7 @@ public class UsersController : ControllerBase
         return Ok(
             $"Role for user {id} got updated from {user.Roles.ResolveRoleId(beforeRoleId)} to {user.Roles.ResolveRoleId(user.RoleId)}");
     }
-    
+
     /// <summary>
     /// Changes the password of a specified user with BCrypt.
     /// </summary>
@@ -433,7 +432,7 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> ChangeOwnPassword([FromBody] ChangeOwnPasswordDto dto)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+        if (string.IsNullOrEmpty(userId)) return Unauthorized(new {message = "User does not exist"});
 
         var user = await _context.Users.FindAsync(userId);
         if (user == null) return NotFound();
@@ -455,16 +454,16 @@ public class UsersController : ControllerBase
         }
         catch (DbUpdateException ex)
         {
-            return BadRequest("Internal server error :(: " + ex.Message);
+            return StatusCode(500, "Internal server error :(: " + ex.Message);
         }
         catch (Exception ex)
         {
-            return BadRequest("Unaccounted internal server error :(: " + ex.Message);
+            return StatusCode(500, "Unaccounted internal server error :(: " + ex.Message);
         }
 
         return Ok(new
         {
-            message = "Users password hot changed"
+            message = $"Password has been changed for user '{user.Username}'"
         });
     }
 
