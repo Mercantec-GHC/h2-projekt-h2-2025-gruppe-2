@@ -155,7 +155,7 @@ public class AppDBContext : DbContext
                 Microwave = false,
                 Tv = 1,
                 Clean = true,
-                Price = 899.00,
+                Price = 899.00m,
                 Description = "Standard twin room with modern amenities.",
                 CreatedAt = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc),
                 UpdatedAt = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc)
@@ -177,7 +177,7 @@ public class AppDBContext : DbContext
                 Microwave = true,
                 Tv = 1,
                 Clean = true,
-                Price = 1199.00,
+                Price = 1199.00m,
                 Description = "King suite with bathtub and microwave.",
                 CreatedAt = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc),
                 UpdatedAt = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc)
@@ -199,7 +199,7 @@ public class AppDBContext : DbContext
                 Microwave = true,
                 Tv = 2,
                 Clean = false,
-                Price = 1799.00,
+                Price = 1799.00m,
                 Description = "Family room with kitchen and two bathrooms.",
                 CreatedAt = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc),
                 UpdatedAt = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc)
@@ -221,7 +221,7 @@ public class AppDBContext : DbContext
                 Microwave = false,
                 Tv = 0,
                 Clean = true,
-                Price = 699.00,
+                Price = 699.00m,
                 Description = "Budget room, basic accommodation for one or two guests.",
                 CreatedAt = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc),
                 UpdatedAt = new DateTime(2025, 1, 1, 10, 0, 0, DateTimeKind.Utc)
