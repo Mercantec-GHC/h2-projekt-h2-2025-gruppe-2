@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using DomainModels;
 
 namespace Blazor.Services;
@@ -132,4 +133,25 @@ public partial class APIService
             return (false, "Generel exception caught, validating token: " + ex.Message);
         }
     }
+
+    public async Task<(bool status, string msg, UserBookingsResponse? bookingsRooms)> GetUsersBookingsRooms(string userId)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"api/Bookings/user/{userId}");
+            if (response.IsSuccessStatusCode)
+            {
+                var userBookings = await response.Content.ReadFromJsonAsync<UserBookingsResponse>();
+                return (true, "Ok", userBookings);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return (false, $"Generel exception caught, getting a users ({userId}) bookings: " + ex.Message, null);
+        }
+        
+        return (false, "Not implemented yet", null);
+    }
+
 }

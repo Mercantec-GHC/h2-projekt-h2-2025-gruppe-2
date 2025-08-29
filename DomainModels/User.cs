@@ -144,3 +144,10 @@ public class SessionTokenDto : Common
     public string RoleId { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
 }
+
+public class UserBookingsResponse
+{
+    public string Message { get; set; }
+    [JsonPropertyName("bookingsDto")]
+    public List<BookingRoomsDto> bookingRooms { get; set; }
+}

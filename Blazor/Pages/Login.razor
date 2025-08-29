@@ -4,6 +4,7 @@
 @inject IJSRuntime JS
 @inject APIService ApiService
 @inject StorageService StorageService
+@inject AuthService AuthService
 
 @if (_userInfo != null)
 {
@@ -43,6 +44,38 @@
         </div>
         <div class="col col-sm-6 col-md-6 col-lg-6 col-xl-6">
             <h2>Bookings</h2>
+            @if (_bookingRooms.Any())
+            {
+                <div class="accordion" id="accordionExample">
+                    @foreach (var bookingRoom in _bookingRooms)
+                    {
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingOne">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                        data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                    Booking #1
+                                </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne"
+                                 data-bs-parent="#accordionExample">
+                                <div class="accordion-body">
+                                    Booking ID: @bookingRoom.BookingId <br/>
+                                    @foreach (string roomId in bookingRoom.RoomIds)
+                                    {
+                                        <div>
+                                            Room ID: @roomId <a href="/room/@roomId">Go to room</a>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p>No bookings yet!</p>
+            }
         </div>
     </div>
 }
@@ -54,10 +87,12 @@ else
 @code {
     SessionTokenDto? _userInfo;
     ChangeOwnPasswordDto _changePassword = new();
+    List<BookingRoomsDto> _bookingRooms = [];
     bool _loadingNewPassword;
 
     protected override async Task OnInitializedAsync()
     {
+        AuthService.OnUserChangedSubscribtion += OnUserChangedSubscription;
         var user = await StorageService.GetItemFromSessionStorageAsync("user");
         if (string.IsNullOrEmpty(user))
         {
@@ -72,6 +107,7 @@ else
                 PropertyNameCaseInsensitive = true
             };
             _userInfo = JsonSerializer.Deserialize<SessionTokenDto>(user, options)!;
+            await GetBookingsRoomsForUser();
         }
         catch (JsonException ex)
         {
@@ -85,6 +121,37 @@ else
         }
 
         StateHasChanged();
+    }
+
+    private async Task GetBookingsRoomsForUser()
+    {
+        if (_userInfo == null)
+        {
+            await JS.InvokeVoidAsync("alert", "user info is null");
+            return;
+        }
+
+        try
+        {
+            var (status, msg, bookingRoomsDto) = await ApiService.GetUsersBookingsRooms(_userInfo.Id);
+            if (status)
+            {
+                _bookingRooms = bookingRoomsDto.bookingRooms;
+                foreach (var bookingsRooms in bookingRoomsDto.bookingRooms)
+                {
+                    Console.WriteLine("BookingId: " + bookingsRooms.BookingId);
+                }
+            }
+            else
+            {
+                Console.WriteLine("Piss");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception getting user bookings" + ex.Message + "StackTrace: " + ex.StackTrace);
+            return;
+        }
     }
 
     private async Task ChangePassword()
@@ -116,6 +183,20 @@ else
         _changePassword = new();
         _loadingNewPassword = false;
         StateHasChanged();
+    }
+
+    private void OnUserChangedSubscription()
+    {
+        InvokeAsync(async () =>
+        {
+            // Re-fetch user info here if needed
+            await OnInitializedAsync(); // or just StateHasChanged()
+        });
+    }
+
+    public void Dispose()
+    {
+        AuthService.OnUserChangedSubscribtion -= OnUserChangedSubscription;
     }
 
     private class ChangePasswordDto

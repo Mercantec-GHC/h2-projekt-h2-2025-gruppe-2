@@ -1,6 +1,7 @@
 ﻿@using System.ComponentModel.DataAnnotations
 @inject APIService ApiService
 @inject StorageService StorageService
+@inject AuthService authService
 
 <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -120,6 +121,7 @@
         await StorageService.RemoveItemFromStorageAsync("authToken");
         await StorageService.RemoveItemFromSessionAsync("user");
         _isUserLoggedIn = false;
+        authService.NotifyUserChanged();
         StateHasChanged();
     }
 
@@ -179,6 +181,7 @@
         }
 
         _loading = false;
+        authService.NotifyUserChanged();
         StateHasChanged();
     }
 

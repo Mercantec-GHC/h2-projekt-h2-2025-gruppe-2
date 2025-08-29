@@ -27,6 +27,7 @@ public class Program
         });
         builder.Services.AddScoped<StorageService>(sp =>
             new StorageService(sp.GetRequiredService<IJSRuntime>()));
+        builder.Services.AddScoped<AuthService>();
 
         await builder.Build().RunAsync();
     }
