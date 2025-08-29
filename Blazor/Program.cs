@@ -31,6 +31,7 @@ public class Program
         });
         builder.Services.AddScoped<LocalStorageService>(sp =>
             new LocalStorageService(sp.GetRequiredService<IJSRuntime>()));
+    builder.Services.AddScoped<ClientJwtService>();
 
         // Default culture formatting, for pricing.etc
         var culture = new CultureInfo("da-DK");
