@@ -30,6 +30,7 @@ public class Program
         });
         builder.Services.AddScoped<LocalStorageService>(sp =>
             new LocalStorageService(sp.GetRequiredService<IJSRuntime>()));
+    builder.Services.AddScoped<ClientJwtService>();
 
         await builder.Build().RunAsync();
     }
