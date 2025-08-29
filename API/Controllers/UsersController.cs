@@ -458,7 +458,7 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> ChangeOwnPassword([FromBody] ChangeOwnPasswordDto dto)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+        if (string.IsNullOrEmpty(userId)) return Unauthorized(new {message = "User does not exist"});
 
         var user = await _context.Users.FindAsync(userId);
         if (user == null) return NotFound();
@@ -480,16 +480,16 @@ public class UsersController : ControllerBase
         }
         catch (DbUpdateException ex)
         {
-            return BadRequest("Internal server error :(: " + ex.Message);
+            return StatusCode(500, "Internal server error :(: " + ex.Message);
         }
         catch (Exception ex)
         {
-            return BadRequest("Unaccounted internal server error :(: " + ex.Message);
+            return StatusCode(500, "Unaccounted internal server error :(: " + ex.Message);
         }
 
         return Ok(new
         {
-            message = "Users password hot changed"
+            message = $"Password has been changed for user '{user.Username}'"
         });
     }
 

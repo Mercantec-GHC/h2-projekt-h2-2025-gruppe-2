@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace DomainModels;
 
@@ -17,6 +18,11 @@ public class User : Common
     public virtual Role? Roles { get; set; }
 
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
+    public void SetLoginDto()
+    {
+        
+    }
 
     /*public void BookRoom()
     {
@@ -113,7 +119,7 @@ ErrorMessage =
     "Password must contain at least one number, one uppercase letter, one lowercase letter, and one special character")]
     public string NewPassword { get; set; } = default!;
 }
-public class LoginResponse
+public class LoginResponseDto
 {
     public string message { get; set; }
     public string token { get; set; }
@@ -126,4 +132,22 @@ public class UserLoginDto
     public string email { get; set; }
     public string username { get; set; }
     public string role { get; set; }
+}
+
+public class SessionTokenDto : Common
+{
+    public required string Email { get; set; }
+    public required string Username { get; set; }
+    public required string HashedPassword { get; set; }
+    public string? Salt { get; set; }
+    public DateTime LastLogin { get; set; }
+    public string RoleId { get; set; } = string.Empty;
+    public string Role { get; set; } = string.Empty;
+}
+
+public class UserBookingsResponse
+{
+    public string Message { get; set; }
+    [JsonPropertyName("bookingsDto")]
+    public List<BookingRoomsDto> bookingRooms { get; set; }
 }

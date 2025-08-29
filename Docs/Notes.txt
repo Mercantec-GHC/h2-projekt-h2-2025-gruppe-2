@@ -12,3 +12,8 @@ files, I dont know what to do.
 Edit: They are now back in the script.js file, which they were originally, but now they dont cause problems for some fucking reason.
 
 Need to know how we should handle the JWT once it is on the local storage.
+
+27/08
+Need to add username and change roles to role for the api/Users/me call.
+
+I created a new branch from login, used smart checkout and rolled back, and now all my progress was gone.
