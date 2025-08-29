@@ -1,5 +1,6 @@
 using System;
 using System.Net.Http;
+using System.Globalization;
 using Blazor.Services;
 using DomainModels;
 using Microsoft.AspNetCore.Components.Web;
@@ -16,13 +17,13 @@ public class Program
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
 
-        // Læs API endpoint fra miljøvariabler eller brug default
+        // Reads API endpoint from environment variables or uses default
         var envApiEndpoint = Environment.GetEnvironmentVariable("API_ENDPOINT");
         Console.WriteLine($"API ENV Endpoint: {envApiEndpoint}");
         var apiEndpoint = envApiEndpoint ?? "https://karambit-api.mercantec.tech/";
         Console.WriteLine($"API Endpoint: {apiEndpoint}");
 
-        // Registrer HttpClient til API service med konfigurerbar endpoint
+        // Registers HttpClient to API service with a configurable endpoint
         builder.Services.AddHttpClient<APIService>(client =>
         {
             client.BaseAddress = new Uri(apiEndpoint);
@@ -30,6 +31,11 @@ public class Program
         });
         builder.Services.AddScoped<LocalStorageService>(sp =>
             new LocalStorageService(sp.GetRequiredService<IJSRuntime>()));
+
+        // Default culture formatting, for pricing.etc
+        var culture = new CultureInfo("da-DK");
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
 
         await builder.Build().RunAsync();
     }
