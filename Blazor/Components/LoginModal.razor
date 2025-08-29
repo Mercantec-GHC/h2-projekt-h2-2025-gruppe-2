@@ -1,0 +1,209 @@
+﻿@using System.ComponentModel.DataAnnotations
+@inject APIService ApiService
+@inject StorageService StorageService
+@inject AuthService authService
+
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="container">
+
+                <div class="modal-header">
+                    <h1>Login</h1>
+                </div>
+                @if (!_isUserLoggedIn)
+                {
+                    @if (!_loading)
+                    {
+                        <EditForm Model="@_loginDto" OnValidSubmit="LoginUser">
+                            <DataAnnotationsValidator/>
+                            <ValidationSummary/>
+
+                            <label>
+                                Email
+                            </label>
+                            <InputText class="form-control" @bind-Value="_loginDto.Email"/>
+
+                            <label>
+                                Password
+                            </label>
+                            <InputText class="form-control" @bind-Value="_loginDto.Password"/>
+
+                            <button class="btn btn-primary mt-2">Click</button>
+                        </EditForm>
+                    }
+                    else
+                    {
+                        <div class="spinner-border mt-2" role="status">
+                            <span class="visually-hidden">&nbsp;</span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div>Welcome back Xir!</div>
+                    <button class="btn btn-danger mt-2" @onclick="LogUserOut" style="width: fit-content">Logout</button>
+                }
+
+                <EditForm Model="@_registerModel" OnValidSubmit="RegisterUser">
+                    <h1>Register</h1>
+                    <DataAnnotationsValidator/>
+                    <ValidationSummary/>
+                    <label>
+                        Email
+                    </label>
+                    <InputText class="form-control" @bind-Value="_registerModel.Email"></InputText>
+
+                    <label>
+                        Password
+                    </label>
+                    <InputText class="form-control" @bind-Value="_registerModel.Password"></InputText>
+
+                    <label>
+                        Repeat Password
+                    </label>
+                    <InputText class="form-control" @bind-Value="_registerModel.SamePassword"></InputText>
+
+                    <label>
+                        Username
+                    </label>
+                    <InputText class="form-control" @bind-Value="_registerModel.Username"></InputText>
+
+                    <button class="btn btn-primary mt-2" type="submit">Register</button>
+                </EditForm>
+                <div class="modal-body"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    RegisterModel _registerModel = new();
+    LoginDto _loginDto = new();
+    bool _isUserLoggedIn;
+    bool _loading;
+    [Inject] public required IJSRuntime JS { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await StorageService.GetItemFromStorageAsync("authToken");
+        if (string.IsNullOrEmpty(token))
+        {
+            Console.WriteLine("User is not logged in");
+            _isUserLoggedIn = false;
+            return;
+        }
+
+        await ValidateJwtTokenAndMakeSessionToken(token);
+        
+        _isUserLoggedIn = true;
+        await JS.InvokeVoidAsync("alert", "user in :)");
+        Console.WriteLine("User is logged in");
+    }
+
+    private async Task ValidateJwtTokenAndMakeSessionToken(string token)
+    {
+        var (status, msg, sessionTokenDto) = await ApiService.ValidateToken(token);
+        if (!status)
+        {
+            await LogUserOut();
+            await JS.InvokeVoidAsync("alert", "User was not logged in: " + msg);
+            return;
+        }
+
+        if (sessionTokenDto == null) throw new NullReferenceException("Session token is null");
+        await StorageService.MakeSessionToken(sessionTokenDto);
+    }
+
+    private async Task LogUserOut()
+    {
+        await StorageService.RemoveItemFromStorageAsync("authToken");
+        await StorageService.RemoveItemFromSessionAsync("user");
+        _isUserLoggedIn = false;
+        authService.NotifyUserChanged();
+        StateHasChanged();
+    }
+
+    private async Task RegisterUser()
+    {
+        Console.WriteLine("Email: " + _registerModel.Email);
+        Console.WriteLine("Password: " + _registerModel.Password);
+        Console.WriteLine("Same password: " + _registerModel.SamePassword);
+        Console.WriteLine("user: " + _registerModel.Username);
+
+        try
+        {
+            var (status, msg) = await ApiService.RegisterUser(_registerModel.Email, _registerModel.Username, _registerModel.Password);
+            await JS.InvokeVoidAsync("alert", msg);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Generel exception caught registering user: " + ex.Message);
+            await JS.InvokeVoidAsync("alert", "Generel exception caught registering user: " + ex.Message);
+            return;
+        }
+    }
+
+    private async Task LoginUser()
+    {
+        Console.WriteLine($"Logging in with {_loginDto.Email} and {_loginDto.Password}");
+        _loading = true;
+        StateHasChanged();
+
+        try
+        {
+            var (status, msg, response) = await ApiService.LoginUser(_loginDto.Email, _loginDto.Password);
+            if (status && response != null)
+            {
+                if (!string.IsNullOrEmpty(response.token))
+                {
+                    await StorageService.SaveItemToStorageAsync("authToken", response.token);
+                    await ValidateJwtTokenAndMakeSessionToken(response.token);
+
+                    _isUserLoggedIn = true;
+                }
+                else
+                    await JS.InvokeVoidAsync("alert", "Token is null");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Password or email is wrong");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Generel exception caught loging user in: " + ex.Message);
+            await JS.InvokeVoidAsync("alert", "Generel exception caught loging user in: " + ex.Message);
+            _loading = false;
+            StateHasChanged();
+            return;
+        }
+
+        _loading = false;
+        authService.NotifyUserChanged();
+        StateHasChanged();
+    }
+
+    private class RegisterModel
+    {
+        [EmailAddress(ErrorMessage = "Invalid Email Address")]
+        [Required(ErrorMessage = "Email is required")]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "Password is required")]
+        [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$",
+            ErrorMessage =
+                "Password must contain at least one number, one uppercase letter, one lowercase letter, and one special character")]
+        public string Password { get; set; } = "";
+
+        [Required(ErrorMessage = "Please confirm password")]
+        [Compare("_password", ErrorMessage = "Passwords do not match")]
+        public string SamePassword { get; set; } = "";
+
+        [Required(ErrorMessage = "Enter identifiable name")]
+        public string Username = "";
+    }
+
+}
