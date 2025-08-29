@@ -34,5 +34,6 @@ public partial class APIService
     {
         public string? message { get; set; }
         public List<Room>? rooms { get; set; }
+
     }
 }

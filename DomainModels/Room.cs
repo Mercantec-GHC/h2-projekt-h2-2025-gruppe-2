@@ -18,7 +18,7 @@ public class Room : Common
     public bool Stove { get; set; }
     public bool Oven { get; set; }
     public bool Microwave { get; set; }
-    public double Price { get; set; }
+    public decimal Price { get; set; }
     public string? Description { get; set; }
     
     public ICollection<BookingsRooms> BookingRooms { get; set; } = new List<BookingsRooms>();
@@ -40,6 +40,6 @@ public class RoomPostDto
     public bool Stove { get; set; }
     public bool Oven { get; set; }
     public bool Microwave { get; set; }
-    public double Price { get; set; }
+    public decimal Price { get; set; }
     public string? Description { get; set; }
 }
