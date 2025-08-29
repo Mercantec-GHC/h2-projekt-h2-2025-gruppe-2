@@ -87,6 +87,25 @@ public class UsersController : ControllerBase
         if (userId == null)
             return Unauthorized("User id not found in token.");
 
+        
+        string? authHeader = Request.Headers["Authorization"].FirstOrDefault();
+        string token = null!;
+
+        if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        {
+            token = authHeader.Substring("Bearer ".Length).Trim();
+        }
+
+        // The method already does some magic, to check if the token is valid or not. The problem is just that i dont
+        // know how to add logic for what happens when that is the case.
+        /*if (_jwtService.ValidateToken(token) == null)
+            return Unauthorized("Token is invalid");*/
+        
+        if (_jwtService.IsTokenExpired(token))
+        {
+            return Unauthorized("Token has expired");
+        }
+
         var user = _context.Users
             .Include(u => u.Roles) // inkluder relaterede data hvis nødvendigt
             .FirstOrDefault(u => u.Id == userId);
