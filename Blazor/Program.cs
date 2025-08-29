@@ -31,8 +31,8 @@ public class Program
         builder.Services.AddScoped<StorageService>(sp =>
             new StorageService(sp.GetRequiredService<IJSRuntime>()));
         builder.Services.AddScoped<AuthService>();
-        builder.Services.AddScoped<LocalStorageService>(sp =>
-            new LocalStorageService(sp.GetRequiredService<IJSRuntime>()));
+        builder.Services.AddScoped<StorageService>(sp =>
+            new StorageService(sp.GetRequiredService<IJSRuntime>()));
     builder.Services.AddScoped<ClientJwtService>();
 
         // Default culture formatting, for pricing.etc

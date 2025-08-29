@@ -1,8 +1,8 @@
 ﻿namespace Blazor.Services;
 
-public class ClientJwtService(LocalStorageService storage)
+public class ClientJwtService(StorageService storage)
 {
-	private readonly LocalStorageService _storage = storage;
+	private readonly StorageService _storage = storage;
 
 	public async Task<string?> GetTokenAsync()
 	{

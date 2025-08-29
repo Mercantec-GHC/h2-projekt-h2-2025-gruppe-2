@@ -11,6 +11,12 @@ public partial class APIService
         var res = await _httpClient.GetFromJsonAsync<List<Room>>("api/Rooms", ct);
         return res ?? new();
     }
+    
+    public async Task<Room> GetRoomById(string id, CancellationToken ct = default)
+    {
+        var res = await _httpClient.GetFromJsonAsync<Room>($"api/Rooms/{id}");
+        return res ?? new();
+    }
 
     // GET: api/Rooms/userId?userId={id}
     public async Task<List<Room>> GetUserRoomsAsync(string userId, CancellationToken ct = default)
