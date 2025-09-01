@@ -76,3 +76,17 @@ public class BookingRoomsDto()
     public DateTime OccupiedTill { get; set; }
     public List<string> RoomIds { get; set; }
 }
+
+public class BookingDto
+{
+    public string Id { get; set; } = "test"; // The API expects an ID value, but it will just be overridden in the process, sp dont delete or mind this
+    public int Adults { get; set; }
+    public int Children { get; set; }
+    public bool RoomService { get; set; }
+    public bool Breakfast { get; set; }
+    public bool Dinner { get; set; }
+    public string UserId { get; set; } = null!;
+    public List<string> RoomIds { get; set; } = [];
+    public DateTime occupiedFrom { get; set; }
+    public DateTime occupiedTill { get; set; }
+}
