@@ -47,7 +47,7 @@ public class DataSeederService
             .RuleFor(r => r.Oven, f => f.Random.Bool())
             .RuleFor(r => r.Description, f => f.Lorem.Paragraphs(1))
             .RuleFor(r => r.Microwave, f => f.Random.Bool())
-            .RuleFor(r => r.Price, f => f.Random.Decimal(200, 2000))
+            .RuleFor(r => r.Price, f => f.Random.Double(200, 2000))
             .RuleFor(r => r.CreatedAt, _timeService.GetCopenhagenTime())
             .RuleFor(r => r.UpdatedAt, (f, r) =>
                 f.Date.Between(r.CreatedAt, DateTime.UtcNow.AddHours(2)));
