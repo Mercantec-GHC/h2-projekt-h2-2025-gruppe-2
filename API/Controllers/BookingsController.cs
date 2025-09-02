@@ -131,7 +131,6 @@ namespace API.Controllers
             DateTime copenhagenTime = _timeHelper.GetCopenhagenTime();
 
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            Console.WriteLine("User id: " + userId);
             if (string.IsNullOrEmpty(userId))
             {
                 return Unauthorized("User ID not found in token");
