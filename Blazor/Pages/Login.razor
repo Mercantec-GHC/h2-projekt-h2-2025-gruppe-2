@@ -47,16 +47,18 @@
             @if (_bookingRooms.Any())
             {
                 <div class="accordion" id="accordionExample">
-                    @foreach (var bookingRoom in _bookingRooms)
+                    @for (int i = 0; i < _bookingRooms.Count; i++)
                     {
+                        var bookingRoom = _bookingRooms[i];
                         <div class="accordion-item">
-                            <h2 class="accordion-header" id="headingOne">
+                            <h2 class="accordion-header" id="@($"heading{i}")">
                                 <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                        data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                                    Booking #1
+                                        data-bs-target="@($"#collapse{i}")" aria-expanded="true" aria-controls="@($"collapse{i}")">
+                                    Booking #@(i + 1)
                                 </button>
                             </h2>
-                            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne"
+                            <div id="@($"collapse{i}")" class="accordion-collapse collapse"
+                                 aria-labelledby="@($"heading{i}")"
                                  data-bs-parent="#accordionExample">
                                 <div class="accordion-body">
                                     Booking ID: @bookingRoom.BookingId <br/>
@@ -70,6 +72,7 @@
                             </div>
                         </div>
                     }
+
                 </div>
             }
             else

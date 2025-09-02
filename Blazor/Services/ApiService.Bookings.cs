@@ -14,7 +14,8 @@ public partial class APIService
         return res?.rooms ?? new();
     }
 
-    public async Task<string> CreateBooking(BookingDto bookingDto, string jwtToken, CancellationToken ct = default)
+    public async Task<string> CreateBookingAsync(NewBookingDto newBookingDto, string jwtToken,
+        CancellationToken ct = default)
     {
         try
         {
@@ -23,14 +24,13 @@ public partial class APIService
                 PropertyNameCaseInsensitive = true
             };
 
-            using var request = new HttpRequestMessage(HttpMethod.Post, "api/Bookings")
+            var request = new HttpRequestMessage(HttpMethod.Post, "api/Bookings")
             {
                 Content = new StringContent(
-                    JsonSerializer.Serialize(bookingDto, options),
+                    JsonSerializer.Serialize(newBookingDto, options),
                     System.Text.Encoding.UTF8,
                     "application/json")
             };
-
 
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
 
@@ -40,12 +40,9 @@ public partial class APIService
             {
                 return "New booking created";
             }
-            else
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                return errorContent;
 
-            }
+            var errorContent = await response.Content.ReadAsStringAsync();
+            return errorContent;
         }
         catch (Exception ex)
         {
@@ -55,7 +52,6 @@ public partial class APIService
 
         return "Booking failed";
     }
-
 
     private sealed class UserRoomsResponse
     {

@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 
 namespace DomainModels;
 
@@ -77,15 +78,14 @@ public class BookingRoomsDto()
     public List<string> RoomIds { get; set; }
 }
 
-public class BookingDto
+public class NewBookingDto
 {
-    public string Id { get; set; } = "test"; // The API expects an ID value, but it will just be overridden in the process, sp dont delete or mind this
+    [Range(1, int.MaxValue, ErrorMessage = "Adults must be between 1 and 100")]
     public int Adults { get; set; }
     public int Children { get; set; }
     public bool RoomService { get; set; }
     public bool Breakfast { get; set; }
     public bool Dinner { get; set; }
-    public string UserId { get; set; } = null!;
     public List<string> RoomIds { get; set; } = [];
     public DateTime occupiedFrom { get; set; }
     public DateTime occupiedTill { get; set; }
