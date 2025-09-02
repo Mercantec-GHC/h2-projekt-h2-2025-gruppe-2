@@ -129,14 +129,26 @@ namespace API.Controllers
         public async Task<ActionResult<Booking>> PostBooking([FromBody] BookingPostDto dto)
         {
             DateTime copenhagenTime = _timeHelper.GetCopenhagenTime();
+
+            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("User ID not found in token");
+            }
+
+            string newId = Guid.NewGuid().ToString();
+            var bookingId = _context.Bookings.Any(b => b.Id == newId);
+            if (bookingId) return StatusCode(500, $"Booking ID '{newId}' already exists. !!!ONE IN A TRILLION!!!'");
+
             Booking booking = new Booking
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = newId,
                 Adults = dto.Adults,
                 Children = dto.Children,
                 RoomService = dto.RoomService,
                 Dinner = dto.Dinner,
-                UserId = dto.UserId,
+                TotalPrice = dto.TotalPrice,
+                UserId = userId,
                 OccupiedFrom = dto.OccupiedFrom,
                 OccupiedTill = dto.OccupiedTill,
                 CreatedAt = copenhagenTime,
@@ -149,6 +161,12 @@ namespace API.Controllers
 
                 foreach (string roomId in dto.RoomIds)
                 {
+                    var tempRoom = _context.Rooms.Any(r => r.Id == roomId);
+                    if (!tempRoom)
+                    {
+                        return StatusCode(500, $"Room '{roomId}' not found'");
+                    }
+
                     BookingsRooms bookingsRooms = new BookingsRooms
                     {
                         Id = Guid.NewGuid().ToString(),
@@ -165,16 +183,16 @@ namespace API.Controllers
             catch (DbUpdateException e)
             {
                 _logger.LogError("Error updating db with new bookings: " + e.Message);
-                return BadRequest("Error updating db with new bookings: " + e.Message);
+                return StatusCode(500, "Error updating db with new bookings: " + e.Message);
             }
             catch (Exception e)
             {
                 _logger.LogError("Generel error saving new bookings: " + e.Message);
-                return BadRequest("Generel error saving new bookings: " + e.Message);
+                return StatusCode(500, "Generel error saving new bookings: " + e.Message);
             }
 
             _logger.LogInformation("Bookings added: " + booking);
-            return Ok(new { message = "Booking er oprettet!" });
+            return Ok(new { message = "Booking created successfully!" });
         }
 
         /// <summary>
