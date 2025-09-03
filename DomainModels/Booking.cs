@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 
 namespace DomainModels;
 
@@ -75,4 +76,18 @@ public class BookingRoomsDto()
     public DateTime OccupiedFrom { get; set; }
     public DateTime OccupiedTill { get; set; }
     public List<string> RoomIds { get; set; }
+}
+
+public class NewBookingDto
+{
+    [Range(1, int.MaxValue, ErrorMessage = "Adults must be between 1 and 100")]
+    public int Adults { get; set; }
+    public int Children { get; set; }
+    public bool RoomService { get; set; }
+    public bool Breakfast { get; set; }
+    public bool Dinner { get; set; }
+    public double TotalPrice { get; set; }
+    public List<string> RoomIds { get; set; } = [];
+    public DateTime occupiedFrom { get; set; }
+    public DateTime occupiedTill { get; set; }
 }
