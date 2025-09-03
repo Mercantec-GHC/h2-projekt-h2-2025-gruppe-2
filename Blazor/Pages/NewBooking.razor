@@ -45,14 +45,7 @@
         <h2>Total price:
             @if (_currentRooms.Any())
             {
-                @(
-                (
-                    _currentRooms.Sum(r => r.Price) * _daysSpent +
-                    (_newBookingDto.RoomService ? ROOM_SERVICE_PRICE : 0) +
-                    (_newBookingDto.Breakfast ? BREAKFAST_PRICE : 0) +
-                    (_newBookingDto.Dinner ? DINNER_PRICE : 0)
-                ).ToString("C")
-                )
+                <span>@CalcPrice().ToString("C")</span>
             }
             else
             {
@@ -133,6 +126,22 @@
         BREAKFAST_PRICE = BookingService.BREAKFAST_PRICE;
         DINNER_PRICE = BookingService.DINNER_PRICE;
         return Task.CompletedTask;
+    }
+
+    private double CalcPrice()
+    {
+        if (_currentRooms.Any())
+        {
+            var price = _currentRooms.Sum(r => r.Price) * _daysSpent +
+                          (_newBookingDto.RoomService ? ROOM_SERVICE_PRICE : 0) +
+                          (_newBookingDto.Breakfast ? BREAKFAST_PRICE : 0) +
+                          (_newBookingDto.Dinner ? DINNER_PRICE : 0);
+
+            _newBookingDto.TotalPrice = price;
+            return price;
+        }
+
+        return 0;
     }
 
     private async Task GetRoomsWithinTimeRange()

@@ -86,6 +86,7 @@ public class NewBookingDto
     public bool RoomService { get; set; }
     public bool Breakfast { get; set; }
     public bool Dinner { get; set; }
+    public double TotalPrice { get; set; }
     public List<string> RoomIds { get; set; } = [];
     public DateTime occupiedFrom { get; set; }
     public DateTime occupiedTill { get; set; }
