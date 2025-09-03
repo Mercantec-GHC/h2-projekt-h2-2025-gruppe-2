@@ -36,6 +36,27 @@ public partial class APIService
         }
     }
 
+    public async Task<List<Room>> GetRoomsByAvailableDates(DateTime startDate, DateTime endDate, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"api/Rooms/availability?startDate={startDate:yyyy-MM-dd}&endDate={endDate:yyyy-MM-dd}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<List<Room>>();
+                return result;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception caught getting rooms by availability: " + ex.Message);
+            return [];
+        }
+
+        return [];
+    }
+
     private sealed class RoomsByUserResponse
     {
         public string? message { get; set; }
