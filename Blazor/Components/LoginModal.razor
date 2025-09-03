@@ -93,25 +93,27 @@
             return;
         }
 
-        await ValidateJwtTokenAndMakeSessionToken(token);
+        var isTokenValid = await ValidateJwtTokenAndMakeSessionToken(token);
+        if (!isTokenValid) return;
         
         _isUserLoggedIn = true;
         await JS.InvokeVoidAsync("alert", "user in :)");
         Console.WriteLine("User is logged in");
     }
 
-    private async Task ValidateJwtTokenAndMakeSessionToken(string token)
+    private async Task<bool> ValidateJwtTokenAndMakeSessionToken(string token)
     {
         var (status, msg, sessionTokenDto) = await ApiService.ValidateToken(token);
         if (!status)
         {
             await LogUserOut();
             await JS.InvokeVoidAsync("alert", "User was not logged in: " + msg);
-            return;
+            return false;
         }
 
         if (sessionTokenDto == null) throw new NullReferenceException("Session token is null");
         await StorageService.MakeSessionToken(sessionTokenDto);
+        return true;
     }
 
     private async Task LogUserOut()
