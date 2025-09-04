@@ -1,4 +1,7 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject APIService Api
+@inject StorageService Storage
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">H2 Med MAGS</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -53,6 +56,11 @@
 
     private bool _isAdmin;
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await IsAdmin();
+    }
+
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
@@ -63,10 +71,25 @@
     {
         try
         {
+            string? jwtToken = await Storage.GetItemFromStorageAsync("authToken");
+            if (string.IsNullOrEmpty(jwtToken))
+            {
+                Console.WriteLine("No authToken found.");
+                _isAdmin = false;
+                return;
+            }
+
+            if (await Api.IsUserAdmin(jwtToken))
+            {
+                _isAdmin = true;
+                StateHasChanged();
+                return;
+            }
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
+            _isAdmin = false;
             return;
         }
         
