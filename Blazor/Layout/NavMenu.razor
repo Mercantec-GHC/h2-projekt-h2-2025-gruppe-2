@@ -34,7 +34,15 @@
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> New Booking
             </NavLink>
         </div>
-        
+        @if (_isAdmin)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/admin" Match="NavLinkMatch.All">
+                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Admin
+                </NavLink>
+            </div>
+        }
+
     </nav>
 </div>
 
@@ -43,8 +51,26 @@
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
+    private bool _isAdmin;
+
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
     }
+
+    // Sends the JWT token and checks if the user has the role admin.
+    private async Task IsAdmin()
+    {
+        try
+        {
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return;
+        }
+        
+        _isAdmin = false;
+    }
+
 }
