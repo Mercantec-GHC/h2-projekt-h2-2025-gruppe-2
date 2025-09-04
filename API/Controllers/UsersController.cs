@@ -131,6 +131,120 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
+    /// Checks if the user is of role Admin, via the given JWT
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("admin")]
+    public async Task<IActionResult> IsAdmin()
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId)) return Unauthorized("User id not found in token");
+
+            User? user = await _context.Users
+                .Include(u => u.Roles)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null) return NotFound("User was not found in database.");
+
+            if (user.Roles?.Name == "Admin")
+            {
+                return Ok(new
+                {
+                    message = "User is authorized"
+                });
+            }
+
+            return Unauthorized(new
+            {
+                message = "User is unauthorized"
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, "Internal server error :(: " + ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Checks if the user is of role Reception, via the given JWT
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("reception")]
+    public async Task<IActionResult> IsReception()
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId)) return Unauthorized("User id not found in token");
+
+            User? user = await _context.Users
+                .Include(u => u.Roles)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null) return NotFound("User was not found in database.");
+
+            if (user.Roles?.Name == "Reception")
+            {
+                return Ok(new
+                {
+                    message = "User is Reception"
+                });
+            }
+
+            return Unauthorized(new
+            {
+                message = "User is NOT Reception"
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, "Internal server error :(: " + ex.Message);
+        }
+    }
+    
+    /// <summary>
+    /// Checks if the user is of role CleaningStaff, via the given JWT
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet("cleaning-staff")]
+    public async Task<IActionResult> IsCleaningStaff()
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId)) return Unauthorized("User id not found in token");
+
+            User? user = await _context.Users
+                .Include(u => u.Roles)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null) return NotFound("User was not found in database.");
+
+            if (user.Roles?.Name == "CleaningStaff")
+            {
+                return Ok(new
+                {
+                    message = "User is CleaningStaff"
+                });
+            }
+
+            return Unauthorized(new
+            {
+                message = "User is NOT CleaningStaff"
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return StatusCode(500, "Internal server error :(: " + ex.Message);
+        }
+    }
+
+    /// <summary>
     /// Updates an existing user.
     /// </summary>
     /// <param name="id">The ID of the user to update.</param>
@@ -458,7 +572,7 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> ChangeOwnPassword([FromBody] ChangeOwnPasswordDto dto)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return Unauthorized(new {message = "User does not exist"});
+        if (string.IsNullOrEmpty(userId)) return Unauthorized(new { message = "User does not exist" });
 
         var user = await _context.Users.FindAsync(userId);
         if (user == null) return NotFound();
