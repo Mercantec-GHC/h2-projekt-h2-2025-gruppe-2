@@ -1,6 +1,8 @@
 @page "/all-rooms"
+@using System.Text.Json
 @using DomainModels
 @using Blazor.Services
+@inject StorageService Storage
 @inject APIService API
 
 <h3 class="mb-3">Rooms</h3>
@@ -23,7 +25,7 @@ else
         @foreach (var r in rooms)
         {
             <div class="col">
-                <HotelRoom room="r"></HotelRoom>
+                <RoomCard room="r"></RoomCard>
             </div>
         }
     </div>
@@ -33,12 +35,23 @@ else
     List<Room> rooms = new();
     bool loading = true;
     string? error;
+    const string CACHE_KEY = "cachedRooms";
+    TimeSpan CACHE_DURATION = TimeSpan.FromMinutes(10) + TimeSpan.FromHours(2); // Example
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            var cacheRooms = await Storage.GetCacheObjectFromLocalStorageAsync<List<Room>>(CACHE_KEY);
+            if (cacheRooms != null && cacheRooms.Expiry > DateTime.UtcNow)
+            {
+                Console.WriteLine("Using cached rooms");
+                rooms = cacheRooms.Data;
+                return;
+            }
+            
             rooms = await API.GetRooms();
+            await Storage.SaveCacheObjectToLocalStorageAsync(CACHE_KEY, rooms, CACHE_DURATION);
         }
         catch (Exception ex)
         {
@@ -49,4 +62,5 @@ else
             loading = false;
         }
     }
+
 }

@@ -27,7 +27,7 @@
                             <label>
                                 Password
                             </label>
-                            <InputText class="form-control" @bind-Value="_loginDto.Password"/>
+                            <InputText type="password" class="form-control" @bind-Value="_loginDto.Password"/>
 
                             <button class="btn btn-primary mt-2">Click</button>
                         </EditForm>
@@ -85,7 +85,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var token = await StorageService.GetItemFromStorageAsync("authToken");
+        string? token = await StorageService.GetItemFromLocalStorageAsync("authToken");
         if (string.IsNullOrEmpty(token))
         {
             Console.WriteLine("User is not logged in");
@@ -97,7 +97,6 @@
         if (!isTokenValid) return;
         
         _isUserLoggedIn = true;
-        await JS.InvokeVoidAsync("alert", "user in :)");
         Console.WriteLine("User is logged in");
     }
 
@@ -118,8 +117,8 @@
 
     private async Task LogUserOut()
     {
-        await StorageService.RemoveItemFromStorageAsync("authToken");
-        await StorageService.RemoveItemFromSessionAsync("user");
+        await StorageService.RemoveItemFromLocalStorageAsync("authToken");
+        await StorageService.RemoveItemFromSessionStorageAsync("user");
         _isUserLoggedIn = false;
         authService.NotifyUserChanged();
         StateHasChanged();
@@ -158,7 +157,7 @@
             {
                 if (!string.IsNullOrEmpty(response.token))
                 {
-                    await StorageService.SaveItemToStorageAsync("authToken", response.token);
+                    await StorageService.SaveItemToLocalStorageAsync("authToken", response.token);
                     await ValidateJwtTokenAndMakeSessionToken(response.token);
 
                     _isUserLoggedIn = true;

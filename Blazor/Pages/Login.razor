@@ -19,7 +19,7 @@
     <p>@_userInfo.CreatedAt</p>
     <p>@_userInfo.UpdatedAt</p>
 
-    <div class="row">
+    <div class="row my-2">
         <div class="col col-sm-6 col-md-6 col-lg-6 col-xl-6">
             <h2>Change Password</h2>
             <EditForm Model="@_changePassword" OnValidSubmit="ChangePassword">
@@ -165,7 +165,7 @@ else
 
         try
         {
-            string token = await StorageService.GetItemFromStorageAsync("authToken");
+            string? token = await StorageService.GetItemFromLocalStorageAsync("authToken");
             if (string.IsNullOrEmpty(token))
             {
                 await JS.InvokeVoidAsync("alert", "No token found, please re-login");

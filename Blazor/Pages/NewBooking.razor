@@ -100,7 +100,7 @@
         @foreach (var r in _availableRooms)
         {
             <div class="col" style="height: 100%;">
-                <HotelRoom room="r"></HotelRoom>
+                <RoomCard room="r"></RoomCard>
                 <button class="btn btn-primary" @onclick="() => AddRoomId(r)">Add room</button>
             </div>
         }
@@ -197,7 +197,7 @@
             return;
         }
 
-        var jwtToken = await StorageService.GetItemFromStorageAsync("authToken");
+        string? jwtToken = await StorageService.GetItemFromLocalStorageAsync("authToken");
         if (string.IsNullOrEmpty(jwtToken))
         {
             await JS.InvokeVoidAsync("alert", "Please log in");
