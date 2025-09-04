@@ -1,23 +1,38 @@
 ﻿@inherits LayoutComponentBase
+@using Blazor.Components
+
+
 <div class="page">
-    <div class="sidebar">
-        <NavMenu/>
-    </div>
-
     <main>
-        <div class="top-row px-4">
-            <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#loginModal">Login</button>
-            <a href="https://mercantec.notion.site/h2" target="_blank">Notion</a>
-        </div>
-        <LoginModal/>
+        <nav class="navbar navbar-dark bg-dark sticky-top">
+            <div class="container-fluid d-flex align-items-center">
+                <NavLink class="navbar-brand d-flex align-items-center gap-2" href="/">
+                    <span class="d-inline-flex justify-content-center align-items-center rounded-circle bg-light" style="width:36px; height:36px;">
+                        <img src="/small karambit.png" alt="Logo" width="30" height="24" class="d-inline-block align-text-top" />
+                    </span>
+                    Karambit
+                </NavLink>
+                <ul class="navbar-nav flex-row ms-9">
+                    <li class="nav-item">
+                        <NavLink class="nav-link px-3" href="" Match="NavLinkMatch.All">Home</NavLink>
+                    </li>
+                    <li class="nav-item">
+                        <NavLink class="nav-link px-3" href="/login">Login</NavLink>
+                    </li>
+                    <li class="nav-item">
+                        <NavLink class="nav-link px-3" href="/all-rooms">All rooms</NavLink>
+                    </li>
+                    <li class="nav-item">
+                        <NavLink class="nav-link px-3" href="/User-Bookings">User Bookings</NavLink>
+                    </li>
+                </ul>
+                
 
-        @* Has to be outside the above div, otherwise the overlay stays ontop of the modal, due to the CSS of the top-row. *@
-        @if (!string.IsNullOrEmpty(_alertMessage))
-        {
-            <div class="alert alert-success" role="alert">
-                @_alertMessage
+                <div class="ms-auto">
+                    <LoginModal />
+                </div>
             </div>
-        }
+        </nav>
 
         <article class="content px-4">
             @Body
