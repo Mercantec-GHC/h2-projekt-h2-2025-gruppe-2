@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using DomainModels;
+using System.Net.Http.Headers;
 
 namespace Blazor.Services;
 
@@ -152,6 +153,29 @@ public partial class APIService
         }
         
         return (false, "Not implemented yet", null);
+    }
+
+    public async Task<bool> IsUserAdmin(string jwtToken)
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "api/Users/admin");
+            
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+            
+            var response = await _httpClient.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error authorizing user: "+ex.Message);
+            return false;
+        }
+
+        return false;
     }
 
 }

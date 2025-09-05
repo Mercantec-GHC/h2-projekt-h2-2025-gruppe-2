@@ -1,0 +1,237 @@
+﻿@page "/new-booking"
+@using System.Text.Json
+@inject APIService API
+@inject IJSRuntime JS
+@inject BookingService BookingService
+@inject StorageService StorageService
+
+<div class="row mb-2">
+    <div class="col-6">
+        <div class="mb-3">
+            <InputDate TValue="DateOnly" @bind-Value="@startingDate" Placeholder="Enter Date"/>
+            <InputDate TValue="DateOnly" @bind-Value="@endingDate" Placeholder="Enter Date"/>
+        </div>
+        <div class="mb-3">Entered date: @startingDate</div>
+        <div class="mb-3">Entered date: @endingDate</div>
+        <div class="mb-3">Nætter: @_daysSpent</div>
+        @if (_loadingRooms)
+        {
+            <Loading/>
+        }
+        else
+        {
+            <button @onclick="GetRoomsWithinTimeRange" class="btn btn-primary">Get rooms by date</button>
+        }
+    </div>
+    <div class="col-6">
+        @if (_currentRooms.Any())
+        {
+            <div class="mb-3">
+                <label>Room IDs</label>
+                <ul style="list-style-type: '- ';">
+                    @foreach (var r in _currentRooms)
+                    {
+                        <li>
+                            ID: @r.Id, for @r.Price.ToString("C") <button class="btn btn-danger"
+                                                                          @onclick="() => RemoveRoom(r)">X
+                            </button>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+    <div class="col-6">
+        <h2>Total price:
+            @if (_currentRooms.Any())
+            {
+                <span>@CalcPrice().ToString("C")</span>
+            }
+            else
+            {
+                <span>0</span>
+            }
+        </h2>
+    </div>
+</div>
+
+<div class="row">
+    @*<EditForm Model="@_newBookingDto" OnValidSubmit="@CreateBooking">
+        <DataAnnotationsValidator/>
+        <ValidationSummary/>*@
+    <div class="col">
+        <label>
+            Adults
+            <InputNumber @bind-Value="_newBookingDto.Adults" class="form-control"/>
+        </label>
+    </div>
+    <div class="col">
+        <label>
+            Children
+            <InputNumber @bind-Value="_newBookingDto.Children" class="form-control"/>
+        </label>
+    </div>
+    <div class="col">
+        <label>
+            Room service (@ROOM_SERVICE_PRICE.ToString("C"))
+            <InputCheckbox @bind-Value="_newBookingDto.RoomService" class="form-check-input"/>
+        </label>
+    </div>
+    <div class="col">
+        <label>
+            Breakfast (@BREAKFAST_PRICE.ToString("C"))
+            <InputCheckbox @bind-Value="_newBookingDto.Breakfast" class="form-check-input"/>
+        </label>
+    </div>
+    <div class="col">
+        <label>
+            Dinner (@DINNER_PRICE.ToString("C"))
+            <InputCheckbox @bind-Value="_newBookingDto.Dinner" class="form-check-input"/>
+        </label>
+    </div>
+    @* </EditForm> *@
+</div>
+<button @onclick="CreateBooking" class="btn btn-primary my-2">Create booking</button>
+
+
+@if (_availableRooms != null)
+{
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+        @foreach (var r in _availableRooms)
+        {
+            <div class="col" style="height: 100%;">
+                <RoomCard room="r"></RoomCard>
+                <button class="btn btn-primary" @onclick="() => AddRoomId(r)">Add room</button>
+            </div>
+        }
+    </div>
+}
+
+@code {
+
+    private DateOnly startingDate = DateOnly.FromDateTime(DateTime.Now);
+    private DateOnly endingDate = DateOnly.FromDateTime(DateTime.Now.AddDays(1));
+    private int _daysSpent;
+    double ROOM_SERVICE_PRICE;
+    double BREAKFAST_PRICE;
+    double DINNER_PRICE;
+    bool _loadingRooms;
+    List<Room>? _availableRooms;
+    List<Room> _currentRooms = [];
+    NewBookingDto _newBookingDto = new();
+
+    protected override Task OnInitializedAsync()
+    {
+        ROOM_SERVICE_PRICE = BookingService.ROOM_SERVICE_PRICE;
+        BREAKFAST_PRICE = BookingService.BREAKFAST_PRICE;
+        DINNER_PRICE = BookingService.DINNER_PRICE;
+        return Task.CompletedTask;
+    }
+
+    private double CalcPrice()
+    {
+        if (_currentRooms.Any())
+        {
+            var price = _currentRooms.Sum(r => r.Price) * _daysSpent +
+                          (_newBookingDto.RoomService ? ROOM_SERVICE_PRICE : 0) +
+                          (_newBookingDto.Breakfast ? BREAKFAST_PRICE : 0) +
+                          (_newBookingDto.Dinner ? DINNER_PRICE : 0);
+
+            _newBookingDto.TotalPrice = price;
+            return price;
+        }
+
+        return 0;
+    }
+
+    private async Task GetRoomsWithinTimeRange()
+    {
+        _loadingRooms = true;
+        StateHasChanged();
+
+        ResetValues();
+
+        try
+        {
+            TimeService helper = new();
+            var startDateUtc = helper.TranslateToUtc(startingDate);
+            var endDateUtc = helper.TranslateToUtc(endingDate);
+            SetDaysSpent();
+            Console.WriteLine("Start: " + startDateUtc);
+            Console.WriteLine("End: " + endDateUtc);
+
+            _availableRooms = await API.GetRoomsByAvailableDates(startDateUtc, endDateUtc);
+            _loadingRooms = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return;
+        }
+    }
+
+    private void SetDaysSpent() => _daysSpent = endingDate.DayNumber - startingDate.DayNumber;
+    private void RemoveRoom(Room room) => _currentRooms.Remove(room);
+
+    private async Task AddRoomId(Room room)
+    {
+        // Check if id is already in the list
+
+        if (!_currentRooms.Contains(room))
+        {
+            _currentRooms.Add(room);
+            StateHasChanged();
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "Room already added");
+        }
+    }
+
+    private async Task CreateBooking()
+    {
+        if (!_currentRooms.Any())
+        {
+            await JS.InvokeVoidAsync("alert", "No rooms added");
+            return;
+        }
+
+        string? jwtToken = await StorageService.GetItemFromLocalStorageAsync("authToken");
+        if (string.IsNullOrEmpty(jwtToken))
+        {
+            await JS.InvokeVoidAsync("alert", "Please log in");
+            return;
+        }
+
+        TimeService helper = new();
+
+        _newBookingDto.occupiedFrom = helper.TranslateToUtc(startingDate);
+        _newBookingDto.occupiedTill = helper.TranslateToUtc(endingDate);
+
+        foreach (var room in _currentRooms)
+        {
+            _newBookingDto.RoomIds.Add(room.Id);
+        }
+
+        var result = await API.CreateBookingAsync(_newBookingDto, jwtToken);
+        await JS.InvokeVoidAsync("alert", result);
+    }
+
+    private void ResetValues()
+    {
+        _currentRooms = [];
+    }
+
+    private async Task<string> SetUserId(string jwtToken)
+    {
+        var token = await StorageService.GetItemFromSessionStorageAsync("user");
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        };
+        var sessionToken = JsonSerializer.Deserialize<SessionTokenDto>(token, options)!;
+        return sessionToken.Id;
+    }
+
+}

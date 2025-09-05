@@ -1,11 +1,13 @@
 @page "/room/{id}"
 @using DomainModels
 @using Blazor.Services
+@inject StorageService Storage
 @inject APIService API
 
 <h3 class="mb-3">Room Details</h3>
 
 @if (error is not null)
+    
 {
     <div class="alert alert-danger">@error</div>
 }
@@ -67,7 +69,16 @@ else
     {
         try
         {
+            CacheWrapper<Room>? cachedRoom = await Storage.GetCacheObjectFromLocalStorageAsync<Room>("room" + id);
+            if (cachedRoom != null && cachedRoom.Expiry > DateTime.UtcNow)
+            {
+                Console.WriteLine("Using chached room");
+                room = cachedRoom.Data;
+                return;
+            }
+            
             room = await API.GetRoomById(id);
+            await Storage.SaveCacheObjectToLocalStorageAsync("room" + id, room, TimeSpan.Zero.Add(TimeSpan.FromMinutes(10) + TimeSpan.FromHours(2)));
         }
         catch (Exception ex)
         {
