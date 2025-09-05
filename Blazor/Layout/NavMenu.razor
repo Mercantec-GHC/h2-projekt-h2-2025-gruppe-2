@@ -1,5 +1,6 @@
 ﻿@inject APIService Api
 @inject StorageService Storage
+@inject AuthService Auth
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -58,12 +59,18 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        Auth.OnUserChangedSubscribtion += OnUserChangedSubscription;
         await IsAdmin();
     }
 
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+    
+    private void OnUserChangedSubscription()
+    {
+        InvokeAsync(StateHasChanged);
     }
 
     // Sends the JWT token and checks if the user has the role admin.
