@@ -1,7 +1,8 @@
 ﻿@inherits LayoutComponentBase
 @using Blazor.Components
 @inject AuthService AuthService
-@inject StorageService StorageService
+@inject StorageService Storage
+@inject IJSRuntime JS
 
 <div class="page">
     <main>
@@ -9,9 +10,9 @@
             <div class="container-fluid d-flex align-items-center">
                 <NavLink class="navbar-brand d-flex align-items-center gap-2" href="/">
                     <span class="d-inline-flex justify-content-center align-items-center rounded-circle bg-light"
-                        style="width:36px; height:36px;">
+                          style="width:36px; height:36px;">
                         <img src="/small karambit.png" alt="Logo" width="30" height="24"
-                            class="d-inline-block align-text-top" />
+                             class="d-inline-block align-text-top"/>
                     </span>
                     Karambit Hotel
                 </NavLink>
@@ -28,6 +29,12 @@
                     <li class="nav-item">
                         <NavLink class="nav-link px-3" href="/User-info">My Info</NavLink>
                     </li>
+                    @if (_isAdmin)
+                    {
+                        <li class="nav-item">
+                            <NavLink class="nav-link px-3" href="/admin">Admin</NavLink>
+                        </li>
+                    }
                     <li class="sign-in ms-auto">
                         @if (_userInfo != null)
                         {
@@ -35,14 +42,14 @@
                                 Hello, @_userInfo.Username!
                             </span>
                             <button type="button" class="nav-link btn btn-link px-3" data-bs-toggle="modal"
-                                data-bs-target="#loginModal">
+                                    data-bs-target="#loginModal">
                                 Sign Out
                             </button>
                         }
                         else
                         {
                             <button type="button" class="nav-link btn btn-link px-3" data-bs-toggle="modal"
-                                data-bs-target="#loginModal">
+                                    data-bs-target="#loginModal">
                                 Sign In
                             </button>
                         }
@@ -50,7 +57,7 @@
                 </ul>
             </div>
         </nav>
-        <LoginModal />
+        <LoginModal/>
         <article class="content px-4">
             @Body
         </article>
@@ -59,16 +66,46 @@
 
 @code {
     private SessionTokenDto? _userInfo;
+    bool _isAdmin;
 
     protected override async Task OnInitializedAsync()
     {
         AuthService.OnUserChangedSubscribtion += OnUserChangedSubscription;
         await LoadUserInfo();
+        await isUserAdmin();
+    }
+
+    private async Task isUserAdmin()
+    {
+        string? jwtToken = await Storage.GetItemFromLocalStorageAsync("authToken");
+        if (string.IsNullOrEmpty(jwtToken))
+        {
+            await JS.InvokeVoidAsync("alert", "No auth token found");
+            _isAdmin = false;
+            return;
+        }
+
+        try
+        {
+            if (await ApiService.IsUserAdmin(jwtToken))
+            {
+                _isAdmin = true;
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error checking if user is admin: " + ex.Message);
+            _isAdmin = false;
+            return;
+        }
+
+        _isAdmin = false;
     }
 
     private async Task LoadUserInfo()
     {
-        var user = await StorageService.GetItemFromSessionStorageAsync("user");
+        var user = await Storage.GetItemFromSessionStorageAsync("user");
         if (!string.IsNullOrEmpty(user))
         {
             var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -78,21 +115,19 @@
         {
             _userInfo = null;
         }
+
         StateHasChanged();
     }
 
     private void OnUserChangedSubscription()
     {
-        InvokeAsync(async () =>
-        {
-            await LoadUserInfo();
-        });
+        InvokeAsync(async () => { await LoadUserInfo(); });
     }
 
     private async Task Logout()
     {
-        await StorageService.RemoveItemFromStorageAsync("authToken");
-        await StorageService.RemoveItemFromSessionAsync("user");
+        await Storage.RemoveItemFromLocalStorageAsync("authToken");
+        await Storage.RemoveItemFromSessionStorageAsync("user");
         AuthService.NotifyUserChanged();
         _userInfo = null;
         StateHasChanged();
@@ -102,4 +137,5 @@
     {
         AuthService.OnUserChangedSubscribtion -= OnUserChangedSubscription;
     }
+
 }

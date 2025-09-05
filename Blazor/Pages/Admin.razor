@@ -98,7 +98,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        string? jwtToken = await Storage.GetItemFromStorageAsync("authToken");
+        string? jwtToken = await Storage.GetItemFromLocalStorageAsync("authToken");
         if (string.IsNullOrEmpty(jwtToken))
         {
             await JS.InvokeVoidAsync("alert", "No token found, you are not authorized to be here.");
