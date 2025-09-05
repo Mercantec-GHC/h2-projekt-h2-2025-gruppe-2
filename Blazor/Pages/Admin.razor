@@ -1,1 +1,121 @@
 ﻿@page "/admin"
+@inject StorageService Storage
+@inject IJSRuntime JS
+@inject APIService Api
+@inject NavigationManager NavigationManager;
+@if (_isAdmin)
+{
+    <h2 class="delete-title">Delete</h2>
+    <div class="row">
+        <div class="col-4">
+            <label>
+                Delete User
+            </label>
+            <div class="row">
+                <div class="col-8">
+                    <InputText @bind-Value="_userId" class="form-control"></InputText>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-danger">Delete User</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-4">
+            <label>
+                Delete User
+            </label>
+            <InputText @bind-Value="_userId" class="form-control"></InputText>
+        </div>
+        <div class="col-4">
+            <label>
+                Delete User
+            </label>
+            <InputText @bind-Value="_userId" class="form-control"></InputText>
+        </div>
+    </div>
+
+    <h2 class="get-title">Get</h2>
+    <h2 class="post-title">Post</h2>
+    <h2 class="put-title">Put</h2>
+}
+
+<style>
+    .delete-title {
+        color: white;
+        background-color: #dc3545;
+        width: fit-content;
+        padding: 10px 15px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        font-weight: bold;
+        justify-self: center;
+        margin: 5px 0px;
+    }
+
+    .get-title {
+        color: white;
+        background-color: #61affe;
+        width: fit-content;
+        padding: 10px 15px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        font-weight: bold;
+        justify-self: center;
+        margin: 5px 0px;
+    }
+
+    .post-title {
+        color: white;
+        background-color: #49cc90;
+        width: fit-content;
+        padding: 10px 15px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        font-weight: bold;
+        justify-self: center;
+        margin: 5px 0px;
+    }
+
+    .put-title {
+        color: white;
+        background-color: #fca130;
+        width: fit-content;
+        padding: 10px 15px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        font-weight: bold;
+        justify-self: center;
+        margin: 5px 0px;
+    }
+</style>
+
+@code {
+
+    // If we dont check if the user is admin, a normal user will be stuck on the screen with the admin info until they
+    // click on the alert
+    bool _isAdmin;
+    string _userId = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        string? jwtToken = await Storage.GetItemFromStorageAsync("authToken");
+        if (string.IsNullOrEmpty(jwtToken))
+        {
+            await JS.InvokeVoidAsync("alert", "No token found, you are not authorized to be here.");
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        if (await Api.IsUserAdmin(jwtToken))
+        {
+            _isAdmin = true;
+            return;
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "You are not authorized to be here.");
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+}
