@@ -1,4 +1,8 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject APIService Api
+@inject StorageService Storage
+@inject AuthService Auth
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">H2 Med MAGS</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -34,7 +38,15 @@
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> New Booking
             </NavLink>
         </div>
-        
+        @if (_isAdmin)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/admin" Match="NavLinkMatch.All">
+                    <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Admin
+                </NavLink>
+            </div>
+        }
+
     </nav>
 </div>
 
@@ -43,8 +55,52 @@
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
+    private bool _isAdmin;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Auth.OnUserChangedSubscribtion += OnUserChangedSubscription;
+        await IsAdmin();
+    }
+
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
     }
+    
+    private void OnUserChangedSubscription()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    // Sends the JWT token and checks if the user has the role admin.
+    private async Task IsAdmin()
+    {
+        try
+        {
+            string? jwtToken = await Storage.GetItemFromStorageAsync("authToken");
+            if (string.IsNullOrEmpty(jwtToken))
+            {
+                Console.WriteLine("No authToken found.");
+                _isAdmin = false;
+                return;
+            }
+
+            if (await Api.IsUserAdmin(jwtToken))
+            {
+                _isAdmin = true;
+                StateHasChanged();
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            _isAdmin = false;
+            return;
+        }
+        
+        _isAdmin = false;
+    }
+
 }
