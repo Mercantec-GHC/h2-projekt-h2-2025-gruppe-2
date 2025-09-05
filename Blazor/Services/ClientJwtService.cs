@@ -6,7 +6,7 @@ public class ClientJwtService(StorageService storage)
 
 	public async Task<string?> GetTokenAsync()
 	{
-		var token = await _storage.GetItemFromStorageAsync("authToken");
+		string? token = await _storage.GetItemFromLocalStorageAsync("authToken");
 		return string.IsNullOrWhiteSpace(token) ? null : token;
 	}
 

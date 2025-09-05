@@ -15,7 +15,9 @@ public class Program
         var builder = WebAssemblyHostBuilder.CreateDefault(args);
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
-
+        
+        builder.Services.AddScoped<BookingService>();
+        
         // Reads API endpoint from environment variables or uses default
         var envApiEndpoint = Environment.GetEnvironmentVariable("API_ENDPOINT");
         Console.WriteLine($"API ENV Endpoint: {envApiEndpoint}");

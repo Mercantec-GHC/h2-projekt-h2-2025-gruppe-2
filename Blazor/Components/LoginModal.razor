@@ -27,16 +27,14 @@
                             <label>
                                 Password
                             </label>
-                            <InputText class="form-control" @bind-Value="_loginDto.Password"/>
+                            <InputText type="password" class="form-control" @bind-Value="_loginDto.Password"/>
 
                             <button class="btn btn-primary mt-2">Click</button>
                         </EditForm>
                     }
                     else
                     {
-                        <div class="spinner-border mt-2" role="status">
-                            <span class="visually-hidden">&nbsp;</span>
-                        </div>
+                        <Loading/>
                     }
                 }
                 else
@@ -87,7 +85,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var token = await StorageService.GetItemFromStorageAsync("authToken");
+        string? token = await StorageService.GetItemFromLocalStorageAsync("authToken");
         if (string.IsNullOrEmpty(token))
         {
             Console.WriteLine("User is not logged in");
@@ -95,31 +93,32 @@
             return;
         }
 
-        await ValidateJwtTokenAndMakeSessionToken(token);
+        var isTokenValid = await ValidateJwtTokenAndMakeSessionToken(token);
+        if (!isTokenValid) return;
         
         _isUserLoggedIn = true;
-        await JS.InvokeVoidAsync("alert", "user in :)");
         Console.WriteLine("User is logged in");
     }
 
-    private async Task ValidateJwtTokenAndMakeSessionToken(string token)
+    private async Task<bool> ValidateJwtTokenAndMakeSessionToken(string token)
     {
         var (status, msg, sessionTokenDto) = await ApiService.ValidateToken(token);
         if (!status)
         {
             await LogUserOut();
             await JS.InvokeVoidAsync("alert", "User was not logged in: " + msg);
-            return;
+            return false;
         }
 
         if (sessionTokenDto == null) throw new NullReferenceException("Session token is null");
         await StorageService.MakeSessionToken(sessionTokenDto);
+        return true;
     }
 
     private async Task LogUserOut()
     {
-        await StorageService.RemoveItemFromStorageAsync("authToken");
-        await StorageService.RemoveItemFromSessionAsync("user");
+        await StorageService.RemoveItemFromLocalStorageAsync("authToken");
+        await StorageService.RemoveItemFromSessionStorageAsync("user");
         _isUserLoggedIn = false;
         authService.NotifyUserChanged();
         StateHasChanged();
@@ -158,7 +157,7 @@
             {
                 if (!string.IsNullOrEmpty(response.token))
                 {
-                    await StorageService.SaveItemToStorageAsync("authToken", response.token);
+                    await StorageService.SaveItemToLocalStorageAsync("authToken", response.token);
                     await ValidateJwtTokenAndMakeSessionToken(response.token);
 
                     _isUserLoggedIn = true;

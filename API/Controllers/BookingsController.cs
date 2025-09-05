@@ -128,6 +128,11 @@ namespace API.Controllers
         [HttpPost]
         public async Task<ActionResult<Booking>> PostBooking([FromBody] BookingPostDto dto)
         {
+            if (dto.OccupiedFrom > dto.OccupiedTill)
+            {
+                return BadRequest("Occupied from date must be earlier than occupied till date.");
+            }
+            
             DateTime copenhagenTime = _timeHelper.GetCopenhagenTime();
 
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;

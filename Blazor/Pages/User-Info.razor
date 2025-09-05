@@ -19,7 +19,7 @@
     <p>@_userInfo.CreatedAt</p>
     <p>@_userInfo.UpdatedAt</p>
 
-    <div class="row">
+    <div class="row my-2">
         <div class="col col-sm-6 col-md-6 col-lg-6 col-xl-6">
             <h2>Change Password</h2>
             <EditForm Model="@_changePassword" OnValidSubmit="ChangePassword">
@@ -47,16 +47,18 @@
             @if (_bookingRooms.Any())
             {
                 <div class="accordion" id="accordionExample">
-                    @foreach (var bookingRoom in _bookingRooms)
+                    @for (int i = 0; i < _bookingRooms.Count; i++)
                     {
+                        var bookingRoom = _bookingRooms[i];
                         <div class="accordion-item">
-                            <h2 class="accordion-header" id="headingOne">
+                            <h2 class="accordion-header" id="@($"heading{i}")">
                                 <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                        data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                                    Booking #1
+                                        data-bs-target="@($"#collapse{i}")" aria-expanded="true" aria-controls="@($"collapse{i}")">
+                                    Booking #@(i + 1)
                                 </button>
                             </h2>
-                            <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne"
+                            <div id="@($"collapse{i}")" class="accordion-collapse collapse"
+                                 aria-labelledby="@($"heading{i}")"
                                  data-bs-parent="#accordionExample">
                                 <div class="accordion-body">
                                     Booking ID: @bookingRoom.BookingId <br/>
@@ -70,6 +72,7 @@
                             </div>
                         </div>
                     }
+
                 </div>
             }
             else
@@ -162,7 +165,7 @@ else
 
         try
         {
-            string token = await StorageService.GetItemFromStorageAsync("authToken");
+            string? token = await StorageService.GetItemFromLocalStorageAsync("authToken");
             if (string.IsNullOrEmpty(token))
             {
                 await JS.InvokeVoidAsync("alert", "No token found, please re-login");
