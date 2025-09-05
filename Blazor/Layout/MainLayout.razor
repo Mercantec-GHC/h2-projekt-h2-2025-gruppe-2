@@ -1,24 +1,56 @@
 ﻿@inherits LayoutComponentBase
+@using Blazor.Components
+@inject AuthService AuthService
+@inject StorageService StorageService
+
 <div class="page">
-    <div class="sidebar">
-        <NavMenu/>
-    </div>
-
     <main>
-        <div class="top-row px-4">
-            <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#loginModal">Login</button>
-            <a href="https://mercantec.notion.site/h2" target="_blank">Notion</a>
-        </div>
-        <LoginModal/>
-
-        @* Has to be outside the above div, otherwise the overlay stays ontop of the modal, due to the CSS of the top-row. *@
-        @if (!string.IsNullOrEmpty(_alertMessage))
-        {
-            <div class="alert alert-success" role="alert">
-                @_alertMessage
+        <nav class="navbar navbar-dark bg-dark sticky-top">
+            <div class="container-fluid d-flex align-items-center">
+                <NavLink class="navbar-brand d-flex align-items-center gap-2" href="/">
+                    <span class="d-inline-flex justify-content-center align-items-center rounded-circle bg-light"
+                        style="width:36px; height:36px;">
+                        <img src="/small karambit.png" alt="Logo" width="30" height="24"
+                            class="d-inline-block align-text-top" />
+                    </span>
+                    Karambit Hotel
+                </NavLink>
+                <ul class="navbar-nav flex-row ms-3 flex-grow-1">
+                    <li class="nav-item">
+                        <NavLink class="nav-link px-3" href="" Match="NavLinkMatch.All">Home</NavLink>
+                    </li>
+                    <li class="nav-item">
+                        <NavLink class="nav-link px-3" href="/all-rooms">All rooms</NavLink>
+                    </li>
+                    <li class="nav-item">
+                        <NavLink class="nav-link px-3" href="/User-Bookings">My Bookings</NavLink>
+                    </li>
+                    <li class="nav-item">
+                        <NavLink class="nav-link px-3" href="/User-info">My Info</NavLink>
+                    </li>
+                    <li class="sign-in ms-auto">
+                        @if (_userInfo != null)
+                        {
+                            <span class="navbar-text text-white me-3">
+                                Hello, @_userInfo.Username!
+                            </span>
+                            <button type="button" class="nav-link btn btn-link px-3" data-bs-toggle="modal"
+                                data-bs-target="#loginModal">
+                                Sign Out
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="nav-link btn btn-link px-3" data-bs-toggle="modal"
+                                data-bs-target="#loginModal">
+                                Sign In
+                            </button>
+                        }
+                    </li>
+                </ul>
             </div>
-        }
-
+        </nav>
+        <LoginModal />
         <article class="content px-4">
             @Body
         </article>
@@ -26,6 +58,48 @@
 </div>
 
 @code {
-    private string? _alertMessage;
+    private SessionTokenDto? _userInfo;
 
+    protected override async Task OnInitializedAsync()
+    {
+        AuthService.OnUserChangedSubscribtion += OnUserChangedSubscription;
+        await LoadUserInfo();
+    }
+
+    private async Task LoadUserInfo()
+    {
+        var user = await StorageService.GetItemFromSessionStorageAsync("user");
+        if (!string.IsNullOrEmpty(user))
+        {
+            var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            _userInfo = System.Text.Json.JsonSerializer.Deserialize<SessionTokenDto>(user, options);
+        }
+        else
+        {
+            _userInfo = null;
+        }
+        StateHasChanged();
+    }
+
+    private void OnUserChangedSubscription()
+    {
+        InvokeAsync(async () =>
+        {
+            await LoadUserInfo();
+        });
+    }
+
+    private async Task Logout()
+    {
+        await StorageService.RemoveItemFromStorageAsync("authToken");
+        await StorageService.RemoveItemFromSessionAsync("user");
+        AuthService.NotifyUserChanged();
+        _userInfo = null;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        AuthService.OnUserChangedSubscribtion -= OnUserChangedSubscription;
+    }
 }
