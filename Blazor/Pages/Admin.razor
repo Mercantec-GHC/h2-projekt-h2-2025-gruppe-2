@@ -3,6 +3,8 @@
 @inject IJSRuntime JS
 @inject APIService Api
 @inject NavigationManager NavigationManager;
+@inject AuthService AuthService
+
 @if (_isAdmin)
 {
     <h2 class="delete-title">Delete</h2>
@@ -98,6 +100,12 @@
 
     protected override async Task OnInitializedAsync()
     {
+        AuthService.OnUserChangedSubscribtion += OnUserChangedSubscription;
+        await IsUseAdmin();
+    }
+
+    private async Task IsUseAdmin()
+    {
         string? jwtToken = await Storage.GetItemFromLocalStorageAsync("authToken");
         if (string.IsNullOrEmpty(jwtToken))
         {
@@ -115,6 +123,14 @@
         {
             await JS.InvokeVoidAsync("alert", "You are not authorized to be here.");
             NavigationManager.NavigateTo("/");
+        }
+    }
+
+    private void OnUserChangedSubscription()
+    {
+        if (NavigationManager.Uri.EndsWith("/admin", StringComparison.OrdinalIgnoreCase))
+        {
+            InvokeAsync(async () => await IsUseAdmin());
         }
     }
 
