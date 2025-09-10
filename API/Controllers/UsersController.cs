@@ -458,7 +458,7 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> ChangeOwnPassword([FromBody] ChangeOwnPasswordDto dto)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrEmpty(userId)) return Unauthorized(new {message = "User does not exist"});
+        if (string.IsNullOrEmpty(userId)) return Unauthorized(new { message = "User does not exist" });
 
         var user = await _context.Users.FindAsync(userId);
         if (user == null) return NotFound();
@@ -491,6 +491,42 @@ public class UsersController : ControllerBase
         {
             message = $"Password has been changed for user '{user.Username}'"
         });
+    }
+
+    /// <summary>
+    /// Returns the details of all the users
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("details")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetUserDetails()
+    {
+        try
+        {
+            List<User> users = await _context.Users.Include(u => u.Roles).ToListAsync();
+
+            UserDetails details = new UserDetails
+            {
+                TotalAccounts = users.Count,
+                TotalUsers = users.Count(u => u.Roles.Name == "User"),
+                TotalAdmin = users.Count(u => u.Roles.Name == "Admin"),
+                TotalCleaningStaff = users.Count(u => u.Roles.Name == "CleaningStaff"),
+                TotalReception = users.Count(u => u.Roles.Name == "Reception"),
+            };
+            
+            return Ok(details);
+        }
+        catch (NullReferenceException ex)
+        {
+            _logger.LogError("A value was null: " + ex.Message);
+            return StatusCode(500, "A value was null: " + ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Unaccounted internal server error :(: " + ex.Message);
+            return StatusCode(500, "Unaccounted internal server error :(: " + ex.Message);
+        }
     }
 
     private bool UserExists(string id)
