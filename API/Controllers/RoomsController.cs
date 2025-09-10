@@ -364,5 +364,42 @@ namespace API.Controllers
                 return StatusCode(500, "Generel error caught getting rooms by user id: " + ex.Message);
             }
         }
+
+        /// <summary>
+        /// Returns all rooms with details
+        /// </summary>
+        /// <returns>An internet code and a list of rooms with details</returns>
+        [HttpGet("details")]
+        [Authorize(Roles="Admin")]
+        public async Task<IActionResult> GetAllRoomsDetails()
+        {
+            List<Room> rooms = await _context.Rooms.ToListAsync();
+
+            // int roomCount = rooms.Count;
+
+            var details = new TotalRoomsDetails
+            {
+                TotalRooms = rooms.Count,
+                TotalBeds = rooms.Sum(r => r.Beds),
+                TotalKingBeds = rooms.Sum(r => r.KingBeds),
+                TotalQueenBeds = rooms.Sum(r => r.QueenBeds),
+                TotalTwinBeds = rooms.Sum(r => r.TwinBeds),
+                TotalCleanRooms = rooms.Count(r => r.Clean),
+                TotalTvs = rooms.Sum(r => r.Tv),
+                TotalBathrooms = rooms.Count(r => r.Bathroom),
+                TotalBathtubs = rooms.Count(r => r.Bathtub),
+                TotalWifis = rooms.Count(r => r.WiFi),
+                TotalFridges = rooms.Count(r => r.Fridge),
+                TotalStoves = rooms.Count(r => r.Stove),
+                TotalOvens = rooms.Count(r => r.Oven),
+                TotalMicrowaves = rooms.Count(r => r.Microwave),
+                TotalPrice = rooms.Sum(r => r.Price),
+                AvgPrice = rooms.Average(r => r.Price),
+                HighestPrice =  rooms.Max(r => r.Price),
+                LowestPrice = rooms.Min(r => r.Price)
+            };
+
+            return Ok(details);
+        }
     }
 }
