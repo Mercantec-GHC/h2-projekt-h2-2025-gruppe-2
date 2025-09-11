@@ -631,10 +631,10 @@ public class UsersController : ControllerBase
             UserDetails details = new UserDetails
             {
                 TotalAccounts = users.Count,
-                TotalUsers = users.Count(u => u.Roles.Name == "User"),
-                TotalAdmin = users.Count(u => u.Roles.Name == "Admin"),
-                TotalCleaningStaff = users.Count(u => u.Roles.Name == "CleaningStaff"),
-                TotalReception = users.Count(u => u.Roles.Name == "Reception"),
+                TotalUsers = users.Count(u => u.Roles?.Name == "User"),
+                TotalAdmin = users.Count(u => u.Roles?.Name == "Admin"),
+                TotalCleaningStaff = users.Count(u => u.Roles?.Name == "CleaningStaff"),
+                TotalReception = users.Count(u => u.Roles?.Name == "Reception"),
             };
 
             return Ok(details);

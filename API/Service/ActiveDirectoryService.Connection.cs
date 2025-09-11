@@ -3,6 +3,9 @@ using System.Net;
 
 namespace API.Service;
 
+/// <summary>
+/// Service for contacting the Active Directory on the Windows server
+/// </summary>
 public partial class ActiveDirectoryService
 {
     /// <summary>
@@ -20,135 +23,6 @@ public partial class ActiveDirectoryService
 
         connection.Bind(); // Test forbindelse
         return connection;
-    }
-
-    /// <summary>
-    /// Calls SearchUsers and checks if one single user exists with the given params
-    /// </summary>
-    /// <param name="name">The name has to be only the first name of an account</param>
-    /// <param name="email">The email of an account</param>
-    /// <param name="role">The role of an account</param>
-    /// <returns></returns>
-    public bool IsUserInAD(string name, string email, string role)
-    {
-        return SearchUsers(name, email, role).Count switch
-        {
-            0 => false,
-            1 => true,
-            _ => false
-        };
-    }
-
-    /// <summary>
-    /// Søger efter brugere baseret på søgeterm
-    /// </summary>
-    /// <param name="searchTerm">Søgeterm til at søge efter</param>
-    /// <returns>Liste af matchende ADUser objekter</returns>
-    private List<ADUser> SearchUsers(string name, string email, string role)
-    {
-        var users = new List<ADUser>();
-
-        using (var connection = GetConnection())
-        {
-            var filter =
-                $"(|(firstName=*{name}*)(mail=*{email}*)(memberOf=*{role}*))";
-
-            var searchRequest = new SearchRequest(
-                GetBaseDN(),
-                filter,
-                SearchScope.Subtree,
-                "cn",
-                "samAccountName",
-                "mail",
-                "department",
-                "title",
-                "distinguishedName",
-                "givenName",
-                "sn",
-                "displayName",
-                "company",
-                "physicalDeliveryOfficeName",
-                "telephoneNumber",
-                "mobile",
-                "manager",
-                "lastLogon",
-                "pwdLastSet",
-                "userAccountControl"
-            );
-
-            try
-            {
-                var response = (SearchResponse)connection.SendRequest(searchRequest);
-
-                foreach (SearchResultEntry entry in response.Entries)
-                {
-                    var user = new ADUser
-                    {
-                        Name = entry.Attributes["cn"]?[0]?.ToString() ?? "N/A",
-                        Username = entry.Attributes["samAccountName"]?[0]?.ToString() ?? "N/A",
-                        Email = entry.Attributes["mail"]?[0]?.ToString() ?? "N/A",
-                        Department = entry.Attributes["department"]?[0]?.ToString() ?? "N/A",
-                        Title = entry.Attributes["title"]?[0]?.ToString() ?? "N/A",
-                        DistinguishedName = entry.Attributes["distinguishedName"]?[0]?.ToString() ?? "N/A",
-                        FirstName = entry.Attributes["givenName"]?[0]?.ToString() ?? "N/A",
-                        LastName = entry.Attributes["sn"]?[0]?.ToString() ?? "N/A",
-                        DisplayName = entry.Attributes["displayName"]?[0]?.ToString() ?? "N/A",
-                        Company = entry.Attributes["company"]?[0]?.ToString() ?? "N/A",
-                        Office = entry.Attributes["physicalDeliveryOfficeName"]?[0]?.ToString() ?? "N/A",
-                        Phone = entry.Attributes["telephoneNumber"]?[0]?.ToString() ?? "N/A",
-                        Mobile = entry.Attributes["mobile"]?[0]?.ToString() ?? "N/A",
-                        Manager = entry.Attributes["manager"]?[0]?.ToString() ?? "N/A"
-                    };
-
-                    // Parse lastLogon (kan være byte array)
-                    if (entry.Attributes.Contains("lastLogon"))
-                    {
-                        var lastLogonValue = entry.Attributes["lastLogon"][0];
-                        if (lastLogonValue is byte[] lastLogonBytes && lastLogonBytes.Length == 8)
-                        {
-                            var ticks = BitConverter.ToInt64(lastLogonBytes, 0);
-                            if (ticks > 0)
-                            {
-                                user.LastLogon = DateTime.FromFileTime(ticks);
-                            }
-                        }
-                    }
-
-                    // Parse passwordLastSet
-                    if (entry.Attributes.Contains("pwdLastSet"))
-                    {
-                        var pwdLastSetValue = entry.Attributes["pwdLastSet"][0];
-                        if (pwdLastSetValue is byte[] pwdLastSetBytes && pwdLastSetBytes.Length == 8)
-                        {
-                            var ticks = BitConverter.ToInt64(pwdLastSetBytes, 0);
-                            if (ticks > 0)
-                            {
-                                user.PasswordLastSet = DateTime.FromFileTime(ticks);
-                            }
-                        }
-                    }
-
-                    // Parse userAccountControl for enabled status
-                    if (entry.Attributes.Contains("userAccountControl"))
-                    {
-                        var uacValue = entry.Attributes["userAccountControl"][0]?.ToString();
-                        if (int.TryParse(uacValue, out int uac))
-                        {
-                            // Bit 2 (0x0002) = ACCOUNTDISABLE
-                            user.IsEnabled = (uac & 0x0002) == 0;
-                        }
-                    }
-
-                    users.Add(user);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Fejl ved søgning efter brugere: {ex.Message}");
-            }
-        }
-
-        return users;
     }
 
     /// <summary>

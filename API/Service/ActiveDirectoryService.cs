@@ -1,12 +1,8 @@
 ﻿namespace API.Service;
 
-public class ADGroup
-{
-    public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public List<string> Members { get; set; } = new List<string>();
-}
-
+/// <summary>
+/// A user on the Active Directory server
+/// </summary>
 public class ADUser
 {
     public string Name { get; set; } = string.Empty;
@@ -29,6 +25,10 @@ public class ADUser
     public List<string> Groups { get; set; } = new List<string>();
 }
 
+/// <summary>
+/// Config for an Active Directory server
+/// </summary>
+/// <param name="Server"></param>
 public class ADConfig
 {
     public string Server { get; set; } = "10.133.71.102";
@@ -40,11 +40,6 @@ public class ADConfig
 public partial class ActiveDirectoryService
 {
     private ADConfig _config;
-
-    public ActiveDirectoryService()
-    {
-        _config = new ADConfig();
-    }
     
     public ActiveDirectoryService(ADConfig config)
     {
