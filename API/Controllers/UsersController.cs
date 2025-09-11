@@ -19,6 +19,7 @@ public class UsersController : ControllerBase
     private readonly JwtService _jwtService;
     private readonly TimeService _timeService = new();
     private readonly ILogger<UsersController> _logger;
+    // private readonly ActiveDirectoryService _adService;
     private int _workFactor;
 
     /// <summary>
@@ -37,6 +38,7 @@ public class UsersController : ControllerBase
         _logger = logger;
         _workFactor = int.Parse(configuration["HashedPassword:WorkFactor"] ??
                                 Environment.GetEnvironmentVariable("WorkFactor") ?? "15");
+        // _adService = adService;
     }
 
     /// <summary>
@@ -150,6 +152,7 @@ public class UsersController : ControllerBase
 
             if (user.Roles?.Name == "Admin")
             {
+                // Contact ADService and check if there is an email of the same name and a corresponding role name
                 return Ok(new
                 {
                     message = "User is authorized"
@@ -373,6 +376,20 @@ public class UsersController : ControllerBase
         if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.HashedPassword))
         {
             return Unauthorized("Incorrect email or password");
+        }
+
+        var adService = new ActiveDirectoryService(new ADConfig
+        {
+            Server = "10.133.71.102",
+            Domain = "karambit.local",
+            Username = user.Username,
+            Password = dto.Password
+        });
+        ADUser? adUser = adService.ShowCurrentUserInfo();
+
+        if (adUser == null)
+        {
+            return Unauthorized("Incorrect email or password for AD, or the user is not found in the AD");
         }
 
         user.LastLogin = _timeService.GetCopenhagenTime();
