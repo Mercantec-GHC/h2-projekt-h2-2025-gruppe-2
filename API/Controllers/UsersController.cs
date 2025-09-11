@@ -19,7 +19,6 @@ public class UsersController : ControllerBase
     private readonly JwtService _jwtService;
     private readonly TimeService _timeService = new();
     private readonly ILogger<UsersController> _logger;
-    // private readonly ActiveDirectoryService _adService;
     private int _workFactor;
 
     /// <summary>
@@ -131,7 +130,7 @@ public class UsersController : ControllerBase
             user.UpdatedAt
         });
     }
-    
+
     /// <summary>
     /// Checks if the user is of role Admin, via the given JWT
     /// </summary>
@@ -208,7 +207,7 @@ public class UsersController : ControllerBase
             return StatusCode(500, "Internal server error :(: " + ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Checks if the user is of role CleaningStaff, via the given JWT
     /// </summary>
@@ -378,18 +377,10 @@ public class UsersController : ControllerBase
             return Unauthorized("Incorrect email or password");
         }
 
-        var adService = new ActiveDirectoryService(new ADConfig
+        (bool adStatus, string msg) = DoesADUserCorrespond(user, dto.Password);
+        if (!adStatus)
         {
-            Server = "10.133.71.102",
-            Domain = "karambit.local",
-            Username = user.Username,
-            Password = dto.Password
-        });
-        ADUser? adUser = adService.ShowCurrentUserInfo();
-
-        if (adUser == null)
-        {
-            return Unauthorized("Incorrect email or password for AD, or the user is not found in the AD");
+            return Unauthorized(msg);
         }
 
         user.LastLogin = _timeService.GetCopenhagenTime();
@@ -645,7 +636,7 @@ public class UsersController : ControllerBase
                 TotalCleaningStaff = users.Count(u => u.Roles.Name == "CleaningStaff"),
                 TotalReception = users.Count(u => u.Roles.Name == "Reception"),
             };
-            
+
             return Ok(details);
         }
         catch (NullReferenceException ex)
@@ -658,6 +649,38 @@ public class UsersController : ControllerBase
             _logger.LogError("Unaccounted internal server error :(: " + ex.Message);
             return StatusCode(500, "Unaccounted internal server error :(: " + ex.Message);
         }
+    }
+
+    private (bool status, string msg) DoesADUserCorrespond(User user, string password)
+    {
+        var adService = new ActiveDirectoryService(new ADConfig
+        {
+            Server = "10.133.71.102",
+            Domain = "karambit.local",
+            Username = user.Username,
+            Password = password
+        });
+        (ADUser? adUser, List<string>? roles) = adService.ShowCurrentUserInfo();
+
+        if (adUser == null || roles == null)
+        {
+            return (false, "Incorrect email or password for AD, or the user is not found in the AD");
+        }
+
+        if (roles.Count == 0)
+        {
+            return (false, "User does not have any roles in AD");
+        }
+
+        foreach (string role in roles)
+        {
+            if ((role == "HotelAdmin" && user.Roles?.Name != "Admin") && role != user.Roles?.Name)
+            {
+                return (false, $"User role ({user.Roles?.Name}) does not correspond to AD role ({role})");
+            }
+        }
+
+        return (true, "AD user is correct");
     }
 
     private bool UserExists(string id)

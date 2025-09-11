@@ -154,7 +154,7 @@ public partial class ActiveDirectoryService
     /// <summary>
     /// Viser detaljerede oplysninger om den aktuelle bruger (/me kommando)
     /// </summary>
-    public ADUser? ShowCurrentUserInfo()
+    public (ADUser? adUser, List<string>? roles) ShowCurrentUserInfo()
     {
         Console.WriteLine("=== Min Bruger Information (/me) ===");
         Console.WriteLine();
@@ -164,7 +164,7 @@ public partial class ActiveDirectoryService
             var adUser = GetCurrentUserDetails();
             if (adUser == null)
             {
-                return null;
+                return (null, null);
             }
             Console.WriteLine("Henter brugerens roller/grupper...");
             var groups = GetCurrentUserGroups();
@@ -233,12 +233,12 @@ public partial class ActiveDirectoryService
             Console.WriteLine($"   Forbindelse: {_config.Server}");
             Console.WriteLine($"   Domæne: {_config.Domain}");
 
-            return adUser;
+            return (adUser, groups);
         }
         catch (Exception ex)
         {
             Console.WriteLine($"❌ Fejl ved hentning af brugeroplysninger: {ex.Message}");
-            return null;
+            return (null, null);
         }
     }
 
