@@ -1,3 +1,4 @@
+using System.Data.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using API.Data;
@@ -85,6 +86,59 @@ namespace API.Controllers
         }
 
         /// <summary>
+        /// Gets all the details about bookings
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("details")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult> GetBookingDetails()
+        {
+            try
+            {
+                List<Booking> bookings = await _context.Bookings
+                    .Include(b => b.BookingRooms)
+                    .ToListAsync();
+
+                BookingDetails details = new BookingDetails
+                {
+                    TotalBookings = bookings.Count,
+                    TotalAdults = bookings.Sum(b => b.Adults),
+                    TotalChildren = bookings.Sum(b => b.Children),
+                    HighestPrice = bookings.Max(b => b.TotalPrice),
+                    LowestPrice = bookings.Min(b => b.TotalPrice),
+                    TotalBookingsPrice = bookings.Sum(b => b.TotalPrice),
+                    AvgPrice = bookings.Average(b => b.TotalPrice),
+                    TotalBreakfast = bookings.Count,
+                    TotalDinner = bookings.Count,
+                    TotalRoomService = bookings.Count,
+                    TotalBookedDays = bookings.Sum(b => b.OccupiedTill.Subtract(b.OccupiedFrom).Days),
+                    TotalActiveBookings = bookings.Count(b => b.OccupiedTill > DateTime.Now.AddHours(2)),
+                    TotalInactiveBookings = bookings.Count(b => b.OccupiedTill < DateTime.Now.AddHours(2)),
+                    TotalBookedRooms = bookings.Sum(b => b.BookingRooms.Count),
+                    TotalActiveBookedRooms = bookings
+                        .Where(b => b.OccupiedTill > DateTime.Now.AddHours(2))
+                        .Sum(b => b.BookingRooms.Count),
+                    TotalInactiveBookedRooms = bookings
+                        .Where(b => b.OccupiedTill < DateTime.Now.AddHours(2))
+                        .Sum(b => b.BookingRooms.Count),
+                };
+
+                return Ok(details);
+            }
+            catch (DbException ex)
+            {
+                _logger.LogError("Database error getting booking details: " + ex.Message);
+                return StatusCode(500, "Database error getting booking details: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Unaccounted error encountered: " + ex.Message);
+                return StatusCode(500, "Unaccounted error encountered: " + ex.Message);
+            }
+        }
+
+        /// <summary>
         /// Updates an existing booking.
         /// </summary>
         /// <param name="id">The ID of the booking to update.</param>
@@ -132,7 +186,7 @@ namespace API.Controllers
             {
                 return BadRequest("Occupied from date must be earlier than occupied till date.");
             }
-            
+
             DateTime copenhagenTime = _timeHelper.GetCopenhagenTime();
 
             var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;

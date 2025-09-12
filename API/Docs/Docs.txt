@@ -48,3 +48,13 @@ Then, in a controller/service, add:
 
         return user;
     }
+    
+10/09:
+The appsettings.json needs to be in the wwwroot for WebAssembly.
+
+Friday ToDos:
+Make sure that dev is equal to main at the end of the day.
+Delete all unused branches.
+
+11/09:
+Generel error handling: A message is sent, as well as a response. If the response is empty/null, an error has happened.

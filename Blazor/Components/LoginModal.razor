@@ -152,8 +152,8 @@
 
         try
         {
-            var (status, msg, response) = await ApiService.LoginUser(_loginDto.Email, _loginDto.Password);
-            if (status && response != null)
+            var (msg, response) = await ApiService.LoginUser(_loginDto.Email, _loginDto.Password);
+            if (response != null)
             {
                 if (!string.IsNullOrEmpty(response.token))
                 {
@@ -167,7 +167,7 @@
             }
             else
             {
-                await JS.InvokeVoidAsync("alert", "Password or email is wrong");
+                await JS.InvokeVoidAsync("alert", "Password or email is wrong: " + msg);
             }
         }
         catch (Exception ex)
@@ -198,7 +198,7 @@
         public string Password { get; set; } = "";
 
         [Required(ErrorMessage = "Please confirm password")]
-        [Compare("_password", ErrorMessage = "Passwords do not match")]
+        [Compare("Password", ErrorMessage = "Passwords do not match")]
         public string SamePassword { get; set; } = "";
 
         [Required(ErrorMessage = "Enter identifiable name")]

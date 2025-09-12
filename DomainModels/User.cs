@@ -151,3 +151,12 @@ public class UserBookingsResponse
     [JsonPropertyName("bookingsDto")]
     public List<BookingRoomsDto> bookingRooms { get; set; }
 }
+
+public class UserDetails
+{
+    public int TotalAccounts { get; set; }
+    public int TotalUsers { get; set; }
+    public int TotalCleaningStaff { get; set; }
+    public int TotalReception { get; set; }
+    public int TotalAdmin { get; set; }
+}

@@ -15,13 +15,22 @@ public class Program
         var builder = WebAssemblyHostBuilder.CreateDefault(args);
         builder.RootComponents.Add<App>("#app");
         builder.RootComponents.Add<HeadOutlet>("head::after");
-        
-        builder.Services.AddScoped<BookingService>();
-        
-        // Reads API endpoint from environment variables or uses default
-        var envApiEndpoint = Environment.GetEnvironmentVariable("API_ENDPOINT");
-        Console.WriteLine($"API ENV Endpoint: {envApiEndpoint}");
-        var apiEndpoint = envApiEndpoint ?? "https://karambit-api.mercantec.tech/";
+        IConfiguration config = builder.Configuration;
+
+        builder.Services.AddScoped<BookingService>(sp => new BookingService(config));
+
+        // Set API endpoint depending on the environment
+        string apiEndpoint;
+        if (builder.HostEnvironment.Environment == "Development")
+        {
+            apiEndpoint = "http://localhost:5001/"; // Development endpoint
+        }
+        else
+        {
+            // Reads API endpoint from environment variables or uses default
+            apiEndpoint = Environment.GetEnvironmentVariable("API_ENDPOINT") 
+                          ?? "https://karambit-api.mercantec.tech/"; // Production endpoint
+        }
         Console.WriteLine($"API Endpoint: {apiEndpoint}");
 
         // Registers HttpClient to API service with a configurable endpoint
@@ -35,7 +44,7 @@ public class Program
         builder.Services.AddScoped<AuthService>();
         builder.Services.AddScoped<StorageService>(sp =>
             new StorageService(sp.GetRequiredService<IJSRuntime>()));
-    builder.Services.AddScoped<ClientJwtService>();
+        builder.Services.AddScoped<ClientJwtService>();
 
         // Default culture formatting, for pricing.etc
         var culture = new CultureInfo("da-DK");

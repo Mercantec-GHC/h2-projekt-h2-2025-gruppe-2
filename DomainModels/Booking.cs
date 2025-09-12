@@ -88,3 +88,23 @@ public class NewBookingDto
     public DateTime occupiedFrom { get; set; }
     public DateTime occupiedTill { get; set; }
 }
+
+public class BookingDetails
+{
+    public int TotalBookings { get; set; }
+    public int TotalAdults { get; set; }
+    public int TotalChildren { get; set; }
+    public int TotalBookedRooms { get; set; }
+    public int TotalBookedDays { get; set; }
+    public int TotalRoomService { get; set; }
+    public int TotalBreakfast { get; set; }
+    public int TotalDinner { get; set; }
+    public int TotalActiveBookings { get; set; }
+    public int TotalActiveBookedRooms { get; set; }
+    public int TotalInactiveBookedRooms { get; set; }
+    public int TotalInactiveBookings { get; set; }
+    public double TotalBookingsPrice { get; set; }
+    public double AvgPrice { get; set; }
+    public double HighestPrice { get; set; }
+    public double LowestPrice { get; set; }
+}
