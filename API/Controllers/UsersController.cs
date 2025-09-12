@@ -37,6 +37,7 @@ public class UsersController : ControllerBase
         _logger = logger;
         _workFactor = int.Parse(configuration["HashedPassword:WorkFactor"] ??
                                 Environment.GetEnvironmentVariable("WorkFactor") ?? "15");
+        // _adService = adService;
     }
 
     /// <summary>
@@ -129,7 +130,7 @@ public class UsersController : ControllerBase
             user.UpdatedAt
         });
     }
-    
+
     /// <summary>
     /// Checks if the user is of role Admin, via the given JWT
     /// </summary>
@@ -150,6 +151,7 @@ public class UsersController : ControllerBase
 
             if (user.Roles?.Name == "Admin")
             {
+                // Contact ADService and check if there is an email of the same name and a corresponding role name
                 return Ok(new
                 {
                     message = "User is authorized"
@@ -205,7 +207,7 @@ public class UsersController : ControllerBase
             return StatusCode(500, "Internal server error :(: " + ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Checks if the user is of role CleaningStaff, via the given JWT
     /// </summary>
@@ -373,6 +375,12 @@ public class UsersController : ControllerBase
         if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.HashedPassword))
         {
             return Unauthorized("Incorrect email or password");
+        }
+
+        (bool adStatus, string msg) = DoesADUserCorrespond(user, dto.Password);
+        if (!adStatus)
+        {
+            return Unauthorized(msg);
         }
 
         user.LastLogin = _timeService.GetCopenhagenTime();
@@ -623,12 +631,12 @@ public class UsersController : ControllerBase
             UserDetails details = new UserDetails
             {
                 TotalAccounts = users.Count,
-                TotalUsers = users.Count(u => u.Roles.Name == "User"),
-                TotalAdmin = users.Count(u => u.Roles.Name == "Admin"),
-                TotalCleaningStaff = users.Count(u => u.Roles.Name == "CleaningStaff"),
-                TotalReception = users.Count(u => u.Roles.Name == "Reception"),
+                TotalUsers = users.Count(u => u.Roles?.Name == "User"),
+                TotalAdmin = users.Count(u => u.Roles?.Name == "Admin"),
+                TotalCleaningStaff = users.Count(u => u.Roles?.Name == "CleaningStaff"),
+                TotalReception = users.Count(u => u.Roles?.Name == "Reception"),
             };
-            
+
             return Ok(details);
         }
         catch (NullReferenceException ex)
@@ -641,6 +649,38 @@ public class UsersController : ControllerBase
             _logger.LogError("Unaccounted internal server error :(: " + ex.Message);
             return StatusCode(500, "Unaccounted internal server error :(: " + ex.Message);
         }
+    }
+
+    private (bool status, string msg) DoesADUserCorrespond(User user, string password)
+    {
+        var adService = new ActiveDirectoryService(new ADConfig
+        {
+            Server = "10.133.71.102",
+            Domain = "karambit.local",
+            Username = user.Username,
+            Password = password
+        });
+        (ADUser? adUser, List<string>? roles) = adService.ShowCurrentUserInfo();
+
+        if (adUser == null || roles == null)
+        {
+            return (false, "Incorrect email or password for AD, or the user is not found in the AD");
+        }
+
+        if (roles.Count == 0)
+        {
+            return (false, "User does not have any roles in AD");
+        }
+
+        foreach (string role in roles)
+        {
+            if ((role == "HotelAdmin" && user.Roles?.Name != "Admin") && role != user.Roles?.Name)
+            {
+                return (false, $"User role ({user.Roles?.Name}) does not correspond to AD role ({role})");
+            }
+        }
+
+        return (true, "AD user is correct");
     }
 
     private bool UserExists(string id)

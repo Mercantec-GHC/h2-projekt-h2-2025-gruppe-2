@@ -38,7 +38,7 @@ public partial class APIService
         }
     }
 
-    public async Task<(bool status, string msg, LoginResponseDto? responseDto)> LoginUser(string email, string password)
+    public async Task<(string msg, LoginResponseDto? responseDto)> LoginUser(string email, string password)
     {
         try
         {
@@ -51,30 +51,29 @@ public partial class APIService
             if (response.IsSuccessStatusCode)
             {
                 var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
-                return (true, "Login successfull!", loginResponse);
+                return ("Login successfull!", loginResponse);
             }
             else
             {
                 var errorMsg = await response.Content.ReadAsStringAsync();
                 Console.WriteLine("Test: " + errorMsg);
-                return (false,
-                    "Failed to create new user! Code: " + response.StatusCode + ", " + errorMsg, null);
+                return ("Failed to create new user! Code: " + response.StatusCode + ", " + errorMsg, null);
             }
         }
         catch (NullReferenceException ex)
         {
             Console.WriteLine("Failed to parse JSON response, JSON is null: " + ex.Message);
-            return (false, "Failed to parse JSON response, JSON is null: " + ex.Message, null);
+            return ("Failed to parse JSON response, JSON is null: " + ex.Message, null);
         }
         catch (JsonException ex)
         {
             Console.WriteLine("Failed to parse JSON response: " + ex.Message);
-            return (false, "Failed to parse JSON response: " + ex.Message, null);
+            return ("Failed to parse JSON response: " + ex.Message, null);
         }
         catch (Exception ex)
         {
             Console.WriteLine("Generel exception caught, please contact support:" + ex.Message);
-            return (false, "Generel exception caught, please contact support:  " + ex.Message, null);
+            return ("Generel exception caught, please contact support:  " + ex.Message, null);
         }
     }
 
@@ -135,7 +134,8 @@ public partial class APIService
         }
     }
 
-    public async Task<(bool status, string msg, UserBookingsResponse? bookingsRooms)> GetUsersBookingsRooms(string userId)
+    public async Task<(bool status, string msg, UserBookingsResponse? bookingsRooms)> GetUsersBookingsRooms(
+        string userId)
     {
         try
         {
@@ -151,7 +151,7 @@ public partial class APIService
             Console.WriteLine(ex);
             return (false, $"Generel exception caught, getting a users ({userId}) bookings: " + ex.Message, null);
         }
-        
+
         return (false, "Not implemented yet", null);
     }
 
@@ -160,9 +160,9 @@ public partial class APIService
         try
         {
             var request = new HttpRequestMessage(HttpMethod.Get, "api/Users/admin");
-            
+
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
-            
+
             var response = await _httpClient.SendAsync(request);
             if (response.IsSuccessStatusCode)
             {
@@ -171,11 +171,10 @@ public partial class APIService
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Error authorizing user: "+ex.Message);
+            Console.WriteLine("Error authorizing user: " + ex.Message);
             return false;
         }
 
         return false;
     }
-
 }
