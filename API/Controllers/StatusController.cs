@@ -1,4 +1,7 @@
+using System.DirectoryServices.Protocols;
+using API.Service;
 using Microsoft.AspNetCore.Mvc;
+using DomainModels;
 
 namespace API.Controllers
 {
@@ -54,6 +57,41 @@ namespace API.Controllers
         public IActionResult Ping()
         {
             return Ok(new { status = "OK", message = "Pong 🏓" });
+        }
+        
+        /// <summary>
+        /// Tests connection with the active directory
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("ad-test")]
+        public async Task<IActionResult> TestAD()
+        {
+        
+            var adService = new ActiveDirectoryService(new ADConfig
+            {
+                Server = "10.133.71.102",
+                Domain = "karambit.local",
+                Username = "Admin",
+                Password = "Qwerty123!!"
+            });
+
+            try
+            {
+                using (adService.GetConnection());
+            }
+            catch (LdapException ex)
+            {
+                Console.WriteLine(ex);
+                return StatusCode(500, new {status = "Error",message = "LDAP error connecting to AD :(: " + ex.Message});
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return StatusCode(500, new {status = "Error", message = "Internal server error connecting to AD :(: " + ex.Message});
+            }
+        
+            return Ok(new {status = "OK", message = "AD connection successful"});
         }
     }
 }

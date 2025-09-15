@@ -19,6 +19,13 @@
             BorderClass="border-warning"
             HealthCheck="@dbHealthCheck" />
     </div>
+    <div class="col-md-6 mb-4">
+        <StatusCard 
+            Title="Database Status"
+            IconClass="bi bi-database text-warning"
+            BorderClass="border-success"
+            HealthCheck="@_adHealthCheck" />
+    </div>
 </div>
 
 <div class="row">
@@ -36,12 +43,14 @@
 @code {
     HealthCheckResponse? healthCheck;
     HealthCheckResponse? dbHealthCheck;
+    HealthCheckResponse? _adHealthCheck;
     WeatherForecast[]? weatherForecasts;
 
     protected override async Task OnInitializedAsync()
     {
         healthCheck = await ApiService.GetHealthCheckAsync();
         dbHealthCheck = await ApiService.GetDBHealthCheckAsync();
+        _adHealthCheck = await ApiService.GetADHealthCheckAsync();
         weatherForecasts = await ApiService.GetWeatherAsync(5);
     }
 }
