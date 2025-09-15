@@ -39,5 +39,22 @@ namespace Blazor.Services
                 };
             }
         }
+
+        public async Task<HealthCheckResponse?> GetADHealthCheckAsync()
+        {
+            try
+            {
+                return await httpClient.GetFromJsonAsync<HealthCheckResponse>("api/status/ad-test");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return new HealthCheckResponse()
+                {
+                    status = "Error",
+                    message = "Couldn't get Active Directory-status (" + ex.Message + ")"
+                };
+            }
+        }
     }
 }

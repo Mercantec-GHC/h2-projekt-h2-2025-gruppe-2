@@ -1,3 +1,4 @@
+using System.DirectoryServices.Protocols;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -660,6 +661,7 @@ public class UsersController : ControllerBase
             Username = user.Username,
             Password = password
         });
+
         (ADUser? adUser, List<string>? roles) = adService.ShowCurrentUserInfo();
 
         if (adUser == null || roles == null)
