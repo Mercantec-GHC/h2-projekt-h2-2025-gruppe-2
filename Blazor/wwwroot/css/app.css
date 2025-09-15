@@ -1,13 +1,19 @@
-html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+@font-face {
+    font-family: 'FiraRegular';
+    src: url('fonts/FiraCode-Regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
 }
 
+html, body {
+    font-family: 'FiraRegular', Helvetica, Arial, sans-serif;
+}
 h1:focus {
     outline: none;
 }
 
 a, .btn-link {
-    color: #0071c1;
+    color: #aaaaaa;
 }
 
 .btn-primary {
@@ -17,7 +23,7 @@ a, .btn-link {
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+  box-shadow: 0 0 0 0.1rem rgba(255, 255, 255, 0), 0 0 0 0.25rem #258cfb;
 }
 
 .content {
