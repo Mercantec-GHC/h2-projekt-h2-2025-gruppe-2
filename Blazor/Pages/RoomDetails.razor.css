@@ -1,0 +1,11 @@
+.room-img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    border-radius: 10px !important;
+    object-fit: cover !important;
+    aspect-ratio: 4/3 !important
+}
+.rounded {
+    border-radius: 10px !important;
+}
