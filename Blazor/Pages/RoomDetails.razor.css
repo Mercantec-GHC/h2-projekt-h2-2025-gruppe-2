@@ -1,3 +1,10 @@
+@font-face {
+    font-family: 'MyCustomFont';
+    src: url('/fonts/texgyrecursor-regular.otf') format('otf');
+    font-weight: normal;
+    font-style: normal;
+}
+
 .room-img {
     max-width: 100% !important;
     height: auto !important;
@@ -8,4 +15,9 @@
 }
 .rounded {
     border-radius: 10px !important;
+}
+.card-title {
+    font-family: 'MyCustomFont', Arial, sans-serif !important;
+    font-weight: bold !important;
+    margin-bottom: 0.5rem !important;
 }
