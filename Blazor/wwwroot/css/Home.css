@@ -1,0 +1,36 @@
+﻿.home {
+    position: relative;
+
+    .background-image {
+        width: 100%;
+    }
+
+    .date {
+        background-color: white;
+        position: absolute;
+        top: 50%;
+        right: 50%;
+        transform: translate(50%, -50%);
+        border: black 1px solid;
+        border-radius: 10px;
+        
+        .starting-date{
+            margin-right: 100px;
+            border-radius: 5px;
+            font-size: 30px;
+        }
+        
+        .ending-date {
+            border-radius: 5px;
+            font-size: 30px;
+        }
+    }
+}
+
+.params {
+    
+    .param-header {
+
+        justify-self: center;
+    }
+}
