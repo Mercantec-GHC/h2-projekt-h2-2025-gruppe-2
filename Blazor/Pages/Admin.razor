@@ -1,137 +1,256 @@
 ﻿@page "/admin"
-@inject StorageService Storage
-@inject IJSRuntime JS
-@inject APIService Api
-@inject NavigationManager NavigationManager;
-@inject AuthService AuthService
+@layout Blazor.Layout.MainLayout
 
-@if (_isAdmin)
-{
-    <h2 class="delete-title">Delete</h2>
-    <div class="row">
-        <div class="col-4">
-            <label>
-                Delete User
-            </label>
-            <div class="row">
-                <div class="col-8">
-                    <InputText @bind-Value="_userId" class="form-control"></InputText>
-                </div>
-                <div class="col-4">
-                    <button class="btn btn-danger">Delete User</button>
-                </div>
-            </div>
-        </div>
-        <div class="col-4">
-            <label>
-                Delete User
-            </label>
-            <InputText @bind-Value="_userId" class="form-control"></InputText>
-        </div>
-        <div class="col-4">
-            <label>
-                Delete User
-            </label>
-            <InputText @bind-Value="_userId" class="form-control"></InputText>
-        </div>
-    </div>
+<HeadContent>
+	<!-- TailwindCSS (CDN for demo) -->
+	<script src="https://cdn.tailwindcss.com"></script>
+	<!-- AOS animations -->
+	<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+	<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+	<!-- Feather icons -->
+	<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+	<style>
+		.chart-container { height: 300px; }
+	</style>
+</HeadContent>
 
-    <h2 class="get-title">Get</h2>
-    <h2 class="post-title">Post</h2>
-    <h2 class="put-title">Put</h2>
-}
+<div class="bg-gray-100 font-sans">
+	<div class="flex flex-col h-screen overflow-hidden">
+		<div class="flex-1 overflow-y-auto">
+			<!-- Search Box -->
+			<div class="bg-gray-50 p-4 border-b">
+				<div class="max-w-2xl mx-auto relative">
+					<input type="text" placeholder="Search bookings, guests, rooms..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+					<i data-feather="search" class="absolute left-3 top-2.5 text-gray-400"></i>
+				</div>
+			</div>
 
-<style>
-    .delete-title {
-        color: white;
-        background-color: #dc3545;
-        width: fit-content;
-        padding: 10px 15px;
-        border-radius: 10px;
-        text-transform: uppercase;
-        font-weight: bold;
-        justify-self: center;
-        margin: 5px 0px;
-    }
+			<!-- Main Content -->
+			<main class="p-6">
+				<div class="mb-6">
+					<h1 class="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
+					<p class="text-gray-600">Welcome back! Here's what's happening with your hotel today.</p>
+				</div>
 
-    .get-title {
-        color: white;
-        background-color: #61affe;
-        width: fit-content;
-        padding: 10px 15px;
-        border-radius: 10px;
-        text-transform: uppercase;
-        font-weight: bold;
-        justify-self: center;
-        margin: 5px 0px;
-    }
+				<!-- Stats Cards -->
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+					<div class="bg-white rounded-lg shadow p-6" data-aos="fade-up">
+						<div class="flex items-center justify-between">
+							<div>
+								<p class="text-gray-500">Total Bookings</p>
+								<h3 class="text-2xl font-bold">@(_bookingDetails?.TotalBookings ?? 0)</h3>
+								<p class="text-gray-400 text-sm">Total active: @(_bookingDetails?.TotalActiveBookings ?? 0)</p>
+							</div>
+							<div class="bg-indigo-100 p-3 rounded-full">
+								<i data-feather="calendar" class="text-indigo-600"></i>
+							</div>
+						</div>
+					</div>
+					<div class="bg-white rounded-lg shadow p-6" data-aos="fade-up" data-aos-delay="50">
+						<div class="flex items-center justify-between">
+							<div>
+								<p class="text-gray-500">Booked Rooms</p>
+								<h3 class="text-2xl font-bold">@(_bookingDetails?.TotalBookedRooms ?? 0)</h3>
+								<p class="text-gray-400 text-sm">Active rooms: @(_bookingDetails?.TotalActiveBookedRooms ?? 0)</p>
+							</div>
+							<div class="bg-blue-100 p-3 rounded-full">
+								<i data-feather="home" class="text-blue-600"></i>
+							</div>
+						</div>
+					</div>
+					<div class="bg-white rounded-lg shadow p-6" data-aos="fade-up" data-aos-delay="100">
+						<div class="flex items-center justify-between">
+							<div>
+								<p class="text-gray-500">Revenue (sum)</p>
+								<h3 class="text-2xl font-bold">@String.Format("{0:C}", _bookingDetails?.TotalBookingsPrice ?? 0)</h3>
+								<p class="text-gray-400 text-sm">Avg: @String.Format("{0:C}", _bookingDetails?.AvgPrice ?? 0)</p>
+							</div>
+							<div class="bg-green-100 p-3 rounded-full">
+								<i data-feather="dollar-sign" class="text-green-600"></i>
+							</div>
+						</div>
+					</div>
+					<div class="bg-white rounded-lg shadow p-6" data-aos="fade-up" data-aos-delay="150">
+						<div class="flex items-center justify-between">
+							<div>
+								<p class="text-gray-500">Rooms (total)</p>
+								<h3 class="text-2xl font-bold">@(_roomsDetails?.TotalRooms ?? 0)</h3>
+								<p class="text-gray-400 text-sm">Clean: @(_roomsDetails?.TotalCleanRooms ?? 0)</p>
+							</div>
+							<div class="bg-yellow-100 p-3 rounded-full">
+								<i data-feather="archive" class="text-yellow-600"></i>
+							</div>
+						</div>
+					</div>
+				</div>
 
-    .post-title {
-        color: white;
-        background-color: #49cc90;
-        width: fit-content;
-        padding: 10px 15px;
-        border-radius: 10px;
-        text-transform: uppercase;
-        font-weight: bold;
-        justify-self: center;
-        margin: 5px 0px;
-    }
+				<!-- Charts and Recent Bookings -->
+				<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+					<!-- Revenue Chart -->
+					<div class="bg-white rounded-lg shadow p-6 lg:col-span-2">
+						<div class="flex items-center justify-between mb-4">
+							<h3 class="font-semibold text-gray-800">Revenue Overview</h3>
+							<div class="flex space-x-2">
+								<button class="px-3 py-1 text-xs bg-indigo-100 text-indigo-700 rounded-full">Monthly</button>
+								<button class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">Weekly</button>
+								<button class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">Daily</button>
+							</div>
+						</div>
+						<div class="chart-container">
+							<canvas id="revenueChart"></canvas>
+						</div>
+					</div>
 
-    .put-title {
-        color: white;
-        background-color: #fca130;
-        width: fit-content;
-        padding: 10px 15px;
-        border-radius: 10px;
-        text-transform: uppercase;
-        font-weight: bold;
-        justify-self: center;
-        margin: 5px 0px;
-    }
-</style>
+					<!-- Occupancy Rate -->
+					<div class="bg-white rounded-lg shadow p-6">
+						<h3 class="font-semibold text-gray-800 mb-4">Occupancy Rate</h3>
+						<div class="chart-container">
+							<canvas id="occupancyChart"></canvas>
+						</div>
+					</div>
+				</div>
+
+				<!-- Active Bookings -->
+				<div class="bg-white rounded-lg shadow overflow-hidden">
+					<div class="px-6 py-4 border-b border-gray-200">
+						<h3 class="font-semibold text-gray-800">Active Bookings</h3>
+					</div>
+					<div class="overflow-x-auto">
+						<table class="min-w-full divide-y divide-gray-200">
+							<thead class="bg-gray-50">
+								<tr>
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Booking ID</th>
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guest</th>
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-In</th>
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-Out</th>
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+								</tr>
+							</thead>
+							<tbody class="bg-white divide-y divide-gray-200">
+								@if (_isLoading)
+								{
+									<tr>
+										<td colspan="7" class="px-6 py-4 text-center text-gray-500">Loading...</td>
+									</tr>
+								}
+								else if (_loadError is not null)
+								{
+									<tr>
+										<td colspan="7" class="px-6 py-4 text-center text-red-600">@_loadError</td>
+									</tr>
+								}
+								else if (_bookings?.Count == 0)
+								{
+									<tr>
+										<td colspan="7" class="px-6 py-4 text-center text-gray-500">No bookings found</td>
+									</tr>
+								}
+								else
+								{
+									@foreach (var b in _bookings!)
+									{
+										<tr>
+											<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@b.Id</td>
+											<td class="px-6 py-4 whitespace-nowrap">
+												<div class="flex items-center">
+													<div class="ml-1">
+														<p class="text-sm font-medium text-gray-900">@b.UserId</p>
+													</div>
+												</div>
+											</td>
+											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@b.BookingRooms?.Count</td>
+											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@b.OccupiedFrom.ToString("yyyy-MM-dd")</td>
+											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@b.OccupiedTill.ToString("yyyy-MM-dd")</td>
+											<td class="px-6 py-4 whitespace-nowrap">
+												@if (b.OccupiedTill > DateTime.UtcNow)
+												{
+													<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Active</span>
+												}
+												else
+												{
+													<span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">Ended</span>
+												}
+											</td>
+											<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+												<a href="#" class="text-indigo-600 hover:text-indigo-900">View</a>
+											</td>
+										</tr>
+									}
+								}
+							</tbody>
+						</table>
+					</div>
+					<div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+						<div class="text-sm text-gray-500">
+							Showing <span class="font-medium">1</span> to <span class="font-medium">4</span> of <span class="font-medium">24</span> results
+						</div>
+						<div class="flex space-x-2">
+							<button class="px-3 py-1 rounded-md bg-gray-100 text-gray-700">Previous</button>
+							<button class="px-3 py-1 rounded-md bg-indigo-600 text-white">1</button>
+							<button class="px-3 py-1 rounded-md bg-gray-100 text-gray-700">2</button>
+							<button class="px-3 py-1 rounded-md bg-gray-100 text-gray-700">3</button>
+							<button class="px-3 py-1 rounded-md bg-gray-100 text-gray-700">Next</button>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+	</div>
+</div>
 
 @code {
+	[Inject] private IJSRuntime JS { get; set; } = default!;
+	[Inject] private APIService Api { get; set; } = default!;
+	[Inject] private StorageService Storage { get; set; } = default!;
 
-    // If we dont check if the user is admin, a normal user will be stuck on the screen with the admin info until they
-    // click on the alert
-    bool _isAdmin;
-    string _userId = string.Empty;
+	private bool _isLoading = true;
+	private string? _loadError;
+	private List<DomainModels.Booking>? _bookings = new();
+	private DomainModels.BookingDetails? _bookingDetails;
+	private DomainModels.TotalRoomsDetails? _roomsDetails;
 
-    protected override async Task OnInitializedAsync()
-    {
-        AuthService.OnUserChangedSubscribtion += OnUserChangedSubscription;
-        await IsUseAdmin();
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		_isLoading = true;
+		_loadError = null;
+		try
+		{
+			var jwt = await Storage.GetItemFromLocalStorageAsync("authToken");
 
-    private async Task IsUseAdmin()
-    {
-        string? jwtToken = await Storage.GetItemFromLocalStorageAsync("authToken");
-        if (string.IsNullOrEmpty(jwtToken))
-        {
-            await JS.InvokeVoidAsync("alert", "No token found, you are not authorized to be here.");
-            NavigationManager.NavigateTo("/");
-            return;
-        }
+			// Parallel fetch
+			var bookingsTask = Api.GetAllBookingsAsync();
+			Task<DomainModels.BookingDetails?> bookingDetailsTask = jwt is null
+				? Task.FromResult<DomainModels.BookingDetails?>(null)
+				: Api.GetBookingDetailsAsync(jwt);
+			Task<DomainModels.TotalRoomsDetails?> roomsDetailsTask = jwt is null
+				? Task.FromResult<DomainModels.TotalRoomsDetails?>(null)
+				: Api.GetRoomsDetailsAsync(jwt);
 
-        if (await Api.IsUserAdmin(jwtToken))
-        {
-            _isAdmin = true;
-            return;
-        }
-        else
-        {
-            await JS.InvokeVoidAsync("alert", "You are not authorized to be here.");
-            NavigationManager.NavigateTo("/");
-        }
-    }
+			await Task.WhenAll(bookingsTask, bookingDetailsTask, roomsDetailsTask);
+			_bookings = bookingsTask.Result;
+			_bookingDetails = bookingDetailsTask.Result;
+			_roomsDetails = roomsDetailsTask.Result;
+		}
+		catch (Exception ex)
+		{
+			_loadError = ex.Message;
+		}
+		finally
+		{
+			_isLoading = false;
+		}
+	}
 
-    private void OnUserChangedSubscription()
-    {
-        if (NavigationManager.Uri.EndsWith("/admin", StringComparison.OrdinalIgnoreCase))
-        {
-            InvokeAsync(async () => await IsUseAdmin());
-        }
-    }
-
+	protected override void OnAfterRender(bool firstRender)
+	{
+		if (firstRender)
+		{
+			// Initialize Feather and AOS when page first renders
+			JS.InvokeVoidAsync("initAdminDashboard");
+		}
+	}
 }
+
+<script src="/js/admin-dashboard.js"></script>
