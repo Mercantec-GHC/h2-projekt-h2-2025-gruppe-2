@@ -11,7 +11,7 @@ main {
 
 }
 .navbar {
-    background: linear-gradient(180deg, #000000,#141414, #303030);
+    background: linear-gradient(180deg, #000000,#000000,#000000, #3a3a3a);
     height: 4rem;
     display: flex;
     align-items: center;
@@ -20,7 +20,7 @@ main {
     justify-content: space-between;
 }
 .nav-item {
-    font-weight: bold;
+    font-weight: regular;
     height: 2.5rem;
     display: flex;
     align-items: center;
@@ -29,22 +29,21 @@ main {
     border: 1px solid transparent; 
     border-radius: 10px;
     margin-right: 2rem;
-    color: rgb(238, 238, 238);
+    color: rgb(255, 255, 255);
     transition: border-color .15s ease;
 }
 
 .sign-in {
-    font-weight: bold;
+    font-weight: regular;
     height: 2.5rem;
     display: flex;
     align-items: center;
     padding-left: 1rem;
     padding-right: 1rem;
-    border: 1px solid transparent;
+    border: 1px solid transparent; 
     border-radius: 10px;
-    background: linear-gradient(180deg, #808080, #444444);
     margin-right: 2rem;
-    color: rgb(238, 238, 238);
+    color: rgb(255, 255, 255) !important;
     transition: border-color .15s ease;
 }
 
@@ -57,19 +56,17 @@ main {
 
 
 .nav-item:hover {
-    border-color: #6e6e6e;
-    color: white !important;
+    border-color: #ffffffac;
 }
 
 .sign-in:hover,
 .sign-in:focus,
 .sign-in:focus-visible {
-    border-color: #808080;
+    border-color: #ffffffac;
 }
 
 .ms-auto .btn-link:hover,
 .ms-auto a:hover {
-    color: white !important;
 }
 
 .top-row {

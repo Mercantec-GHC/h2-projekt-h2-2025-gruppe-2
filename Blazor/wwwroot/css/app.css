@@ -1,6 +1,6 @@
 @font-face {
     font-family: 'FiraRegular';
-    src: url('fonts/FiraCode-Regular.otf') format('opentype');
+    src: url('/fonts/FiraCode-Regular.otf') format('opentype');
     font-weight: normal;
     font-style: normal;
 }
@@ -13,17 +13,13 @@ h1:focus {
 }
 
 a, .btn-link {
-    color: #aaaaaa;
+    color: #fff;
 }
 
 .btn-primary {
     color: #fff;
     background-color: #1b6ec2;
-    border-color: #1861ac;
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem rgba(255, 255, 255, 0), 0 0 0 0.25rem #258cfb;
+    border-color: #1862ac00;
 }
 
 .content {

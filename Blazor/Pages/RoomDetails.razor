@@ -27,10 +27,10 @@ else
             </div>
             <div class="col-md-6"> 
                 <div class="card-body">
-                    <h5 class="card-title mb-3">Room @room.Id</h5>
+                    <h5 class="card-title mb-3" style="padding: 0.75rem 0;">Room @room.Id</h5>
 
                     <ul class="list-unstyled small mb-3">
-                        <li><strong>Total Beds:</strong> @room.Beds</li>
+                        <li style="padding: 0.5rem 0;"><strong>Total Beds:</strong> @room.Beds</li>
 
                         @* Bed type counts only if > 0 so no dupes *@
                         @if (room.KingBeds > 0) { <li><strong>King beds:</strong> @room.KingBeds</li> }
