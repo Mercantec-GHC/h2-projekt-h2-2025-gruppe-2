@@ -1,23 +1,25 @@
-html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+@font-face {
+    font-family: 'FiraRegular';
+    src: url('/fonts/FiraCode-Regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
 }
 
+html, body {
+    font-family: 'FiraRegular', Helvetica, Arial, sans-serif;
+}
 h1:focus {
     outline: none;
 }
 
 a, .btn-link {
-    color: #0071c1;
+    color: #fff;
 }
 
 .btn-primary {
     color: #fff;
     background-color: #1b6ec2;
-    border-color: #1861ac;
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    border-color: #1862ac00;
 }
 
 .content {
@@ -111,4 +113,25 @@ code {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
+}
+.form-control2 {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--bs-body-color);
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: #0000003e;
+  background-clip: padding-box;
+  border-radius: var(--bs-border-radius);
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  outline: none !important;
+  &:focus {
+    border-color: #ffffff;
+    background-color: #5e5e5e3e;
+  }
 }

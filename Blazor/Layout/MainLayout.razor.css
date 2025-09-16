@@ -6,34 +6,60 @@
 
 main {
     flex: 1;
-}
+    background-image: url('whar.jpg');
+    height: 1080px;
 
+}
+.navbar {
+    background: linear-gradient(180deg, #000000,#000000,#000000, #3a3a3a);
+    min-height: 4rem;
+}
 .nav-item {
-    font-weight: bold;
-    background-color: #414141;
-    border-bottom: 1px solid #000000;
-    height: 2.5rem;
-    display: flex;
-    align-items: center;
-    padding-left: 1rem;
-    padding-right: 1rem;
+    font-size: clamp(0.8rem, 2.5vw, 1rem);
+    container-name: nav-item;
+    font-weight: regular;
+    border: 1px solid transparent; 
+    border-radius: 10px;
+    margin-right: 1rem;
+    color: rgb(255, 255, 255);
+    transition: border-color .15s ease;
 }
 
 .sign-in {
-    font-weight: bold;
-    background-color: #414141;
-    border-bottom: 1px solid #000000;
-    border-radius: 15px;
-    height: 2.5rem;
-    display: flex;
-    align-items: center;
-    padding-left: 2rem;
-    padding-right: 2rem;
+    font-size: clamp(0.8rem, 2.5vw, 1rem);
+    container-name: sign-in;
+    font-weight: regular;
+    border: 1px solid transparent; 
+    border-radius: 10px;
+    margin-right: 1rem;
+    color: rgb(255, 255, 255);
+    transition: border-color .15s ease;
+    color: rgb(255, 255, 255) !important;
+}
+.navbar
+
+
+.navbar-text{
+font-size: small;
+}
+.sign-in {
+    border: 1px solid transparent;
+    transition: border-color .15s ease;
+}
+
+
+.nav-item:hover {
+    border-color: #ffffffac;
+}
+
+.sign-in:hover,
+.sign-in:focus,
+.sign-in:focus-visible {
+    border-color: #ffffffac;
 }
 
 .ms-auto .btn-link:hover,
 .ms-auto a:hover {
-    color: white !important;
 }
 
 .top-row {
@@ -90,9 +116,27 @@ main {
         width: 0;
     }
 
-    .top-row,
-    article {
-        padding-left: 2rem !important;
-        padding-right: 1.5rem !important;
+
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1rem;
+    }
+    
+    .nav-item {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+        justify-content: center;
+    }
+    
+    .sign-in {
+        width: 100%;
+        margin-right: 0;
+        justify-content: center;
     }
 }

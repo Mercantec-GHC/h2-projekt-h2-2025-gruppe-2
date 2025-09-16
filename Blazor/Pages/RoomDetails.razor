@@ -3,9 +3,6 @@
 @using Blazor.Services
 @inject StorageService Storage
 @inject APIService API
-
-<h3 class="mb-3">Room Details</h3>
-
 @if (error is not null)
     
 {
@@ -13,7 +10,7 @@
 }
 else if (loading)
 {
-    <div class="text-muted">Loading room details...</div>
+    <h3>Loading room details...</h3>
 }
 else if (room is null)
 {
@@ -21,39 +18,45 @@ else if (room is null)
 }
 else
 {
-    <div class="card shadow-sm">
-        <img class="card-img-top room-img"
-             alt="Room @room.Id"
-             src="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fcache.marriott.com%2Fmarriottassets%2Fmarriott%2FLONPL%2Flonpl-guestroom-0117-hor-clsc.jpg%3Finterpolation%3Dprogressive-bilinear%26&f=1&nofb=1&ipt=ebe42a9838514aada588f06e57dcb5cd12e793934a0fcacb6a5e5df2d252dbf8" />
-        <div class="card-body">
-            <h5 class="card-title mb-3">Room @room.Id</h5>
-
-            <ul class="list-unstyled small mb-3">
-                <li><strong>Total Beds:</strong> @room.Beds</li>
-
-                @* Bed type counts only if > 0 so no dupes *@
-                @if (room.KingBeds > 0) { <li><strong>King beds:</strong> @room.KingBeds</li> }
-                @if (room.QueenBeds > 0) { <li><strong>Queen beds:</strong> @room.QueenBeds</li> }
-                @if (room.TwinBeds  > 0) { <li><strong>Twin beds:</strong> @room.TwinBeds</li> }
-                @if (room.Size      > 0) { <li><strong>Size (m²):</strong> @room.Size</li> }
-                @if (room.Tv        > 0) { <li><strong>TVs:</strong> @room.Tv</li> }
-
-                <li><strong>Price:</strong> @room.Price.ToString("C")</li>
-            </ul>
-
-            @* Boolean amenities as badges bc its pretti *@
-            <div class="d-flex flex-wrap gap-2">
-                @foreach (var amenity in GetAmenityBadges(room))
-                {
-                    <span class="badge bg-primary">@amenity</span>
-                }
+    <div class="card-body rounded border shadow-sm mb-4">
+        <div class="row">
+            <div class="col-md-6">
+                <img class="room-img w-100"
+                     alt="Room @room.Id"
+                     src="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fcache.marriott.com%2Fmarriottassets%2Fmarriott%2FLONPL%2Flonpl-guestroom-0117-hor-clsc.jpg%3Finterpolation%3Dprogressive-bilinear%26&f=1&nofb=1&ipt=ebe42a9838514aada588f06e57dcb5cd12e793934a0fcacb6a5e5df2d252dbf8" />
             </div>
+            <div class="col-md-6"> 
+                <div class="card-body">
+                    <h5 class="card-title mb-3" style="padding: 0.75rem 0;">Room @room.Id</h5>
 
-            @if (!string.IsNullOrWhiteSpace(room.Description))
-            {
-                <hr />
-                <p class="mb-0">@room.Description</p>
-            }
+                    <ul class="list-unstyled small mb-3">
+                        <li style="padding: 0.5rem 0;"><strong>Total Beds:</strong> @room.Beds</li>
+
+                        @* Bed type counts only if > 0 so no dupes *@
+                        @if (room.KingBeds > 0) { <li><strong>King beds:</strong> @room.KingBeds</li> }
+                        @if (room.QueenBeds > 0) { <li><strong>Queen beds:</strong> @room.QueenBeds</li> }
+                        @if (room.TwinBeds  > 0) { <li><strong>Twin beds:</strong> @room.TwinBeds</li> }
+                        @if (room.Size      > 0) { <li><strong>Size (m²):</strong> @room.Size</li> }
+                        @if (room.Tv        > 0) { <li><strong>TVs:</strong> @room.Tv</li> }
+
+                        <li><strong>Price:</strong> @room.Price.ToString("C")</li>
+                    </ul>
+
+                    @* Boolean amenities as badges bc its pretti *@
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var amenity in GetAmenityBadges(room))
+                        {
+                            <span class="badge bg-primary">@amenity</span>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(room.Description))
+                    {
+                        <hr />
+                        <p class="mb-0">@room.Description</p>
+                    }
+                </div>
+            </div>
         </div>
     </div>
 }

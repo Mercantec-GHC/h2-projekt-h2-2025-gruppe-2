@@ -340,13 +340,7 @@
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
-.icon-link > .bi {
-  flex-shrink: 0;
-  width: 1em;
-  height: 1em;
-  fill: currentcolor;
-  transition: 0.2s ease-in-out transform;
-}
+
 @media (prefers-reduced-motion: reduce) {
   .icon-link > .bi {
     transition: none;
