@@ -6,29 +6,65 @@
 
 main {
     flex: 1;
-}
+    background-image: url('resortimg.jpg');
+    height: 1080px;
 
+}
+.navbar {
+    background: linear-gradient(180deg, #000000,#141414, #303030);
+    height: 4rem;
+    display: flex;
+    align-items: center;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    justify-content: space-between;
+}
 .nav-item {
     font-weight: bold;
-    background-color: #414141;
-    border-bottom: 1px solid #000000;
     height: 2.5rem;
     display: flex;
     align-items: center;
     padding-left: 1rem;
     padding-right: 1rem;
+    border: 1px solid transparent; 
+    border-radius: 10px;
+    margin-right: 2rem;
+    color: rgb(238, 238, 238);
+    transition: border-color .15s ease;
 }
 
 .sign-in {
     font-weight: bold;
-    background-color: #414141;
-    border-bottom: 1px solid #000000;
-    border-radius: 15px;
     height: 2.5rem;
     display: flex;
     align-items: center;
-    padding-left: 2rem;
-    padding-right: 2rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #808080, #444444);
+    margin-right: 2rem;
+    color: rgb(238, 238, 238);
+    transition: border-color .15s ease;
+}
+
+
+.nav-item,
+.sign-in {
+    border: 1px solid transparent;
+    transition: border-color .15s ease;
+}
+
+
+.nav-item:hover {
+    border-color: #6e6e6e;
+    color: white !important;
+}
+
+.sign-in:hover,
+.sign-in:focus,
+.sign-in:focus-visible {
+    border-color: #808080;
 }
 
 .ms-auto .btn-link:hover,
