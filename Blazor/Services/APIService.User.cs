@@ -57,7 +57,7 @@ public partial class APIService
             {
                 var errorMsg = await response.Content.ReadAsStringAsync();
                 Console.WriteLine("Test: " + errorMsg);
-                return ("Failed to create new user! Code: " + response.StatusCode + ", " + errorMsg, null);
+                return ("Failed to login user! Code: " + response.StatusCode + ", " + errorMsg, null);
             }
         }
         catch (NullReferenceException ex)

@@ -32,7 +32,9 @@ public class Program
             .CreateLogger();
 
         builder.Host.UseSerilog();
-
+        
+        builder.Services.AddScoped<MailService>();
+        
         // The JwtService will magically get added to the controller.
         builder.Services.AddScoped<JwtService>();
         string jwtSecretKey = (Configuration["Jwt:SecretKey"]
