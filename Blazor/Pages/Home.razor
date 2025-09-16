@@ -20,44 +20,45 @@
         <h2 class="param-header">Available rooms
             from @MakeDateReadable(startingDate) to @MakeDateReadable(endingDate)</h2>
 
-        <div class="row">
-            @*<EditForm Model="@_newBookingDto" OnValidSubmit="@CreateBooking">
-        <DataAnnotationsValidator/>
-        <ValidationSummary/>*@
-            <div class="col">
-                <label>
-                    Adults
-                    <InputNumber @bind-Value="_newBookingDto.Adults" class="form-control"/>
-                </label>
+        <EditForm Model="@_newBookingDto" OnValidSubmit="@CreateBooking" class="booking-form">
+            <DataAnnotationsValidator/>
+            <ValidationSummary/>
+            <div class="row">
+                <div class="col">
+                    <label>
+                        Adults
+                        <InputNumber @bind-Value="_newBookingDto.Adults" class="form-control"/>
+                    </label>
+                </div>
+                <div class="col">
+                    <label>
+                        Children
+                        <InputNumber @bind-Value="_newBookingDto.Children" class="form-control"/>
+                    </label>
+                </div>
+                <div class="col">
+                    <label>
+                        Room service (@ROOM_SERVICE_PRICE.ToString("C"))
+                        <InputCheckbox @bind-Value="_newBookingDto.RoomService" class="form-check-input"/>
+                    </label>
+                </div>
+                <div class="col">
+                    <label>
+                        Breakfast (@BREAKFAST_PRICE.ToString("C"))
+                        <InputCheckbox @bind-Value="_newBookingDto.Breakfast" class="form-check-input"/>
+                    </label>
+                </div>
+                <div class="col">
+                    <label>
+                        Dinner (@DINNER_PRICE.ToString("C"))
+                        <InputCheckbox @bind-Value="_newBookingDto.Dinner" class="form-check-input"/>
+                    </label>
+                </div>
             </div>
-            <div class="col">
-                <label>
-                    Children
-                    <InputNumber @bind-Value="_newBookingDto.Children" class="form-control"/>
-                </label>
-            </div>
-            <div class="col">
-                <label>
-                    Room service (@ROOM_SERVICE_PRICE.ToString("C"))
-                    <InputCheckbox @bind-Value="_newBookingDto.RoomService" class="form-check-input"/>
-                </label>
-            </div>
-            <div class="col">
-                <label>
-                    Breakfast (@BREAKFAST_PRICE.ToString("C"))
-                    <InputCheckbox @bind-Value="_newBookingDto.Breakfast" class="form-check-input"/>
-                </label>
-            </div>
-            <div class="col">
-                <label>
-                    Dinner (@DINNER_PRICE.ToString("C"))
-                    <InputCheckbox @bind-Value="_newBookingDto.Dinner" class="form-check-input"/>
-                </label>
-            </div>
-            @* </EditForm> *@
-        </div>
+            <button type="submit" class="btn btn-primary my-2">Create booking</button>
+        </EditForm>
 
-        <div class="row">
+        <div class="row booking-price py-3">
             <div class="col-6">
                 <h2>Total price:
                     @if (_currentRooms.Any())
@@ -88,9 +89,10 @@
                     </div>
                 }
             </div>
+            <div>
+                <button @onclick="GetRoomsWithinTimeRange" class="btn btn-primary">Get rooms by date</button>
+            </div>
         </div>
-        <button @onclick="GetRoomsWithinTimeRange" class="btn btn-primary">Get rooms by date</button>
-        <button @onclick="CreateBooking" class="btn btn-primary my-2">Create booking</button>
     </div>
 
     @if (_availableRooms != null)
@@ -104,10 +106,12 @@
             <div>
                 <button class="btn btn-outline-primary btn-sm me-2"
                         @onclick="PrevPage"
-                        disabled="@(_currentPage == 0)">Previous</button>
+                        disabled="@(_currentPage == 0)">Previous
+                </button>
                 <button class="btn btn-outline-primary btn-sm"
                         @onclick="NextPage"
-                        disabled="@(_currentPage >= totalPages - 1)">Next</button>
+                        disabled="@(_currentPage >= totalPages - 1)">Next
+                </button>
             </div>
         </div>
 
@@ -165,7 +169,7 @@
     private int _daysSpent;
     bool _loadingRooms;
     List<Room>? _availableRooms;
-    
+
     private int _currentPage = 0;
     private int _pageSize = 8;
 
@@ -232,7 +236,7 @@
             Console.WriteLine("End: " + endDateUtc);
 
             _availableRooms = await API.GetRoomsByAvailableDates(startDateUtc, endDateUtc);
-            
+
             _currentPage = 0;
             _loadingRooms = false;
             StateHasChanged();
@@ -287,7 +291,7 @@
         var result = await API.CreateBookingAsync(_newBookingDto, jwtToken);
         await JS.InvokeVoidAsync("alert", result);
     }
-    
+
     private IEnumerable<Room> PagedRooms =>
         _availableRooms == null
             ? Enumerable.Empty<Room>()
