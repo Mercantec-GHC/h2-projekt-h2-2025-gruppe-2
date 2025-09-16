@@ -6,49 +6,42 @@
 
 main {
     flex: 1;
-    background-image: url('resortimg.jpg');
+    background-image: url('whar.jpg');
     height: 1080px;
 
 }
 .navbar {
     background: linear-gradient(180deg, #000000,#000000,#000000, #3a3a3a);
-    height: 4rem;
-    display: flex;
-    align-items: center;
-    padding-left: 2rem;
-    padding-right: 2rem;
-    justify-content: space-between;
+    min-height: 4rem;
 }
 .nav-item {
+    font-size: clamp(0.8rem, 2.5vw, 1rem);
+    container-name: nav-item;
     font-weight: regular;
-    height: 2.5rem;
-    display: flex;
-    align-items: center;
-    padding-left: 1rem;
-    padding-right: 1rem;
     border: 1px solid transparent; 
     border-radius: 10px;
-    margin-right: 2rem;
+    margin-right: 1rem;
     color: rgb(255, 255, 255);
     transition: border-color .15s ease;
 }
 
 .sign-in {
+    font-size: clamp(0.8rem, 2.5vw, 1rem);
+    container-name: sign-in;
     font-weight: regular;
-    height: 2.5rem;
-    display: flex;
-    align-items: center;
-    padding-left: 1rem;
-    padding-right: 1rem;
     border: 1px solid transparent; 
     border-radius: 10px;
-    margin-right: 2rem;
-    color: rgb(255, 255, 255) !important;
+    margin-right: 1rem;
+    color: rgb(255, 255, 255);
     transition: border-color .15s ease;
+    color: rgb(255, 255, 255) !important;
 }
+.navbar
 
 
-.nav-item,
+.navbar-text{
+font-size: small;
+}
 .sign-in {
     border: 1px solid transparent;
     transition: border-color .15s ease;
@@ -123,9 +116,27 @@ main {
         width: 0;
     }
 
-    .top-row,
-    article {
-        padding-left: 2rem !important;
-        padding-right: 1.5rem !important;
+
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1rem;
+    }
+    
+    .nav-item {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+        justify-content: center;
+    }
+    
+    .sign-in {
+        width: 100%;
+        margin-right: 0;
+        justify-content: center;
     }
 }
