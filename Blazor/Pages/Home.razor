@@ -97,7 +97,7 @@
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
             @foreach (var r in _availableRooms)
             {
-                <div class="col px-2" style="height: 100%;">
+                <div class="col" style="height: 100%;">
                     <RoomCard room="r"></RoomCard>
                     <button class="btn btn-primary" @onclick="() => AddRoomId(r)">Add room</button>
                 </div>
