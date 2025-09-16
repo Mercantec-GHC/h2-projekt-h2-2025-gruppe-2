@@ -13,13 +13,13 @@
         transform: translate(50%, -50%);
         border: black 1px solid;
         border-radius: 10px;
-        
-        .starting-date{
+
+        .starting-date {
             margin-right: 100px;
             border-radius: 5px;
             font-size: 30px;
         }
-        
+
         .ending-date {
             border-radius: 5px;
             font-size: 30px;
@@ -28,7 +28,10 @@
 }
 
 .params {
-    
+    background-color: #f1f1f1;
+    border-radius: 5px;
+    border: gray 1px solid;
+
     .param-header {
 
         justify-self: center;
