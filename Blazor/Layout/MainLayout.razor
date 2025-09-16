@@ -61,9 +61,10 @@
             </div>
         </nav>
         <LoginModal/>
-        <article class="content px-4">
             @Body
+        <article class="content px-4">
         </article>
+        <Footer></Footer>
     </main>
 </div>
 
@@ -113,10 +114,12 @@
         {
             var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             _userInfo = System.Text.Json.JsonSerializer.Deserialize<SessionTokenDto>(user, options);
+            Console.Write("User info: " + _userInfo?.Username);
         }
         else
         {
             _userInfo = null;
+            Console.WriteLine("User Null: ");
         }
 
         StateHasChanged();
