@@ -28,4 +28,15 @@ public class TimeService
         // Build the readable date string
         return $"{day}{daySuffix} of {monthName}";
     }
+    public string MakeDateReadableShort(DateOnly date)
+    {
+        // Get the day with the ordinal suffix
+        int day = date.Day;
+
+        // Get the month name
+        string monthName = date.ToString("MMMM");
+
+        // Build the readable date string
+        return $"{day} {monthName.Substring(0, 3)}";
+    }
 }

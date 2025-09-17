@@ -52,13 +52,9 @@ namespace API.Controllers
                 return NotFound($"Room {id} not found.");
             }
 
-            List<string> bookingsRoomsBookingsIds = await _context.BookingsRooms
-                .Where(br => br.RoomId == id)
-                .Select(br => br.BookingId)
-                .ToListAsync();
-
             List<Booking> bookings = await _context.Bookings
-                .Where(b => bookingsRoomsBookingsIds.Contains(b.Id))
+                .Where(b => _context.BookingsRooms
+                    .Any(br => br.BookingId == b.Id && br.RoomId == id))
                 .ToListAsync();
 
             RoomOccupation roomOccupation = new()
