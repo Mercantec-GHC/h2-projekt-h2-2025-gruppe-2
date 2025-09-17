@@ -1,0 +1,86 @@
+﻿@inject APIService Api
+@inject IJSRuntime JS
+
+<div class="container">
+    @if (_roomOccupation != null)
+    {
+        <div class="justify-content-center d-flex">
+            <button class="btn btn-primary" @onclick="PrevWeek">Prev</button>
+            <button class="btn btn-primary" @onclick="NextWeek">Next</button>
+        </div>
+        <div class="row">
+            @for (int i = 0; i < 14; i++)
+            {
+                var currentDate = DateOnly.FromDateTime(_baseDate.AddDays(i));
+                bool isOccupied = false;
+
+                foreach (var occ in _roomOccupation.OccupiedDates)
+                {
+                    var occStart = DateOnly.FromDateTime(occ.Key);
+                    var occEnd = DateOnly.FromDateTime(occ.Value);
+                    if (currentDate >= occStart && currentDate <= occEnd)
+                    {
+                        isOccupied = true;
+                        break;
+                    }
+                }
+
+                var bgColor = isOccupied ? "red" : "green";
+                <div class="col" style="padding: 0; border: 1px solid white;">
+                    <div class="calender-header" style="background-color: lightgray; padding: 0 0 1px 0">
+                        <p>@_timeService.MakeDateReadable(currentDate)</p>
+                    </div>
+                    <div class="calender-body" style="height: 100px; background-color: @bgColor;">
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <Loading/>
+    }
+</div>
+
+@code {
+
+    [Parameter] public string Id { get; set; }
+
+    private DateTime _baseDate = DateTime.UtcNow.Date;
+
+    private TimeService _timeService = new();
+
+    private RoomOccupation? _roomOccupation;
+    private string _pendingMsg = string.Empty;
+    private bool _alertRequest;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var (msg, roomOccupation) = await Api.GetRoomOccupationsAsync(Id);
+        if (roomOccupation == null)
+        {
+            _pendingMsg = msg;
+            _alertRequest = true;
+            return;
+        }
+
+        _roomOccupation = roomOccupation;
+        foreach (var date in _roomOccupation.OccupiedDates)
+        {
+            Console.WriteLine($"From: {date.Key}, Till: {date.Value}");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_alertRequest && !string.IsNullOrEmpty(_pendingMsg))
+        {
+            _alertRequest = false;
+            await JS.InvokeVoidAsync("alert", _pendingMsg);
+        }
+    }
+
+    private void NextWeek() => _baseDate = _baseDate.AddDays(7);
+    private void PrevWeek() => _baseDate = _baseDate.AddDays(-7);
+
+}
