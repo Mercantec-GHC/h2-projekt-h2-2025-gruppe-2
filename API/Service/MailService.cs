@@ -202,6 +202,54 @@ public class MailService
     }
 
     /// <summary>
+    /// Returns a basic HTML/CSS form for telling the admins that a user was accessed that does not exist
+    /// </summary>
+    /// <param name="userId">The faulty ID that was trying to be found in the DB</param>
+    /// <param name="during">The phrase for what was happening, while trying to access the faulty ID</param>
+    /// <returns>A HTML document in a string format</returns>
+    public string GetUserNotFoundHtml(string userId, string during)
+    {
+        return $"""
+
+                <!DOCTYPE html>
+                <html lang='da'>
+                <head>
+                    <meta charset='UTF-8'>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                    <title>User {userId} not found</title>
+                </head>
+                <body>
+                    <p>User of id '{userId}' was not found while: '{during}'</p>
+                </body>
+                </html>
+                """;
+    }
+
+    /// <summary>
+    /// Returns a basic HTML/CSS form for telling the admins that a room was accessed that does not exist
+    /// </summary>
+    /// <param name="roomId">The faulty ID that was trying to be found in the DB</param>
+    /// <param name="during">The phrase for what was happening while trying to access the faulty ID</param>
+    /// <returns>A HTML document in a string format</returns>
+    public string GetRoomNotFoundHtml(string roomId, string during)
+    {
+        return $"""
+
+                <!DOCTYPE html>
+                <html lang='da'>
+                <head>
+                    <meta charset='UTF-8'>
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                    <title>Room {roomId} not found</title>
+                </head>
+                <body style="background-color: #58151c; padding: 10px; color: white;">
+                    <p>Room of id '{roomId}' was not found while: '{during}'</p>
+                </body>
+                </html>
+                """;
+    }
+
+    /// <summary>
     /// Opretter HTML template for velkommen email
     /// </summary>
     /// <param name="username">Brugerens brugernavn</param>

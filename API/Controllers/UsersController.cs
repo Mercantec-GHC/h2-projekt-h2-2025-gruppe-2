@@ -155,7 +155,7 @@ public class UsersController : ControllerBase
     /// <returns>A JWT token and user information if authentication is successful, or 401 if credentials are invalid.</returns>
     [Authorize(Roles = "User,Admin,CleaningStaff,Reception")]
     [HttpGet("me")]
-    public IActionResult GetCurrentUser()
+    public async Task<IActionResult> GetCurrentUser()
     {
         // 1. Get user ID from token (typically set as 'sub' claim in JWT)
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -187,7 +187,17 @@ public class UsersController : ControllerBase
             .FirstOrDefault(u => u.Id == userId);
 
         if (user == null)
+        {
+            var mailStatus = await _mailService.SendEmailAsync(
+                "karambithotel@gmail.com",
+                "User not found",
+                _mailService.GetUserNotFoundHtml(userId, "getting current user"),
+                isHtml:true);
+            
+            if (!mailStatus) _logger.LogError("Email was not sent");
+            
             return NotFound("User was not found in database.");
+        }
 
         // 3. Returnér ønskede data - fx til profilsiden
         return Ok(new
@@ -396,7 +406,7 @@ public class UsersController : ControllerBase
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
-        
+
         var emailSent = await _mailService.SendWelcomeEmailAsync(dto.Email, dto.Username, userRole.Name);
 
         if (emailSent)
@@ -426,6 +436,15 @@ public class UsersController : ControllerBase
 
         if (user == null)
         {
+            bool emailStatus = await _mailService.SendEmailAsync(
+                "karambithotel@gmail.com",
+                $"User ({id}) not found",
+                _mailService.GetUserNotFoundHtml(id, "deleting user"),
+                isHtml:true
+            );
+
+            if (!emailStatus) _logger.LogError("Email was not sent");
+
             return NotFound();
         }
 
@@ -466,6 +485,16 @@ public class UsersController : ControllerBase
         (bool adStatus, string msg) = DoesADUserCorrespond(user, dto.Password);
         if (!adStatus)
         {
+            bool emailStatus = await _mailService.SendEmailAsync(
+                "karambithotel@gmail.com",
+                $"User ({user.Id}) not found",
+                _mailService.GetUserNotFoundHtml(user.Id, "Logging in with AD"),
+                isHtml:true
+            );
+
+            if (!emailStatus) _logger.LogError("Email was not sent after checking with AD");
+            
+
             return Unauthorized(msg);
         }
 
