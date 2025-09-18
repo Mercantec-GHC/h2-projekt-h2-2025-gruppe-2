@@ -24,6 +24,8 @@
         transform: translate(50%, -50%);
         border: black 1px solid;
         border-radius: 10px;
+        /*Has to be higher than the overlay gradient, otherwise the user cant click on the calenders*/
+        z-index: 1;
 
         .starting-date {
             margin-right: 100px;
