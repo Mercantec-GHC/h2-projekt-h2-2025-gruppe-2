@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Mail;
 using System.Text;
+using DomainModels;
 
 namespace API.Service;
 
@@ -247,6 +248,53 @@ public class MailService
                 </body>
                 </html>
                 """;
+    }
+
+    /// <summary>
+    /// Opretter HTML template for velkommen email
+    /// </summary>
+    /// <param name="user">The user that has just booked</param>
+    /// <param name="booking">The booking that has just been created</param>
+    /// <param name="roomIds">The IDs of the booked rooms</param>
+    /// <returns>HTML formateret email template</returns>
+    public string BookingConfirmation(User user, Booking booking, List<string> roomIds)
+    {
+        string roomService = booking.RoomService ? "✅" : "❌";
+        string breakfast = booking.Breakfast ? "✅" : "❌";
+        string dinner = booking.Dinner ? "✅" : "❌";
+        string bookedRooms = "<ul>" +
+                             string.Join("", roomIds.Select(id => $"<li>{id}</li>")) +
+                             "</ul>";
+
+
+        return $$$"""
+                  <!DOCTYPE html>
+                  <html lang='da'>
+                  <head>
+                      <meta charset='UTF-8'>
+                      <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                      <title>Booking has been confirmed, {{{user.Username}}}!</title>
+                      <style>
+                          body {{
+                              font-family: 'Georgia', serif;
+                          }}
+                      </style>
+                  </head>
+                  <body style="background-color: #58151c; padding: 10px; color: white;">
+                      <h2>Booking review for {{{user.Username}}}</h2>
+                      <p>Duration: {{{booking.OccupiedFrom}}} - {{{booking.OccupiedTill}}} - {{{(int)(booking.OccupiedTill.Date - booking.OccupiedFrom.Date).TotalDays}}} days</p>
+                      
+                      <p>Booked rooms:</p>
+                      {{{bookedRooms}}}
+                      
+                      <p>Roomservice: {{{roomService}}}</p>
+                      <p>Breakfast: {{{breakfast}}}</p>
+                      <p>Dinner: {{{dinner}}}</p>
+                      
+                      <p>Total price: {{{booking.TotalPrice.ToString("C")}}}</p>
+                  </body>
+                  </html>
+                  """;
     }
 
     /// <summary>

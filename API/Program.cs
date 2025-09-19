@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reflection;
 using System.Text;
 using API.Data;
@@ -187,6 +188,9 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
+        var culture = new CultureInfo("da-DK");
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
 
         app.Run();
     }

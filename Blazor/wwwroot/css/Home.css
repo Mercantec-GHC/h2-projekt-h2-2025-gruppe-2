@@ -24,6 +24,8 @@
         transform: translate(50%, -50%);
         border: black 1px solid;
         border-radius: 10px;
+        /*Has to be bigger than the index of the overlay, so that we dont click on the overlay instead of the dates.*/
+        z-index: 1;
 
         .starting-date {
             margin-right: 100px;
