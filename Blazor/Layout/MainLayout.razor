@@ -6,12 +6,12 @@
 
 <div class="page">
     <main>
-        <nav class="navbar navbar-dark bg-dark sticky-top">
+        <nav class="navbar navbar-dark bg-dark sticky-top sticky-leftc">
             <div class="container-fluid d-flex align-items-center">
                 <NavLink class="navbar-brand d-flex align-items-center gap-2" href="/">
                     <span class="d-inline-flex justify-content-center align-items-center rounded-circle bg-light"
                           style="width:36px; height:36px;">
-                        <img src="/small_karambit.webp" alt="Logo" width="30" height="24"
+                        <img src="/small_karambit.webp" alt="Logo" width="30" height="30"
                              class="d-inline-block align-text-top"/>
                     </span>
                     Karambit Hotel
@@ -41,9 +41,6 @@
                     <li class="sign-in ms-auto">
                         @if (_userInfo != null)
                         {
-                            <span class="navbar-text text-white me-3">
-                                Hello, @_userInfo.Username!
-                            </span>
                             <button type="button" class="nav-link btn btn-link px-3" data-bs-toggle="modal"
                                     data-bs-target="#loginModal">
                                 Sign Out
@@ -61,9 +58,10 @@
             </div>
         </nav>
         <LoginModal/>
-        <article class="content px-4">
             @Body
+        <article class="content px-4">
         </article>
+        <Footer></Footer>
     </main>
 </div>
 
@@ -113,10 +111,12 @@
         {
             var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             _userInfo = System.Text.Json.JsonSerializer.Deserialize<SessionTokenDto>(user, options);
+            Console.Write("User info: " + _userInfo?.Username);
         }
         else
         {
             _userInfo = null;
+            Console.WriteLine("User Null: ");
         }
 
         StateHasChanged();

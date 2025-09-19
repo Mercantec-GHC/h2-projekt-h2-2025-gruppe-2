@@ -1,0 +1,59 @@
+﻿.home {
+    position: relative;
+
+    .background-image {
+        width: 100%;
+    }
+    .background-image__overlay:before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;           
+        width: 100%;
+        height: 50%;
+        background-size: cover;
+        background: linear-gradient(to bottom, transparent 0%, white 90%) no-repeat center;
+        z-index: 0;
+    }
+
+    .date {
+        background-color: white;
+        position: absolute;
+        top: 50%;
+        right: 50%;
+        transform: translate(50%, -50%);
+        border: black 1px solid;
+        border-radius: 10px;
+        /*Has to be bigger than the index of the overlay, so that we dont click on the overlay instead of the dates.*/
+        z-index: 1;
+
+        .starting-date {
+            margin-right: 100px;
+            border-radius: 5px;
+            font-size: 30px;
+        }
+
+        .ending-date {
+            border-radius: 5px;
+            font-size: 30px;
+        }
+    }
+}
+
+
+.params {
+    background-color: #f1f1f1;
+    border-radius: 5px;
+    border: gray 1px solid;
+
+    .param-header {
+
+        justify-self: center;
+    }
+
+    .booking-price {
+        background-color: #e3e3e3;
+        border-radius: 5px;
+        border: gray 1px solid;
+    }
+}

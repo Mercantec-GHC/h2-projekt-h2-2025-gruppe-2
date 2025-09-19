@@ -18,6 +18,7 @@ namespace API.Controllers
     {
         private readonly AppDBContext _context;
         private readonly ILogger<RoomsController> _logger;
+        private readonly MailService _mailService;
         private TimeService _timeService = new();
 
         /// <summary>
@@ -25,10 +26,11 @@ namespace API.Controllers
         /// </summary>
         /// <param name="context">The database context to use for data access.</param>
         /// <param name="logger">Logger configuration</param>
-        public RoomsController(AppDBContext context, ILogger<RoomsController> logger)
+        public RoomsController(AppDBContext context, ILogger<RoomsController> logger, MailService mailService)
         {
             _context = context;
             _logger = logger;
+            _mailService = mailService;
         }
 
         /// <summary>
@@ -40,6 +42,34 @@ namespace API.Controllers
         public async Task<ActionResult<IEnumerable<Room>>> GetRooms()
         {
             return await _context.Rooms.ToListAsync();
+        }
+
+        [HttpGet]
+        [Route("occupied/{id}")]
+        public async Task<ActionResult> GetRoomOccupations(string id)
+        {
+            Room? room = await _context.Rooms.FirstOrDefaultAsync(r => r.Id == id);
+            if (room == null)
+            {
+                return NotFound($"Room {id} not found.");
+            }
+
+            List<Booking> bookings = await _context.Bookings
+                .Where(b => _context.BookingsRooms
+                    .Any(br => br.BookingId == b.Id && br.RoomId == id))
+                .ToListAsync();
+
+            RoomOccupation roomOccupation = new()
+            {
+                RoomId = id
+            };
+
+            foreach (Booking booking in bookings)
+            {
+                roomOccupation.OccupiedDates.Add(booking.OccupiedFrom, booking.OccupiedTill);
+            }
+
+            return Ok(roomOccupation);
         }
 
         /// <summary>
@@ -82,7 +112,7 @@ namespace API.Controllers
                 return BadRequest("An error has occured: " + e.Message);
             }
         }
-        
+
         // GET: api/Rooms/5
         /// <summary>
         /// Gets a single room with the given ID
@@ -101,7 +131,7 @@ namespace API.Controllers
 
             return room;
         }
-        
+
         /// <summary>
         /// Retrieves all rooms based on availability, within the specified date range (YYYY-MM-DDTHH:MM:SS/2025-08-18T10:30:00).
         /// </summary>
@@ -156,7 +186,18 @@ namespace API.Controllers
         public async Task<IActionResult> CleanRoom(string id)
         {
             var room = await _context.Rooms.FindAsync(id);
-            if (room == null) return NotFound();
+            if (room == null)
+            {
+                var mailStatus = await _mailService.SendEmailAsync(
+                    "karambithotel@gmail.com",
+                    "Room not found",
+                    _mailService.GetRoomNotFoundHtml(id, "cleaning room"),
+                    isHtml: true);
+
+                if (!mailStatus) _logger.LogError("Email was not sent");
+
+                return NotFound($"Room '{id}' not found");
+            }
 
             if (room.Clean) return BadRequest("Error. Room already marked clean.");
 
@@ -178,7 +219,17 @@ namespace API.Controllers
         public async Task<IActionResult> UncleanRoom(string id)
         {
             var room = await _context.Rooms.FindAsync(id);
-            if (room == null) return NotFound();
+            if (room == null)
+            {
+                var mailStatus = await _mailService.SendEmailAsync(
+                    "karambithotel@gmail.com",
+                    "Room not found",
+                    _mailService.GetRoomNotFoundHtml(id, "uncleaning room"),
+                    isHtml:true);
+
+                if (!mailStatus) _logger.LogError("Email was not sent");
+                return NotFound($"Room '{id}' not found");
+            }
 
             if (!room.Clean) return BadRequest("Error. Room already marked unclean.");
 
@@ -349,7 +400,7 @@ namespace API.Controllers
                         .Any(br => br.RoomId == r.Id &&
                                    _context.Bookings.Any(b => b.Id == br.BookingId && b.UserId == userId)))
                     .ToListAsync();
-                
+
                 return Ok(new
                 {
                     message = rooms.Count == 0
@@ -370,7 +421,7 @@ namespace API.Controllers
         /// </summary>
         /// <returns>An internet code and a list of rooms with details</returns>
         [HttpGet("details")]
-        [Authorize(Roles="Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllRoomsDetails()
         {
             List<Room> rooms = await _context.Rooms.ToListAsync();
@@ -395,7 +446,7 @@ namespace API.Controllers
                 TotalMicrowaves = rooms.Count(r => r.Microwave),
                 TotalPrice = rooms.Sum(r => r.Price),
                 AvgPrice = rooms.Average(r => r.Price),
-                HighestPrice =  rooms.Max(r => r.Price),
+                HighestPrice = rooms.Max(r => r.Price),
                 LowestPrice = rooms.Min(r => r.Price)
             };
 

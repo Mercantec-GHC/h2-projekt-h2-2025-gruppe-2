@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reflection;
 using System.Text;
 using API.Data;
@@ -32,7 +33,9 @@ public class Program
             .CreateLogger();
 
         builder.Host.UseSerilog();
-
+        
+        builder.Services.AddScoped<MailService>();
+        
         // The JwtService will magically get added to the controller.
         builder.Services.AddScoped<JwtService>();
         string jwtSecretKey = (Configuration["Jwt:SecretKey"]
@@ -185,6 +188,9 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
+        var culture = new CultureInfo("da-DK");
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
 
         app.Run();
     }

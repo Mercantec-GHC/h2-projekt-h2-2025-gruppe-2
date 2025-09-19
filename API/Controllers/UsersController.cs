@@ -1,3 +1,4 @@
+using System.DirectoryServices.Protocols;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,7 @@ public class UsersController : ControllerBase
 {
     private readonly AppDBContext _context;
     private readonly JwtService _jwtService;
+    private readonly MailService _mailService;
     private readonly TimeService _timeService = new();
     private readonly ILogger<UsersController> _logger;
     private int _workFactor;
@@ -28,8 +30,9 @@ public class UsersController : ControllerBase
     /// <param name="jwtService">The JWT service for token generation and validation.</param>
     /// <param name="logger">The logger</param>
     /// <param name="configuration">Used to get the work factor</param>
+    /// <param name="mailService">Mail service used for sending messages to a mail</param>
     public UsersController(AppDBContext context, JwtService jwtService, ILogger<UsersController> logger,
-        IConfiguration configuration
+        IConfiguration configuration, MailService mailService
     )
     {
         _context = context;
@@ -37,7 +40,79 @@ public class UsersController : ControllerBase
         _logger = logger;
         _workFactor = int.Parse(configuration["HashedPassword:WorkFactor"] ??
                                 Environment.GetEnvironmentVariable("WorkFactor") ?? "15");
-        // _adService = adService;
+        _mailService = mailService;
+    }
+
+    /// <summary>
+    /// Test endpoint til at verificere mail konfiguration og sende test email.
+    /// Kun tilgængelig for administratorer.
+    /// </summary>
+    /// <param name="testEmail">Email adresse der skal modtage test email</param>
+    /// <returns>Resultat af mail test</returns>
+    /// <response code="200">Mail test kørt succesfuldt.</response>
+    /// <response code="401">Ikke autoriseret - manglende eller ugyldig token.</response>
+    /// <response code="403">Forbudt - kun administratorer har adgang.</response>
+    /// <response code="500">Der opstod en intern serverfejl.</response>
+    [Authorize(Roles = "Admin")]
+    [HttpPost("test-email")]
+    public async Task<IActionResult> TestEmail([FromQuery] string testEmail)
+    {
+        try
+        {
+            _logger.LogInformation("🧪 Tester email konfiguration for: {Email}", testEmail);
+
+            // Test SMTP forbindelse
+            var smtpTest = await _mailService.TestSmtpConnectionAsync();
+
+            if (!smtpTest)
+            {
+                return BadRequest(new
+                {
+                    message = "SMTP forbindelse fejler - tjek konfiguration",
+                    smtpWorking = false
+                });
+            }
+
+            // Send test email
+            var emailSent = await _mailService.SendEmailAsync(
+                testEmail,
+                "🧪 H2-MAGS Email Test",
+                "<h2>Email Test Succesfuld!</h2><p>Din mail konfiguration virker korrekt.</p>",
+                isHtml: true
+            );
+
+            if (emailSent)
+            {
+                _logger.LogInformation("✅ Test email sendt succesfuldt til: {Email}", testEmail);
+                return Ok(new
+                {
+                    message = "Test email sendt succesfuldt!",
+                    email = testEmail,
+                    smtpWorking = true,
+                    emailSent = true
+                });
+            }
+            else
+            {
+                _logger.LogWarning("❌ Kunne ikke sende test email til: {Email}", testEmail);
+                return BadRequest(new
+                {
+                    message = "Kunne ikke sende test email",
+                    email = testEmail,
+                    smtpWorking = true,
+                    emailSent = false
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Fejl ved email test for: {Email}", testEmail);
+            return StatusCode(500, new
+            {
+                message = "Der opstod en intern serverfejl ved email test",
+                error = ex.Message
+            });
+        }
     }
 
     /// <summary>
@@ -80,7 +155,7 @@ public class UsersController : ControllerBase
     /// <returns>A JWT token and user information if authentication is successful, or 401 if credentials are invalid.</returns>
     [Authorize(Roles = "User,Admin,CleaningStaff,Reception")]
     [HttpGet("me")]
-    public IActionResult GetCurrentUser()
+    public async Task<IActionResult> GetCurrentUser()
     {
         // 1. Get user ID from token (typically set as 'sub' claim in JWT)
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -112,7 +187,17 @@ public class UsersController : ControllerBase
             .FirstOrDefault(u => u.Id == userId);
 
         if (user == null)
+        {
+            var mailStatus = await _mailService.SendEmailAsync(
+                "karambithotel@gmail.com",
+                "User not found",
+                _mailService.GetUserNotFoundHtml(userId, "getting current user"),
+                isHtml:true);
+            
+            if (!mailStatus) _logger.LogError("Email was not sent");
+            
             return NotFound("User was not found in database.");
+        }
 
         // 3. Returnér ønskede data - fx til profilsiden
         return Ok(new
@@ -322,6 +407,17 @@ public class UsersController : ControllerBase
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
+        var emailSent = await _mailService.SendWelcomeEmailAsync(dto.Email, dto.Username, userRole.Name);
+
+        if (emailSent)
+        {
+            _logger.LogInformation("✅ Velkommen email sendt til: {Email}", dto.Email);
+        }
+        else
+        {
+            _logger.LogWarning("⚠️ Kunne ikke sende velkommen email til: {Email}", dto.Email);
+        }
+
         return Ok(new { message = "User created!", user.Email, role = userRole.Name });
     }
 
@@ -340,6 +436,15 @@ public class UsersController : ControllerBase
 
         if (user == null)
         {
+            bool emailStatus = await _mailService.SendEmailAsync(
+                "karambithotel@gmail.com",
+                $"User ({id}) not found",
+                _mailService.GetUserNotFoundHtml(id, "deleting user"),
+                isHtml:true
+            );
+
+            if (!emailStatus) _logger.LogError("Email was not sent");
+
             return NotFound();
         }
 
@@ -380,6 +485,16 @@ public class UsersController : ControllerBase
         (bool adStatus, string msg) = DoesADUserCorrespond(user, dto.Password);
         if (!adStatus)
         {
+            bool emailStatus = await _mailService.SendEmailAsync(
+                "karambithotel@gmail.com",
+                $"User ({user.Id}) not found",
+                _mailService.GetUserNotFoundHtml(user.Id, "Logging in with AD"),
+                isHtml:true
+            );
+
+            if (!emailStatus) _logger.LogError("Email was not sent after checking with AD");
+            
+
             return Unauthorized(msg);
         }
 
@@ -660,6 +775,7 @@ public class UsersController : ControllerBase
             Username = user.Username,
             Password = password
         });
+
         (ADUser? adUser, List<string>? roles) = adService.ShowCurrentUserInfo();
 
         if (adUser == null || roles == null)

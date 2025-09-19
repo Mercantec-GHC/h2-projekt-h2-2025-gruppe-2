@@ -1,47 +1,323 @@
 ﻿@page "/"
-
 @using System.Net.Http
+@inject BookingService BookingService
+@inject APIService API
+@inject StorageService StorageService
+@inject IJSRuntime JS
 
-<h1 class="mb-4">Status Dashboard</h1>
-
-<div class="row">
-    <div class="col-md-6 mb-4">
-        <StatusCard 
-            Title="API Status"
-            IconClass="bi bi-heart-pulse text-success"
-            BorderClass="border-success"
-            HealthCheck="@healthCheck" />
+<div class="home">
+    <div class="date">
+        <div class="m-3">
+            <InputDate class="starting-date" TValue="DateOnly" @bind-Value="@startingDate" Placeholder="Enter Date"/>
+            <InputDate class="ending-date" TValue="DateOnly" @bind-Value="@endingDate" Placeholder="Enter Date"/>
+        </div>
     </div>
-    <div class="col-md-6 mb-4">
-        <StatusCard 
-            Title="Database Status"
-            IconClass="bi bi-database text-warning"
-            BorderClass="border-warning"
-            HealthCheck="@dbHealthCheck" />
-    </div>
+    <img class="background-image" src="maxresdefault.jpg" alt="Hotel-theme-image"/>
+    <div class="background-image__overlay" >&nbsp;</div>
 </div>
 
-<div class="row">
-    <div class="col-12">
-        <WeatherTable WeatherForecasts="@weatherForecasts" />
+<div class="container py-4">
+    <div class="params p-3 mb-4">
+        <h2 class="param-header">Available rooms
+            from @MakeDateReadable(startingDate) to @MakeDateReadable(endingDate)</h2>
+
+        <EditForm Model="@_newBookingDto" OnValidSubmit="@CreateBooking" class="booking-form">
+            <DataAnnotationsValidator/>
+            <ValidationSummary/>
+            <div class="row">
+                <div class="col">
+                    <label>
+                        Adults
+                        <InputNumber @bind-Value="_newBookingDto.Adults" class="form-control"/>
+                    </label>
+                </div>
+                <div class="col">
+                    <label>
+                        Children
+                        <InputNumber @bind-Value="_newBookingDto.Children" class="form-control"/>
+                    </label>
+                </div>
+                <div class="col">
+                    <label>
+                        Room service (@ROOM_SERVICE_PRICE.ToString("C"))
+                        <InputCheckbox @bind-Value="_newBookingDto.RoomService" class="form-check-input"/>
+                    </label>
+                </div>
+                <div class="col">
+                    <label>
+                        Breakfast (@BREAKFAST_PRICE.ToString("C"))
+                        <InputCheckbox @bind-Value="_newBookingDto.Breakfast" class="form-check-input"/>
+                    </label>
+                </div>
+                <div class="col">
+                    <label>
+                        Dinner (@DINNER_PRICE.ToString("C"))
+                        <InputCheckbox @bind-Value="_newBookingDto.Dinner" class="form-check-input"/>
+                    </label>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary my-2">Create booking</button>
+        </EditForm>
+
+        <div class="row booking-price py-3">
+            <div class="col-6">
+                <h2>Total price:
+                    @if (_currentRooms.Any())
+                    {
+                        <span>@CalcPrice().ToString("C")</span>
+                    }
+                    else
+                    {
+                        <span>0</span>
+                    }
+                </h2>
+            </div>
+            <div class="col-6">
+                @if (_currentRooms.Any())
+                {
+                    <div class="mb-3">
+                        <label>Room IDs</label>
+                        <ul style="list-style-type: '- ';">
+                            @foreach (var r in _currentRooms)
+                            {
+                                <li>
+                                    ID: @r.Id, for @r.Price.ToString("C") <button class="btn btn-danger"
+                                                                                  @onclick="() => RemoveRoom(r)">X
+                                    </button>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </div>
+            <div>
+                <button @onclick="GetRoomsWithinTimeRange" class="btn btn-primary">Get rooms by date</button>
+            </div>
+        </div>
     </div>
+
+    @if (_availableRooms != null)
+    {
+        var totalPages = (int)Math.Ceiling(_availableRooms.Count / (double)_pageSize);
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                Showing page @(_currentPage + 1) of @totalPages
+            </div>
+            <div>
+                <button class="btn btn-outline-primary btn-sm me-2"
+                        @onclick="PrevPage"
+                        disabled="@(_currentPage == 0)">Previous
+                </button>
+                <button class="btn btn-outline-primary btn-sm"
+                        @onclick="NextPage"
+                        disabled="@(_currentPage >= totalPages - 1)">Next
+                </button>
+            </div>
+        </div>
+
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+            @foreach (var r in PagedRooms)
+            {
+                <div class="col" style="height: 100%;">
+                    <RoomCard room="r"></RoomCard>
+                    <button class="btn btn-primary mt-1" @onclick="() => AddRoomId(r)">Add room</button>
+                </div>
+            }
+        </div>
+    }
+
 </div>
 
-<div class="row">
-    <div class="col-12">
-        <Counter />
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <StatusCard
+                Title="API Status"
+                IconClass="bi bi-heart-pulse text-success"
+                BorderClass="border-success"
+                HealthCheck="@healthCheck"/>
+        </div>
+        <div class="col-md-6 mb-4">
+            <StatusCard
+                Title="Database Status"
+                IconClass="bi bi-database text-warning"
+                BorderClass="border-warning"
+                HealthCheck="@dbHealthCheck"/>
+        </div>
+        <div class="col-md-6 mb-4">
+            <StatusCard
+                Title="Database Status"
+                IconClass="bi bi-database text-warning"
+                BorderClass="border-success"
+                HealthCheck="@_adHealthCheck"/>
+        </div>
     </div>
 </div>
 
 @code {
     HealthCheckResponse? healthCheck;
     HealthCheckResponse? dbHealthCheck;
-    WeatherForecast[]? weatherForecasts;
+    HealthCheckResponse? _adHealthCheck;
+    NewBookingDto _newBookingDto = new();
+    List<Room> _currentRooms = [];
+
+    private DateOnly startingDate = DateOnly.FromDateTime(DateTime.Now);
+    private DateOnly endingDate = DateOnly.FromDateTime(DateTime.Now.AddDays(1));
+    double ROOM_SERVICE_PRICE;
+    double BREAKFAST_PRICE;
+    double DINNER_PRICE;
+    private int _daysSpent;
+    bool _loadingRooms;
+    List<Room>? _availableRooms;
+
+    private int _currentPage = 0;
+    private int _pageSize = 8;
 
     protected override async Task OnInitializedAsync()
     {
+        ROOM_SERVICE_PRICE = BookingService.ROOM_SERVICE_PRICE;
+        BREAKFAST_PRICE = BookingService.BREAKFAST_PRICE;
+        DINNER_PRICE = BookingService.DINNER_PRICE;
         healthCheck = await ApiService.GetHealthCheckAsync();
         dbHealthCheck = await ApiService.GetDBHealthCheckAsync();
-        weatherForecasts = await ApiService.GetWeatherAsync(5);
+        _adHealthCheck = await ApiService.GetADHealthCheckAsync();
     }
+
+    private string MakeDateReadable(DateOnly date)
+    {
+        // Get the day with the ordinal suffix
+        int day = date.Day;
+        string daySuffix = day switch
+        {
+            1 or 21 or 31 => "st",
+            2 or 22 => "nd",
+            3 or 23 => "rd",
+            _ => "th"
+        };
+
+        // Get the month name
+        string monthName = date.ToString("MMMM");
+
+        // Build the readable date string
+        return $"{day}{daySuffix} of {monthName}";
+    }
+
+    private double CalcPrice()
+    {
+        if (_currentRooms.Any())
+        {
+            var price = _currentRooms.Sum(r => r.Price) * _daysSpent +
+                        (_newBookingDto.RoomService ? ROOM_SERVICE_PRICE : 0) +
+                        (_newBookingDto.Breakfast ? BREAKFAST_PRICE : 0) +
+                        (_newBookingDto.Dinner ? DINNER_PRICE : 0);
+
+            _newBookingDto.TotalPrice = price;
+            return price;
+        }
+
+        return 0;
+    }
+
+
+    private async Task GetRoomsWithinTimeRange()
+    {
+        _loadingRooms = true;
+        StateHasChanged();
+
+        ResetValues();
+
+        try
+        {
+            TimeService helper = new();
+            var startDateUtc = helper.TranslateToUtc(startingDate);
+            var endDateUtc = helper.TranslateToUtc(endingDate);
+            SetDaysSpent();
+            Console.WriteLine("Start: " + startDateUtc);
+            Console.WriteLine("End: " + endDateUtc);
+
+            _availableRooms = await API.GetRoomsByAvailableDates(startDateUtc, endDateUtc);
+
+            _currentPage = 0;
+            _loadingRooms = false;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return;
+        }
+    }
+
+    private async Task AddRoomId(Room room)
+    {
+        // Check if id is already in the list
+
+        if (!_currentRooms.Contains(room))
+        {
+            _currentRooms.Add(room);
+            StateHasChanged();
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "Room already added");
+        }
+    }
+
+    private async Task CreateBooking()
+    {
+        if (!_currentRooms.Any())
+        {
+            await JS.InvokeVoidAsync("alert", "No rooms added");
+            return;
+        }
+
+        string? jwtToken = await StorageService.GetItemFromLocalStorageAsync("authToken");
+        if (string.IsNullOrEmpty(jwtToken))
+        {
+            await JS.InvokeVoidAsync("alert", "Please log in");
+            return;
+        }
+
+        TimeService helper = new();
+
+        _newBookingDto.occupiedFrom = helper.TranslateToUtc(startingDate);
+        _newBookingDto.occupiedTill = helper.TranslateToUtc(endingDate);
+
+        foreach (var room in _currentRooms)
+        {
+            _newBookingDto.RoomIds.Add(room.Id);
+        }
+
+        var result = await API.CreateBookingAsync(_newBookingDto, jwtToken);
+        await JS.InvokeVoidAsync("alert", result);
+    }
+
+    private IEnumerable<Room> PagedRooms =>
+        _availableRooms == null
+            ? Enumerable.Empty<Room>()
+            : _availableRooms.Skip(_currentPage * _pageSize).Take(_pageSize);
+
+    private void NextPage()
+    {
+        if (_availableRooms == null) return;
+        var totalPages = (int)Math.Ceiling(_availableRooms.Count / (double)_pageSize);
+        if (_currentPage < totalPages - 1)
+        {
+            _currentPage++;
+        }
+    }
+
+    private void PrevPage()
+    {
+        if (_currentPage > 0)
+        {
+            _currentPage--;
+        }
+    }
+
+    private void ResetValues() => _currentRooms = [];
+    private void SetDaysSpent() => _daysSpent = endingDate.DayNumber - startingDate.DayNumber;
+    private void RemoveRoom(Room room) => _currentRooms.Remove(room);
+
 }

@@ -85,3 +85,9 @@ public class TotalRoomsDetails
     public double HighestPrice { get; set; }
     public double LowestPrice { get; set; }
 }
+
+public class RoomOccupation
+{
+    public string RoomId { get; set; }
+    public Dictionary<DateTime, DateTime> OccupiedDates { get; set; } = new();
+}

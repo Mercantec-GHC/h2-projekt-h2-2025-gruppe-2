@@ -1,0 +1,17 @@
+.modal {
+--bs-modal-color: #fff;
+--bs-modal-bg: #000000ad;
+backdrop-filter: blur(2px);
+background-color: #000000ad;
+
+}
+.btn{
+    background-color: #00000076 !important;
+    color: white !important;
+    border: 1px solid transparent !important;
+    border-color: #ffffff !important;
+}
+.modal-content {
+border: #fff 1px solid;
+border-width: 1px !important;
+}

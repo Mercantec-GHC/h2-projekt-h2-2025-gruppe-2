@@ -22,14 +22,14 @@
                             <label>
                                 Email
                             </label>
-                            <InputText class="form-control" @bind-Value="_loginDto.Email"/>
+                            <InputText class="form-control2" @bind-Value="_loginDto.Email"/>
 
                             <label>
                                 Password
                             </label>
-                            <InputText type="password" class="form-control" @bind-Value="_loginDto.Password"/>
+                            <InputText type="password" class="form-control2" @bind-Value="_loginDto.Password"/>
 
-                            <button class="btn btn-primary mt-2">Log in</button>
+                            <button class="btn mt-2">Log in</button>
                         </EditForm>
                     }
                     else
@@ -40,7 +40,7 @@
                 else
                 {
                     <div>Welcome back Xir!</div>
-                    <button class="btn btn-danger mt-2" @onclick="LogUserOut" style="width: fit-content">Logout</button>
+                    <button class="btn btn-danger mt-2" @onclick="LogUserOut" style="width: fit-content">Sign Out</button>
                 }
 
                 <EditForm Model="@_registerModel" OnValidSubmit="RegisterUser">
@@ -50,22 +50,22 @@
                     <label>
                         Email
                     </label>
-                    <InputText class="form-control" @bind-Value="_registerModel.Email"></InputText>
+                    <InputText class="form-control2" @bind-Value="_registerModel.Email"></InputText>
 
                     <label>
                         Password
                     </label>
-                    <InputText class="form-control" @bind-Value="_registerModel.Password"></InputText>
+                    <InputText class="form-control2" @bind-Value="_registerModel.Password"></InputText>
 
                     <label>
                         Repeat Password
                     </label>
-                    <InputText class="form-control" @bind-Value="_registerModel.SamePassword"></InputText>
+                    <InputText class="form-control2" @bind-Value="_registerModel.SamePassword"></InputText>
 
                     <label>
                         Username
                     </label>
-                    <InputText class="form-control" @bind-Value="_registerModel.Username"></InputText>
+                    <InputText class="form-control2" @bind-Value="_registerModel.Username"></InputText>
 
                     <button class="btn btn-primary mt-2" type="submit">Register</button>
                 </EditForm>
