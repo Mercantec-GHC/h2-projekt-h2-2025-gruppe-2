@@ -20,16 +20,18 @@ namespace API.Controllers
         private readonly AppDBContext _context;
         private readonly TimeService _timeHelper = new();
         private readonly ILogger<BookingsController> _logger;
+        private readonly MailService _mailService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BookingsController"/> class.
         /// </summary>
         /// <param name="context">The database context to use for data access.</param>
         /// <param name="logger">Logger context for logging to a file</param>
-        public BookingsController(AppDBContext context, ILogger<BookingsController> logger)
+        public BookingsController(AppDBContext context, ILogger<BookingsController> logger, MailService mailService)
         {
             _context = context;
             _logger = logger;
+            _mailService = mailService;
         }
 
         /// <summary>
@@ -195,6 +197,14 @@ namespace API.Controllers
                 return Unauthorized("User ID not found in token");
             }
 
+            User? user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                _logger.LogError("User ID not found in database: " + userId);
+                return BadRequest("User ID not found in database: " + userId);
+            }
+
             string newId = Guid.NewGuid().ToString();
             var bookingId = _context.Bookings.Any(b => b.Id == newId);
             if (bookingId) return StatusCode(500, $"Booking ID '{newId}' already exists. !!!ONE IN A TRILLION!!!'");
@@ -238,6 +248,19 @@ namespace API.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+                bool emailStatus = await _mailService.SendEmailAsync(
+                    user.Email,
+                    "Booking confirmation",
+                    _mailService.BookingConfirmation(user, booking, dto.RoomIds),
+                    isHtml: true
+                );
+
+                if (!emailStatus)
+                {
+                    _logger.LogError("Error sending email to user, while adding booking: " + user.Email);
+                    return StatusCode(500,
+                        "While email was not sent, your booking was created. Please contact us if you have any questions.");
+                }
             }
             catch (DbUpdateException e)
             {
