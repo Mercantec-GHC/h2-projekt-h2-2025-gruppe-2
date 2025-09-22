@@ -6,24 +6,25 @@
 	<script src="https://cdn.tailwindcss.com"></script>
 	<!-- AOS animations -->
 	<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-	<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-	<!-- Feather icons -->
-	<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+	<!-- Removed AOS / Feather / Chart.js scripts since JS file deleted -->
 	<style>
-		.chart-container { height: 300px; }
+		.chart-placeholder {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			height: 12rem; /* h-48 */
+			font-size: 0.875rem; /* text-sm */
+			color: #9ca3af; /* text-gray-400 */
+			background-color: #f9fafb; /* bg-gray-50 */
+			border: 1px dashed #d1d5db; /* border + border-gray-300 + dashed */
+			border-radius: 0.5rem; /* rounded */
+		}
 	</style>
 </HeadContent>
 
 <div class="bg-gray-100 font-sans">
 	<div class="flex flex-col h-screen overflow-hidden">
 		<div class="flex-1 overflow-y-auto">
-			<!-- Search Box -->
-			<div class="bg-gray-50 p-4 border-b">
-				<div class="max-w-2xl mx-auto relative">
-					<input type="text" placeholder="Search bookings, guests, rooms..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-					<i data-feather="search" class="absolute left-3 top-2.5 text-gray-400"></i>
-				</div>
-			</div>
 
 			<!-- Main Content -->
 			<main class="p-6">
@@ -32,9 +33,53 @@
 					<p class="text-gray-600">Welcome back! Here's what's happening with your hotel today.</p>
 				</div>
 
-				<!-- Stats Cards -->
-				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-					<div class="bg-white rounded-lg shadow p-6" data-aos="fade-up">
+				<!-- Top Metrics (Snapshot + KPIs unified) -->
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4 mb-6">
+					<div class="bg-white shadow rounded-lg p-5 flex flex-col justify-between">
+						<div class="flex items-start justify-between mb-2">
+							<p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Bookings Today</p>
+							<i data-feather="clipboard" class="text-indigo-500"></i>
+						</div>
+						<h3 class="text-3xl font-bold text-gray-800">@BookingsToday</h3>
+						<p class="text-xs text-gray-400">New bookings created today</p>
+					</div>
+					<div class="bg-white shadow rounded-lg p-5 flex flex-col justify-between">
+						<div class="flex items-start justify-between mb-2">
+							<p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Active Guests</p>
+							<i data-feather="users" class="text-blue-500"></i>
+						</div>
+						<h3 class="text-3xl font-bold text-gray-800">@ActiveGuests</h3>
+						<p class="text-xs text-gray-400">Adults + children in active bookings</p>
+					</div>
+					<div class="bg-white shadow rounded-lg p-5 flex flex-col justify-between">
+						<div class="flex items-start justify-between mb-2">
+							<p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Revenue</p>
+							<i data-feather="dollar-sign" class="text-green-500"></i>
+						</div>
+						<h3 class="text-2xl font-bold text-gray-800">@FormatCurrency(RevenueToday)</h3>
+						<p class="text-xs text-gray-400">Today • <span class="font-semibold">@FormatCurrency(RevenueThisMonth)</span> this month</p>
+					</div>
+					<div class="bg-white shadow rounded-lg p-5 flex flex-col justify-between">
+						<div class="flex items-start justify-between mb-2">
+							<p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Rooms</p>
+							<i data-feather="home" class="text-purple-500"></i>
+						</div>
+						<h3 class="text-2xl font-bold text-gray-800">@RoomsOccupied / @RoomsAvailable</h3>
+						<p class="text-xs text-gray-400">Occupied / Available</p>
+					</div>
+					<div class="bg-white shadow rounded-lg p-5 flex flex-col justify-between border-l-4 @(CleaningAlertCount > 0 ? "border-orange-400" : "border-green-400")">
+						<div class="flex items-start justify-between mb-2">
+							<p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Cleaning Alerts</p>
+							<i data-feather="alert-triangle" class="@(CleaningAlertCount > 0 ? "text-orange-500" : "text-green-500")"></i>
+						</div>
+						<h3 class="text-3xl font-bold @(CleaningAlertCount > 0 ? "text-orange-600" : "text-green-600")">@CleaningAlertCount</h3>
+						<p class="text-xs text-gray-400">Rooms needing cleaning</p>
+					</div>
+				</div>
+
+				<!-- Secondary KPIs -->
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 mb-6">
+					<button class="bg-white rounded-lg shadow p-6 text-left hover:ring-2 hover:ring-indigo-200" data-aos="fade-up" @onclick="SetFilterAll">
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-gray-500">Total Bookings</p>
@@ -45,8 +90,8 @@
 								<i data-feather="calendar" class="text-indigo-600"></i>
 							</div>
 						</div>
-					</div>
-					<div class="bg-white rounded-lg shadow p-6" data-aos="fade-up" data-aos-delay="50">
+					</button>
+					<button class="bg-white rounded-lg shadow p-6 text-left hover:ring-2 hover:ring-indigo-200" data-aos="fade-up" data-aos-delay="50" @onclick="SetFilterActive">
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-gray-500">Booked Rooms</p>
@@ -57,7 +102,7 @@
 								<i data-feather="home" class="text-blue-600"></i>
 							</div>
 						</div>
-					</div>
+					</button>
 					<div class="bg-white rounded-lg shadow p-6" data-aos="fade-up" data-aos-delay="100">
 						<div class="flex items-center justify-between">
 							<div>
@@ -70,15 +115,50 @@
 							</div>
 						</div>
 					</div>
-					<div class="bg-white rounded-lg shadow p-6" data-aos="fade-up" data-aos-delay="150">
+					<button class="bg-white rounded-lg shadow p-6 text-left hover:ring-2 hover:ring-orange-200" data-aos="fade-up" data-aos-delay="150" @onclick="ShowUncleanRooms">
 						<div class="flex items-center justify-between">
 							<div>
 								<p class="text-gray-500">Rooms (total)</p>
 								<h3 class="text-2xl font-bold">@(_roomsDetails?.TotalRooms ?? 0)</h3>
-								<p class="text-gray-400 text-sm">Clean: @(_roomsDetails?.TotalCleanRooms ?? 0)</p>
+								<p class="text-gray-400 text-sm">
+									Clean: <span class="text-green-600 font-semibold">@(_roomsDetails?.TotalCleanRooms ?? 0)</span>
+									<span class="mx-1">/</span>
+									Unclean: <span class="text-orange-600 font-semibold">@((_roomsDetails?.TotalRooms ?? 0) - (_roomsDetails?.TotalCleanRooms ?? 0))</span>
+								</p>
 							</div>
+							@if (_uncleanRooms?.Count > 0)
+							{
+								<div class="mb-4 p-4 rounded border bg-yellow-50 text-yellow-800">
+									<span class="font-semibold">⚠ @_uncleanRooms.Count rooms need cleaning.</span>
+									<button class="ml-2 text-sm underline" @onclick="ShowUncleanRooms">View list</button>
+								</div>
+							}
 							<div class="bg-yellow-100 p-3 rounded-full">
 								<i data-feather="archive" class="text-yellow-600"></i>
+							</div>
+						</div>
+					</button>
+					<div class="bg-white rounded-lg shadow p-6" data-aos="fade-up" data-aos-delay="200">
+						<div class="flex items-center justify-between">
+							<div>
+								<p class="text-gray-500">Occupancy</p>
+								<h3 class="text-2xl font-bold">@OccupancyPercent%</h3>
+								<p class="text-gray-400 text-sm">@(_bookingDetails?.TotalActiveBookedRooms ?? 0) active rooms</p>
+							</div>
+							<div class="bg-indigo-100 p-3 rounded-full">
+								<i data-feather="trending-up" class="text-indigo-600"></i>
+							</div>
+						</div>
+					</div>
+					<div class="bg-white rounded-lg shadow p-6" data-aos="fade-up" data-aos-delay="250">
+						<div class="flex items-center justify-between">
+							<div>
+								<p class="text-gray-500">Active Accounts</p>
+								<h3 class="text-2xl font-bold">@(_userDetails?.TotalAccounts ?? 0)</h3>
+								<p class="text-gray-400 text-sm">Admins: @(_userDetails?.TotalAdmin ?? 0) • Staff: @((_userDetails?.TotalCleaningStaff ?? 0) + (_userDetails?.TotalReception ?? 0))</p>
+							</div>
+							<div class="bg-blue-100 p-3 rounded-full">
+								<i data-feather="users" class="text-blue-600"></i>
 							</div>
 						</div>
 					</div>
@@ -86,26 +166,47 @@
 
 				<!-- Charts and Recent Bookings -->
 				<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-					<!-- Revenue Chart -->
+					<!-- Revenue Chart Placeholder -->
 					<div class="bg-white rounded-lg shadow p-6 lg:col-span-2">
 						<div class="flex items-center justify-between mb-4">
 							<h3 class="font-semibold text-gray-800">Revenue Overview</h3>
-							<div class="flex space-x-2">
-								<button class="px-3 py-1 text-xs bg-indigo-100 text-indigo-700 rounded-full">Monthly</button>
-								<button class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">Weekly</button>
-								<button class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">Daily</button>
-							</div>
+							<span class="text-xs text-gray-400">(charts disabled)</span>
 						</div>
-						<div class="chart-container">
-							<canvas id="revenueChart"></canvas>
-						</div>
+						<div class="chart-placeholder">Chart removed (no JS). Add Blazor chart component later.</div>
 					</div>
 
-					<!-- Occupancy Rate -->
+					<!-- Occupancy Rate Placeholder -->
 					<div class="bg-white rounded-lg shadow p-6">
-						<h3 class="font-semibold text-gray-800 mb-4">Occupancy Rate</h3>
-						<div class="chart-container">
-							<canvas id="occupancyChart"></canvas>
+						<div class="flex items-center justify-between mb-4">
+							<h3 class="font-semibold text-gray-800">Occupancy Rate</h3>
+							<span class="text-xs text-gray-400">(charts disabled)</span>
+						</div>
+						<div class="chart-placeholder">Chart removed (no JS). Add Blazor chart component later.</div>
+					</div>
+				</div>
+
+				<!-- Filters -->
+				<div class="bg-white rounded-lg shadow p-4 mb-4">
+					<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+						<div>
+							<label class="block text-xs text-gray-500 mb-1">Status</label>
+							<select class="w-full border rounded px-2 py-1" @onchange="OnStatusChange">
+								<option value="all">All</option>
+								<option value="active">Booked</option>
+								<option value="ended">Available</option>
+							</select>
+						</div>
+						<div>
+							<label class="block text-xs text-gray-500 mb-1">Guest/User ID</label>
+							<input class="w-full border rounded px-2 py-1" placeholder="Search by user id" @bind="_filterUser" />
+						</div>
+						<div>
+							<label class="block text-xs text-gray-500 mb-1">From</label>
+							<input type="date" class="w-full border rounded px-2 py-1" @bind-value="_filterFrom" />
+						</div>
+						<div>
+							<label class="block text-xs text-gray-500 mb-1">To</label>
+							<input type="date" class="w-full border rounded px-2 py-1" @bind-value="_filterTo" />
 						</div>
 					</div>
 				</div>
@@ -149,7 +250,7 @@
 								}
 								else
 								{
-									@foreach (var b in _bookings!)
+									@foreach (var b in FilteredBookings)
 									{
 										<tr>
 											<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@b.Id</td>
@@ -201,7 +302,6 @@
 </div>
 
 @code {
-	[Inject] private IJSRuntime JS { get; set; } = default!;
 	[Inject] private APIService Api { get; set; } = default!;
 	[Inject] private StorageService Storage { get; set; } = default!;
 
@@ -210,6 +310,52 @@
 	private List<DomainModels.Booking>? _bookings = new();
 	private DomainModels.BookingDetails? _bookingDetails;
 	private DomainModels.TotalRoomsDetails? _roomsDetails;
+	private DomainModels.UserDetails? _userDetails;
+	private List<DomainModels.Room>? _uncleanRooms = new();
+	private bool _showUncleanPanel = false;
+
+	// Filters
+	private string _statusFilter = "all"; // all | active | ended
+	private string _filterUser = string.Empty;
+	private DateTime? _filterFrom = null;
+	private DateTime? _filterTo = null;
+
+	private IEnumerable<DomainModels.Booking> FilteredBookings => (_bookings ?? new())
+		.Where(b => _statusFilter == "all" || (_statusFilter == "active" ? b.OccupiedTill > DateTime.UtcNow : b.OccupiedTill <= DateTime.UtcNow))
+		.Where(b => string.IsNullOrWhiteSpace(_filterUser) || (b.UserId?.Contains(_filterUser, StringComparison.OrdinalIgnoreCase) ?? false))
+		.Where(b => !_filterFrom.HasValue || b.OccupiedFrom.Date >= _filterFrom.Value.Date)
+		.Where(b => !_filterTo.HasValue || b.OccupiedTill.Date <= _filterTo.Value.Date)
+		.OrderByDescending(b => b.OccupiedFrom);
+
+	private int OccupancyPercent
+	{
+		get
+		{
+			var totalRooms = _roomsDetails?.TotalRooms ?? 0;
+			if (totalRooms <= 0) return 0;
+			var activeRooms = _bookingDetails?.TotalActiveBookedRooms ?? 0;
+			var pct = (int)Math.Round(100.0 * activeRooms / totalRooms);
+			return Math.Clamp(pct, 0, 100);
+		}
+	}
+
+	// Snapshot computed metrics
+	private int BookingsToday => (_bookings ?? new()).Count(b => SameDay(b.CreatedAt, DateTime.UtcNow));
+	private int ActiveGuests => (_bookings ?? new())
+		.Where(b => b.OccupiedTill > DateTime.UtcNow)
+		.Sum(b => b.Adults + b.Children);
+	private double RevenueToday => (_bookings ?? new())
+		.Where(b => SameDay(b.CreatedAt, DateTime.UtcNow))
+		.Sum(b => b.TotalPrice);
+	private double RevenueThisMonth => (_bookings ?? new())
+		.Where(b => b.CreatedAt.Year == DateTime.UtcNow.Year && b.CreatedAt.Month == DateTime.UtcNow.Month)
+		.Sum(b => b.TotalPrice);
+	private int RoomsOccupied => _bookingDetails?.TotalActiveBookedRooms ?? 0;
+	private int RoomsAvailable => (_roomsDetails?.TotalRooms ?? 0) - RoomsOccupied;
+	private int CleaningAlertCount => _uncleanRooms?.Count ?? 0;
+
+	private static bool SameDay(DateTime a, DateTime b) => a.Date == b.Date;
+	private static string FormatCurrency(double value) => string.Format(System.Globalization.CultureInfo.CurrentCulture, "{0:C0}", value);
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -227,11 +373,19 @@
 			Task<DomainModels.TotalRoomsDetails?> roomsDetailsTask = jwt is null
 				? Task.FromResult<DomainModels.TotalRoomsDetails?>(null)
 				: Api.GetRoomsDetailsAsync(jwt);
+			Task<DomainModels.UserDetails?> userDetailsTask = jwt is null
+				? Task.FromResult<DomainModels.UserDetails?>(null)
+				: Api.GetUserDetailsAsync(jwt);
+			Task<List<DomainModels.Room>> uncleanRoomsTask = jwt is null
+				? Task.FromResult(new List<DomainModels.Room>())
+				: Api.GetUncleanRoomsAsync(jwt);
 
-			await Task.WhenAll(bookingsTask, bookingDetailsTask, roomsDetailsTask);
+			await Task.WhenAll(bookingsTask, bookingDetailsTask, roomsDetailsTask, userDetailsTask, uncleanRoomsTask);
 			_bookings = bookingsTask.Result;
 			_bookingDetails = bookingDetailsTask.Result;
 			_roomsDetails = roomsDetailsTask.Result;
+			_userDetails = userDetailsTask.Result;
+			_uncleanRooms = uncleanRoomsTask.Result;
 		}
 		catch (Exception ex)
 		{
@@ -243,14 +397,25 @@
 		}
 	}
 
-	protected override void OnAfterRender(bool firstRender)
+
+	private void OnStatusChange(ChangeEventArgs e)
 	{
-		if (firstRender)
-		{
-			// Initialize Feather and AOS when page first renders
-			JS.InvokeVoidAsync("initAdminDashboard");
-		}
+		_statusFilter = e.Value?.ToString() ?? "all";
+	}
+
+	private void SetFilterAll()
+	{
+		_statusFilter = "all";
+	}
+
+	private void SetFilterActive()
+	{
+		_statusFilter = "active";
+	}
+
+	private void ShowUncleanRooms()
+	{
+		_showUncleanPanel = true;
 	}
 }
 
-<script src="/js/admin-dashboard.js"></script>

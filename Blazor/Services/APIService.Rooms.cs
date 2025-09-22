@@ -45,7 +45,7 @@ public partial class APIService
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadFromJsonAsync<List<Room>>();
-                return result;
+                return result ?? new List<Room>();
             }
         }
         catch (Exception ex)
@@ -62,5 +62,44 @@ public partial class APIService
         public string? message { get; set; }
         public List<Room>? rooms { get; set; }
 
+    }
+
+    public async Task<List<Room>> GetUncleanRoomsAsync(string jwtToken, CancellationToken ct = default)
+    {
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Get, "api/Rooms/unclean");
+            req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+            var res = await _httpClient.SendAsync(req, ct);
+            if (!res.IsSuccessStatusCode) return new List<Room>();
+            var payload = await res.Content.ReadFromJsonAsync<RoomsWrapper>(cancellationToken: ct);
+            return payload?.rooms ?? new List<Room>();
+        }
+        catch
+        {
+            return new List<Room>();
+        }
+    }
+
+    public async Task<List<Room>> GetCleanRoomsAsync(string jwtToken, CancellationToken ct = default)
+    {
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Get, "api/Rooms/clean");
+            req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+            var res = await _httpClient.SendAsync(req, ct);
+            if (!res.IsSuccessStatusCode) return new List<Room>();
+            var payload = await res.Content.ReadFromJsonAsync<RoomsWrapper>(cancellationToken: ct);
+            return payload?.rooms ?? new List<Room>();
+        }
+        catch
+        {
+            return new List<Room>();
+        }
+    }
+
+    private sealed class RoomsWrapper
+    {
+        public List<Room>? rooms { get; set; }
     }
 }
