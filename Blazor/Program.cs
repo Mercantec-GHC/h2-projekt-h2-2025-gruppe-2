@@ -5,6 +5,7 @@ using Blazor.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.JSInterop;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Blazor;
 
@@ -28,7 +29,7 @@ public class Program
         else
         {
             // Reads API endpoint from environment variables or uses default
-            apiEndpoint = Environment.GetEnvironmentVariable("API_ENDPOINT") 
+            apiEndpoint = Environment.GetEnvironmentVariable("API_ENDPOINT")
                           ?? "https://karambit-api.mercantec.tech/"; // Production endpoint
         }
         Console.WriteLine($"API Endpoint: {apiEndpoint}");
@@ -50,6 +51,15 @@ public class Program
         var culture = new CultureInfo("da-DK");
         CultureInfo.DefaultThreadCurrentCulture = culture;
         CultureInfo.DefaultThreadCurrentUICulture = culture;
+
+        // Configure HttpClient
+        builder.Services.AddScoped(sp => new HttpClient
+        {
+            BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
+        });
+            builder.Services.AddScoped(sp => new HubConnectionBuilder()
+    .WithUrl("http://localhost:5001/signalrhub")  // Match API port
+    .Build());
 
         await builder.Build().RunAsync();
     }
