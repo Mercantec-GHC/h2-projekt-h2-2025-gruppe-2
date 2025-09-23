@@ -18,12 +18,12 @@ public class ChatHub : Hub
     {
         if (ConnectedUsers.TryGetValue(AdminUserId, out var adminConnId))
         {
-            await Clients.Client(adminConnId).SendAsync("ReceiveMessage", senderUserId, message);
+            await Clients.Clients(adminConnId, Context.ConnectionId).SendAsync("ReceiveMessage", adminConnId, senderUserId, message);
         }
         else
         {
             await Clients.Client(Context.ConnectionId)
-                .SendAsync("ReceiveMessage", "System", "Admin is not connected");
+                .SendAsync("ReceiveMessage", "System", "System", "Admin is not connected");
         }
     }
 
@@ -33,8 +33,14 @@ public class ChatHub : Hub
         {
             if (ConnectedUsers.TryGetValue(targetUserId, out var targetConnId))
             {
-                await Clients.Client(targetConnId)
-                    .SendAsync("ReceiveMessage", AdminUserId, message);
+                await Clients.Clients(targetConnId, Context.ConnectionId)
+                    .SendAsync("ReceiveMessageAsAdmin", AdminUserId, targetUserId, message);
+            }
+            else
+            {
+                Console.WriteLine("User not found");
+                await Clients.Client(Context.ConnectionId)
+                    .SendAsync("ReceiveMessage", "System", "System", "User not found");
             }
         }
     }
