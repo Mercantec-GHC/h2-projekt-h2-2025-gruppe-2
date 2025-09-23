@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using Serilog;
+using Microsoft.AspNetCore.SignalR;
 
 namespace API;
 
@@ -146,15 +147,18 @@ public class Program
                         )
                         .AllowAnyMethod()
                         .AllowAnyHeader()
+                        .AllowCredentials() // For SignalR
                         .WithExposedHeaders("Content-Disposition");
                 }
             );
         });
-
+        
         // Tilføj basic health checks
         builder.Services.AddHealthChecks()
             .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(),
                 ["live"]);
+
+        builder.Services.AddSignalR();
 
         var app = builder.Build();
 
@@ -188,6 +192,7 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
+        app.MapHub<ChatHub>("/signalrhub");
         var culture = new CultureInfo("da-DK");
         CultureInfo.DefaultThreadCurrentCulture = culture;
         CultureInfo.DefaultThreadCurrentUICulture = culture;
