@@ -18,20 +18,17 @@ public class Program
         builder.RootComponents.Add<HeadOutlet>("head::after");
         IConfiguration config = builder.Configuration;
 
-        builder.Services.AddScoped<BookingService>(sp => new BookingService(config));
-
-        // Set API endpoint depending on the environment
         string apiEndpoint;
         if (builder.HostEnvironment.Environment == "Development")
         {
-            apiEndpoint = "http://localhost:5001/"; // Development endpoint
+            apiEndpoint = "http://localhost:5001/";
         }
         else
         {
-            // Reads API endpoint from environment variables or uses default
             apiEndpoint = Environment.GetEnvironmentVariable("API_ENDPOINT")
                           ?? "https://karambit-api.mercantec.tech/"; // Production endpoint
         }
+
         Console.WriteLine($"API Endpoint: {apiEndpoint}");
 
         // Registers HttpClient to API service with a configurable endpoint
@@ -40,6 +37,7 @@ public class Program
             client.BaseAddress = new Uri(apiEndpoint);
             Console.WriteLine($"APIService BaseAddress: {client.BaseAddress}");
         });
+        builder.Services.AddScoped<BookingService>(sp => new BookingService(config));
         builder.Services.AddScoped<StorageService>(sp =>
             new StorageService(sp.GetRequiredService<IJSRuntime>()));
         builder.Services.AddScoped<AuthService>();
@@ -47,19 +45,19 @@ public class Program
             new StorageService(sp.GetRequiredService<IJSRuntime>()));
         builder.Services.AddScoped<ClientJwtService>();
 
-        // Default culture formatting, for pricing.etc
-        var culture = new CultureInfo("da-DK");
-        CultureInfo.DefaultThreadCurrentCulture = culture;
-        CultureInfo.DefaultThreadCurrentUICulture = culture;
-
         // Configure HttpClient
         builder.Services.AddScoped(sp => new HttpClient
         {
             BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)
         });
-            builder.Services.AddScoped(sp => new HubConnectionBuilder()
-    .WithUrl("http://localhost:5001/signalrhub")  // Match API port
-    .Build());
+        builder.Services.AddScoped(sp => new HubConnectionBuilder()
+            .WithUrl("http://localhost:5001/signalrhub") // Match API port
+            .Build());
+
+        // Default culture formatting, for pricing.etc
+        var culture = new CultureInfo("da-DK");
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
 
         await builder.Build().RunAsync();
     }

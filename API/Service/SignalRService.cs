@@ -1,10 +1,61 @@
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
 
 namespace API.Service;
+
 public class ChatHub : Hub
 {
-    public async Task SendMessage(string user, string message)
+    private static readonly ConcurrentDictionary<string, string> ConnectedUsers = new();
+    private const string AdminUserId = "4f8a2997-3e89-4e19-826b-062391224f58";
+
+    public void JoinUserChat(string userId)
     {
-        await Clients.All.SendAsync("ReceiveMessage", user, message);
+        ConnectedUsers.AddOrUpdate(userId, Context.ConnectionId, (k, v) => Context.ConnectionId);
+        _ = SendMessageToAdmin("System", $"{userId} has joined the chat");
+    }
+
+    public async Task SendMessageToAdmin(string senderUserId, string message)
+    {
+        if (ConnectedUsers.TryGetValue(AdminUserId, out var adminConnId))
+        {
+            await Clients.Client(adminConnId).SendAsync("ReceiveMessage", senderUserId, message);
+        }
+        else
+        {
+            await Clients.Client(Context.ConnectionId)
+                .SendAsync("ReceiveMessage", "System", "Admin is not connected");
+        }
+    }
+
+    public async Task AdminReplyToUser(string targetUserId, string message)
+    {
+        if (Context.UserIdentifier == AdminUserId || Context.ConnectionId == ConnectedUsers[AdminUserId])
+        {
+            if (ConnectedUsers.TryGetValue(targetUserId, out var targetConnId))
+            {
+                await Clients.Client(targetConnId)
+                    .SendAsync("ReceiveMessage", AdminUserId, message);
+            }
+        }
+    }
+
+    public void PrintUsers()
+    {
+        foreach (var user in ConnectedUsers)
+        {
+            Console.WriteLine($"User: {user.Key}, ConnectionId: {user.Value}");
+        }
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        var user = ConnectedUsers.FirstOrDefault(x => x.Value == Context.ConnectionId);
+        if (!string.IsNullOrEmpty(user.Key))
+        {
+            ConnectedUsers.TryRemove(user.Key, out _);
+            await SendMessageToAdmin("System", $"{user.Key} has left the chat");
+        }
+
+        await base.OnDisconnectedAsync(exception);
     }
 }

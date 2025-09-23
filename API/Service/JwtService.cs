@@ -24,6 +24,7 @@ public class JwtService
     /// <param name="logger">The given logger.</param>
     public JwtService(IConfiguration configuration, ILogger<JwtService> logger)
     {
+        
         _secretKey = configuration["Jwt:SecretKey"]
                      ?? Environment.GetEnvironmentVariable("JwtSecretKey")
                      ?? "NOTSAFENOTSAFENOTSAFENOTSAFENOTSAFENOTSAFENOTSAFENOTSAFE";

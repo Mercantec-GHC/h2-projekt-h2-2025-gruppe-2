@@ -1,0 +1,108 @@
+﻿@page "/signalr"
+@using System.Text.Json
+@using Microsoft.AspNetCore.SignalR.Client
+@inject HubConnection hubConnection
+@inject IJSRuntime JS
+@inject StorageService Storage
+
+@if (_userInfo != null)
+{
+    <h3>SignalR Chat</h3>
+    <div>
+        <input @bind="_message" placeholder="Type your message..."/>
+        @if (IsAdmin)
+        {
+            <input @bind="_targetUserId" placeholder="Target user ID..."/>
+            <button @onclick="SendAdminReply">Send to user</button>
+        }
+        else
+        {
+            <button @onclick="SendMessageToAdmin">Send to admin</button>
+        }
+    </div>
+    <ul>
+        @foreach (var msg in _messages)
+        {
+            <li>@msg</li>
+        }
+    </ul>
+    <button @onclick="PrintUsers">Click me</button>
+}
+else
+{
+    <p>Please login to continue</p>
+}
+
+@code {
+    private string _message = string.Empty;
+    private string _targetUserId = string.Empty; // For admin only
+    private List<string> _messages = new();
+    private SessionTokenDto? _userInfo;
+
+    private const string AdminUserId = "4f8a2997-3e89-4e19-826b-062391224f58";
+
+    private bool IsAdmin => _userInfo?.Id == AdminUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        string sessionToken = await Storage.GetItemFromSessionStorageAsync("user");
+        if (string.IsNullOrEmpty(sessionToken))
+        {
+            await JS.InvokeVoidAsync("alert", "No session token found");
+            return;
+        }
+
+        _userInfo = JsonSerializer.Deserialize<SessionTokenDto>(sessionToken, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        hubConnection.On<string, string>("ReceiveMessage", (senderUserId, msg) =>
+        {
+            _messages.Add($"{senderUserId}: {msg}");
+            StateHasChanged();
+        });
+
+        try
+        {
+            await hubConnection.StartAsync();
+            if (hubConnection.State == HubConnectionState.Connected)
+            {
+                await JoinChat();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error connecting SignalR: " + ex);
+            await JS.InvokeVoidAsync("alert", "Error connecting SignalR: " + ex.Message);
+        }
+    }
+
+    private async Task JoinChat()
+    {
+        if (hubConnection.State == HubConnectionState.Connected && _userInfo != null)
+        {
+            await hubConnection.SendAsync("JoinUserChat", _userInfo.Id);
+        }
+    }
+
+    private async Task SendMessageToAdmin()
+    {
+        if (hubConnection.State == HubConnectionState.Connected && _userInfo != null)
+        {
+            await hubConnection.SendAsync("SendMessageToAdmin", _userInfo.Id, _message);
+            _message = string.Empty;
+        }
+    }
+
+    private async Task SendAdminReply()
+    {
+        if (hubConnection.State == HubConnectionState.Connected && !string.IsNullOrWhiteSpace(_targetUserId))
+        {
+            await hubConnection.SendAsync("AdminReplyToUser", _targetUserId, _message);
+            _message = string.Empty;
+        }
+    }
+
+    private async Task PrintUsers()
+    {
+        await hubConnection.SendAsync("PrintUsers");
+    }
+}

@@ -1,0 +1,3 @@
+23-09-25:
+SignalR Clients.Client uses the Context.ConnectionId thing, while the Client.User uses a different identifier, like the
+identity name of a user.
