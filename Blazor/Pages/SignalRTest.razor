@@ -18,10 +18,12 @@
             {
                 <EditForm Model="@_message" OnValidSubmit="SendAdminReply">
                     <DataAnnotationsValidator/>
-                    <ValidationSummary/>
                     <input @bind="_message.Msg" placeholder="Type your message..."/>
                     <input @bind="_targetUserId" placeholder="Target user ID..."/>
                     <button class="btn btn-primary">Send to user</button>
+                    <div class="fade-validation-summary">
+                        <ValidationSummary/>
+                    </div>
                 </EditForm>
                 <div class="row">
                     @foreach (var userGroup in _messages.GroupBy(m => m.UserDestinationId))
@@ -39,9 +41,11 @@
             {
                 <EditForm Model="@_message" OnValidSubmit="SendMessageToAdmin">
                     <DataAnnotationsValidator/>
-                    <ValidationSummary/>
                     <input @bind="_message.Msg" placeholder="Type your message..."/>
                     <button class="btn btn-primary">Send to admin</button>
+                    <div class="fade-validation-summary">
+                        <ValidationSummary/>
+                    </div>
                 </EditForm>
                 <SignalRUserCard
                     UserName="You"
@@ -56,6 +60,21 @@
         <p>Please login to continue</p>
     }
 </div>
+
+<style>
+    .fade-validation-summary {
+        opacity: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: opacity 0.4s ease, max-height 0.4s ease;
+    }
+
+    .fade-validation-summary:has(ul) {
+        opacity: 1;
+        max-height: 300px;
+        transform: translateY(0);
+    }
+</style>
 
 @code {
     private Message _message = new();
@@ -147,6 +166,7 @@
                 return;
             }
         }
+
         DisposeAuthService();
     }
 
@@ -158,12 +178,12 @@
             StateHasChanged();
         });
     }
-    
+
     private void DisposeAuthService()
     {
         AuthService.OnUserChangedSubscribtion -= OnUserChangedSubscription;
     }
-    
+
     private async Task JoinChat()
     {
         if (hubConnection.State == HubConnectionState.Connected && _userInfo != null)

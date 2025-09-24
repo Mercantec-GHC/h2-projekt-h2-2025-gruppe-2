@@ -40,7 +40,7 @@ public class ChatHub : Hub
             {
                 Console.WriteLine("User not found");
                 await Clients.Client(Context.ConnectionId)
-                    .SendAsync("ReceiveMessage", "System", "System", "User not found");
+                    .SendAsync("ReceiveMessage", "System", "System", $"User '{targetUserId}' not found");
             }
         }
     }
