@@ -1,39 +1,57 @@
 ﻿@page "/signalr"
+@using System.ComponentModel.DataAnnotations
 @using System.Text.Json
 @using Microsoft.AspNetCore.SignalR.Client
+@inject APIService Api
 @inject HubConnection hubConnection
 @inject IJSRuntime JS
+@inject AuthService AuthService
 @inject StorageService Storage
+@implements IAsyncDisposable
 
 <div class="container">
     @if (_userInfo != null)
     {
         <h3>SignalR Chat</h3>
         <div>
-            @if (IsAdmin)
+            @if (_isAdmin)
             {
-                <EditForm Model="@this">
-                    <input @bind="_message" placeholder="Type your message..."/>
+                <EditForm Model="@_message" OnValidSubmit="SendAdminReply">
+                    <DataAnnotationsValidator/>
+                    <input @bind="_message.Msg" placeholder="Type your message..."/>
                     <input @bind="_targetUserId" placeholder="Target user ID..."/>
-                    <button class="btn btn-primary" @onclick="SendAdminReply">Send to user</button>
+                    <button class="btn btn-primary">Send to user</button>
+                    <div class="fade-validation-summary">
+                        <ValidationSummary/>
+                    </div>
                 </EditForm>
                 <div class="row">
                     @foreach (var userGroup in _messages.GroupBy(m => m.UserDestinationId))
                     {
                         <div class="col-4">
-                            <SignalRUserCard UserName="@userGroup.Key" Msgs="@userGroup.ToList()"/>
+                            <SignalRUserCard
+                                UserName="@userGroup.Key"
+                                Msgs="@userGroup.ToList()"
+                                OnCopy="OnCopyUserId"/>
                         </div>
                     }
-
                 </div>
             }
             else
             {
-                <EditForm Model="@this">
-                    <input @bind="_message" placeholder="Type your message..."/>
-                    <button class="btn btn-primary" @onclick="SendMessageToAdmin">Send to admin</button>
+                <EditForm Model="@_message" OnValidSubmit="SendMessageToAdmin">
+                    <DataAnnotationsValidator/>
+                    <input @bind="_message.Msg" placeholder="Type your message..."/>
+                    <button class="btn btn-primary">Send to admin</button>
+                    <div class="fade-validation-summary">
+                        <ValidationSummary/>
+                    </div>
                 </EditForm>
-                <SignalRUserCard UserName="@_userInfo.Id" Msgs="@_messages"/>
+                <SignalRUserCard
+                    UserName="You"
+                    Msgs="@_messages"
+                    OnCopy="OnCopyUserId"
+                    IsUser="true"/>
             }
         </div>
     }
@@ -43,22 +61,53 @@
     }
 </div>
 
+<style>
+    .fade-validation-summary {
+        opacity: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: opacity 0.4s ease, max-height 0.4s ease;
+    }
+
+    .fade-validation-summary:has(ul) {
+        opacity: 1;
+        max-height: 300px;
+        transform: translateY(0);
+    }
+</style>
+
 @code {
-    private string _message = string.Empty;
+    private Message _message = new();
     private string _targetUserId = string.Empty; // For admin only
     private List<UserMsgs> _messages = new();
     private SessionTokenDto? _userInfo;
-
-    private const string AdminUserId = "4f8a2997-3e89-4e19-826b-062391224f58";
-
-    private bool IsAdmin => _userInfo?.Id == AdminUserId;
+    private bool _isAdmin;
 
     protected override async Task OnInitializedAsync()
     {
+        AuthService.OnUserChangedSubscribtion += OnUserChangedSubscription;
+        await Setup();
+    }
+
+    private async Task Setup()
+    {
+        string? jwtToken = await Storage.GetItemFromLocalStorageAsync("authToken");
+        if (string.IsNullOrEmpty(jwtToken))
+        {
+            await JS.InvokeVoidAsync("alert", "No JWT, please login");
+            _userInfo = null;
+            await hubConnection.StopAsync();
+            return;
+        }
+
+        _isAdmin = await ApiService.IsUserAdmin(jwtToken);
+
         string sessionToken = await Storage.GetItemFromSessionStorageAsync("user");
         if (string.IsNullOrEmpty(sessionToken))
         {
             await JS.InvokeVoidAsync("alert", "No session token found");
+            _userInfo = null;
+            await hubConnection.StopAsync();
             return;
         }
 
@@ -103,6 +152,38 @@
         }
     }
 
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection.State == HubConnectionState.Connected)
+        {
+            try
+            {
+                await hubConnection.StopAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error disconnecting: " + ex);
+                return;
+            }
+        }
+
+        DisposeAuthService();
+    }
+
+    private void OnUserChangedSubscription()
+    {
+        InvokeAsync(async () =>
+        {
+            await Setup();
+            StateHasChanged();
+        });
+    }
+
+    private void DisposeAuthService()
+    {
+        AuthService.OnUserChangedSubscribtion -= OnUserChangedSubscription;
+    }
+
     private async Task JoinChat()
     {
         if (hubConnection.State == HubConnectionState.Connected && _userInfo != null)
@@ -115,8 +196,8 @@
     {
         if (hubConnection.State == HubConnectionState.Connected && _userInfo != null)
         {
-            await hubConnection.SendAsync("SendMessageToAdmin", _userInfo.Id, _message);
-            _message = string.Empty;
+            await hubConnection.SendAsync("SendMessageToAdmin", _userInfo.Id, _message.Msg);
+            _message.Msg = string.Empty;
         }
     }
 
@@ -124,8 +205,8 @@
     {
         if (hubConnection.State == HubConnectionState.Connected && !string.IsNullOrWhiteSpace(_targetUserId))
         {
-            await hubConnection.SendAsync("AdminReplyToUser", _targetUserId, _message);
-            _message = string.Empty;
+            await hubConnection.SendAsync("AdminReplyToUser", _targetUserId, _message.Msg);
+            _message.Msg = string.Empty;
         }
     }
 
@@ -134,12 +215,30 @@
         await hubConnection.SendAsync("PrintUsers");
     }
 
+    private void OnCopyUserId(string userId)
+    {
+        _targetUserId = userId;
+        StateHasChanged();
+    }
+
+    private async Task<string> ResolveUserIdToName(string userId)
+    {
+        var result = await Api.ResolveUsernameFromUserId(userId);
+        return !result.status ? "N/A" : result.result;
+    }
+
     public class UserMsgs
     {
         public string UserSenderId { get; set; }
         public string UserDestinationId { get; set; }
         public string Msg { get; set; }
         public bool IsAdmin { get; set; }
+    }
+
+    private class Message
+    {
+        [MinLength(1, ErrorMessage = "Message cant be empty")]
+        public string Msg { get; set; } = String.Empty;
     }
 
 }

@@ -2,14 +2,23 @@
 <div class="card signalr-user-card">
     <div class="card-header">
         @UserName
+        @if (!IsUser)
+        {
+            <button class="btn btn-warning" @onclick="() => SetId(UserName)">Copy</button>
+        }
+        
+        @if (copied)
+        {
+            <span class="text-success ms-2">Copied!</span>
+        }
     </div>
-    <div class="card-body">
-            @foreach (var msg in Msgs)
-            {
-                <p class="@(msg.IsAdmin ? "is-admin" : "is-user")">
-                    @msg.Msg
-                </p>
-            }
+    <div class="card-body signalr-user-card-body">
+        @foreach (var msg in Msgs)
+        {
+            <p class="@(msg.IsAdmin ? "is-admin" : "is-user")">
+                @msg.Msg
+            </p>
+        }
     </div>
 </div>
 
@@ -19,6 +28,13 @@
         border-radius: 10px;
         margin-top: 10px;
         box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.15);
+        /*The bar overflows the border-radius*/
+        overflow: hidden;
+    }
+
+    .signalr-user-card-body {
+        max-height: 300px;
+        overflow-y: auto;
     }
 
     .is-admin {
@@ -45,5 +61,18 @@
 
     [Parameter] public required string UserName { get; set; }
     [Parameter] public required List<SignalRTest.UserMsgs> Msgs { get; set; }
+    [Parameter] public EventCallback<string> OnCopy { get; set; }
+    [Parameter] public bool IsUser { get; set; } = false;
+    private bool copied = false;
+
+    private async void SetId(string userId)
+    {
+        await OnCopy.InvokeAsync(userId);
+        copied = true;
+        StateHasChanged();
+        await Task.Delay(1000); // show feedback for 1s
+        copied = false;
+        StateHasChanged();
+    }
 
 }
