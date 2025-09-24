@@ -766,6 +766,18 @@ public class UsersController : ControllerBase
         }
     }
 
+    [HttpGet]
+    [Route("username/{id}")]
+    public async Task<IActionResult> GetUsernameFromUserIdAsync(string id)
+    {
+        string? username = await _context.Users
+            .Where(u => u.Id == id)
+            .Select(u => u.Username)
+            .FirstOrDefaultAsync();
+        
+        return string.IsNullOrEmpty(username) ? NotFound($"Username with user ID '{id}' not found") : Ok(username);
+    }
+
     private (bool status, string msg) DoesADUserCorrespond(User user, string password)
     {
         var adService = new ActiveDirectoryService(new ADConfig

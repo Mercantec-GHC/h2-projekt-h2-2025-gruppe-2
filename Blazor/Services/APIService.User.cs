@@ -177,4 +177,27 @@ public partial class APIService
 
         return false;
     }
+
+    public async Task<(bool status, string result)> ResolveUsernameFromUserId(string id)
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"api/Users/username/{id}");
+            // request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+
+            var response = await _httpClient.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return (true, await response.Content.ReadAsStringAsync());
+            }
+            
+            return (false, $"Error resolving name from ID '{id}'");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return (false, $"Error resolving name from ID '{id}'");
+        }
+    }
 }
