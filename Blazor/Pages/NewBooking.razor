@@ -4,6 +4,7 @@
 @inject IJSRuntime JS
 @inject BookingService BookingService
 @inject StorageService StorageService
+@inject BookingStateService BookingState
 
 <div class="row mb-2">
     <div class="col-6">
@@ -120,12 +121,39 @@
     List<Room> _currentRooms = [];
     NewBookingDto _newBookingDto = new();
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
+        // Check if we have pre-selected data from room page calendar
+        if (BookingState.SelectedStartDate.HasValue)
+        {
+            startingDate = BookingState.SelectedStartDate.Value; // Use .Value to get DateOnly from DateOnly?
+            endingDate = startingDate.AddDays(1); // defaults to 1 night
+            
+            // Auto-loads the specific room from page calendar
+            if (!string.IsNullOrEmpty(BookingState.PreSelectedRoomId))
+            {
+                try
+                {
+                    var room = await API.GetRoomById(BookingState.PreSelectedRoomId);
+                    if (room != null)
+                    {
+                        _currentRooms.Add(room);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error loading pre-selected room: {ex.Message}");
+                }
+            }
+            
+            // Clear the booking state after using it
+            BookingState.Clear();
+        }
+
         ROOM_SERVICE_PRICE = BookingService.ROOM_SERVICE_PRICE;
         BREAKFAST_PRICE = BookingService.BREAKFAST_PRICE;
         DINNER_PRICE = BookingService.DINNER_PRICE;
-        return Task.CompletedTask;
+        SetDaysSpent();
     }
 
     private double CalcPrice()

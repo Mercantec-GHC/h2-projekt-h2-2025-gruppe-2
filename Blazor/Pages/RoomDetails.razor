@@ -18,7 +18,8 @@ else if (room is null)
 }
 else
 {
-    <div class="card-body rounded border shadow-sm mb-4">
+    <div style="padding: 1rem;">
+    <div class="card-body rounded border shadow-sm mb-2">
         <div class="row">
             <div class="col-md-6">
                 <img class="room-img w-100"
@@ -26,11 +27,11 @@ else
                      src="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fcache.marriott.com%2Fmarriottassets%2Fmarriott%2FLONPL%2Flonpl-guestroom-0117-hor-clsc.jpg%3Finterpolation%3Dprogressive-bilinear%26&f=1&nofb=1&ipt=ebe42a9838514aada588f06e57dcb5cd12e793934a0fcacb6a5e5df2d252dbf8" />
             </div>
             <div class="col-md-6"> 
-                <div class="card-body">
-                    <h5 class="card-title mb-3" style="padding: 0.75rem 0;">Room @room.Id</h5>
+                <div class="card-body" style="padding: 1rem;">
+                    <h5 class="card-title mb-3">Room @room.Id</h5>
 
                     <ul class="list-unstyled small mb-3">
-                        <li style="padding: 0.5rem 0;"><strong>Total Beds:</strong> @room.Beds</li>
+                        <li><strong>Total Beds:</strong> @room.Beds</li>
 
                         @* Bed type counts only if > 0 so no dupes *@
                         @if (room.KingBeds > 0) { <li><strong>King beds:</strong> @room.KingBeds</li> }
@@ -59,7 +60,8 @@ else
             </div>
         </div>
     </div>
-    
+    </div>
+       <h4>Availability:</h4>
     <RoomCalender Id="@room.Id"></RoomCalender>
 }
 

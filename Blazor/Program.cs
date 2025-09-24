@@ -41,10 +41,10 @@ public class Program
         builder.Services.AddScoped<StorageService>(sp =>
             new StorageService(sp.GetRequiredService<IJSRuntime>()));
         builder.Services.AddScoped<AuthService>();
-        builder.Services.AddScoped<StorageService>(sp =>
-            new StorageService(sp.GetRequiredService<IJSRuntime>()));
         builder.Services.AddScoped<ClientJwtService>();
+        builder.Services.AddScoped<BookingStateService>();
 
+        
         // Configure HttpClient
         builder.Services.AddScoped(sp => new HttpClient
         {

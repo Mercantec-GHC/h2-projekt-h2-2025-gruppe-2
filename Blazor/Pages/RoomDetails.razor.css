@@ -4,7 +4,7 @@
     display: block !important;
     border-radius: 10px !important;
     object-fit: cover !important;
-    aspect-ratio: 4/3 !important
+/*     aspect-ratio: 4/3 !important; */
 }
 .rounded {
     border-radius: 10px !important;
@@ -12,5 +12,8 @@
 .card-title {
     font-family: 'MyCustomFont', Arial, sans-serif !important;
     font-weight: bold !important;
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 2rem !important;
+}
+.card-body {
+    padding: 1rem !important;
 }
