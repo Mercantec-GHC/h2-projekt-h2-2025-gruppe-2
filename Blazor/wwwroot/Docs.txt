@@ -1,3 +1,20 @@
 23-09-25:
 SignalR Clients.Client uses the Context.ConnectionId thing, while the Client.User uses a different identifier, like the
 identity name of a user.
+
+25-09-25:
+request.Content = new StringContent(
+	JsonSerializer.Serialize(new
+	{
+		msg
+	}),
+	System.Text.Encoding.UTF8,
+	"application/json");
+Result: {"msg": "Message as this"}
+
+
+request.Content = new StringContent(
+	JsonSerializer.Serialize(msg),
+	System.Text.Encoding.UTF8,
+	"application/json");
+Result: "Message as is"

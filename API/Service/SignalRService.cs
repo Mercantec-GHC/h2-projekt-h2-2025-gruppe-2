@@ -8,17 +8,32 @@ public class ChatHub : Hub
     private static readonly ConcurrentDictionary<string, string> ConnectedUsers = new();
     private const string AdminUserId = "4f8a2997-3e89-4e19-826b-062391224f58";
 
-    public void JoinUserChat(string userId)
+    public async Task JoinUserChat(string userId)
     {
         ConnectedUsers.AddOrUpdate(userId, Context.ConnectionId, (k, v) => Context.ConnectionId);
-        _ = SendMessageToAdmin("System", $"{userId} has joined the chat");
+        await SendWelcomeMessage("System", $"{userId} has joined the chat");
     }
 
+    private async Task SendWelcomeMessage(string senderUserId, string message)
+    {
+        if (ConnectedUsers.TryGetValue(AdminUserId, out var adminConnId))
+        {
+            await Clients.Clients(adminConnId, Context.ConnectionId)
+                .SendAsync("ReceiveUserJoinedMessage", adminConnId, senderUserId, message);
+        }
+        else
+        {
+            await Clients.Client(Context.ConnectionId)
+                .SendAsync("ReceiveUserJoinedMessage", "System", "System", "Admin is not connected");
+        }
+    }
+    
     public async Task SendMessageToAdmin(string senderUserId, string message)
     {
         if (ConnectedUsers.TryGetValue(AdminUserId, out var adminConnId))
         {
-            await Clients.Clients(adminConnId, Context.ConnectionId).SendAsync("ReceiveMessage", adminConnId, senderUserId, message);
+            await Clients.Clients(adminConnId, Context.ConnectionId)
+                .SendAsync("ReceiveMessage", adminConnId, senderUserId, message);
         }
         else
         {

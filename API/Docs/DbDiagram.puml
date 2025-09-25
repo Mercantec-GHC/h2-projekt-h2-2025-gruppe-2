@@ -18,6 +18,11 @@ object roles {
 	role_name string
 }
 
+object messages {
+	id Primary Key
+	user_id string
+	message string
+}
 
 object users {
 	id Primary Key
@@ -97,6 +102,7 @@ object images_rooms{
 }
 
 users --> "role:id" roles
+users --> "id" messages
 rooms -- "n " bookings_rooms
 bookings -- "n  " bookings_rooms
 bookings "n " -- "1 " users

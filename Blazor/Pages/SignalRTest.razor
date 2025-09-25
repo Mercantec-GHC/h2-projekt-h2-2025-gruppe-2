@@ -113,7 +113,7 @@
 
         _userInfo = JsonSerializer.Deserialize<SessionTokenDto>(sessionToken, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-        hubConnection.On<string, string, string>("ReceiveMessage", (senderUserId, destinationUserId, msg) =>
+        hubConnection.On<string, string, string>("ReceiveMessage", async (senderUserId, destinationUserId, msg) =>
         {
             _messages.Add(new UserMsgs
             {
@@ -122,6 +122,7 @@
                 Msg = msg,
                 IsAdmin = false
             });
+            await AddNewHistoryMsg(jwtToken, msg);
             StateHasChanged();
         });
 
@@ -137,12 +138,25 @@
             StateHasChanged();
         });
 
+        hubConnection.On<string, string, string>("ReceiveUserJoinedMessage", (senderUserId, destinationUserId, msg) =>
+        {
+            _messages.Add(new UserMsgs
+            {
+                UserSenderId = senderUserId,
+                UserDestinationId = destinationUserId,
+                Msg = msg,
+                IsAdmin = false
+            });
+            StateHasChanged();
+        });
+
         try
         {
             await hubConnection.StartAsync();
             if (hubConnection.State == HubConnectionState.Connected)
             {
                 await JoinChat();
+                await GetHistory(_userInfo.Id, jwtToken);
             }
         }
         catch (Exception ex)
@@ -150,6 +164,46 @@
             Console.WriteLine("Error connecting SignalR: " + ex);
             await JS.InvokeVoidAsync("alert", "Error connecting SignalR: " + ex.Message);
         }
+    }
+
+    private async Task AddNewHistoryMsg(string jwt, string msg)
+    {
+        string? result = await Api.PostHistoryAsync(jwt, msg);
+        if (result != null)
+        {
+            await JS.InvokeVoidAsync("alert", result);
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task GetHistory(string userId, string jwt)
+    {
+        var (msg, history) = await Api.GetUserHistoryByUserId(userId, jwt);
+        if (history == null)
+        {
+            await JS.InvokeVoidAsync("alert", msg);
+            return;
+        }
+
+        if (!history.Any())
+        {
+            await JS.InvokeVoidAsync("alert", "No history");
+            return;
+        }
+
+        foreach (string message in history)
+        {
+            _messages.Add(new UserMsgs
+            {
+                UserSenderId = "System",
+                UserDestinationId = userId,
+                Msg = message,
+                IsAdmin = false
+            });
+        }
+
+        StateHasChanged();
     }
 
     public async ValueTask DisposeAsync()
