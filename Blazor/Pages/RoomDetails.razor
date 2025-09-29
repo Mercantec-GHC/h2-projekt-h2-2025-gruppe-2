@@ -18,6 +18,7 @@ else if (room is null)
 }
 else
 {
+    <div class="card mb-3">
     <div style="padding: 1rem;">
     <div class="card-body rounded border shadow-sm mb-2">
         <div class="row">
@@ -61,8 +62,9 @@ else
         </div>
     </div>
     </div>
-       <h4>Availability:</h4>
+       <h4 style="padding: 1rem;">Availability:</h4>
     <RoomCalender Id="@room.Id"></RoomCalender>
+    </div>
 }
 
 @code {

@@ -64,7 +64,7 @@
             }
             else
             {
-                <span>$0.00</span>
+                <span>0.00 kr.</span>
             }
         </h2>
     </div>
@@ -294,5 +294,4 @@
         var sessionToken = JsonSerializer.Deserialize<SessionTokenDto>(token, options)!;
         return sessionToken.Id;
     }
-
 }
