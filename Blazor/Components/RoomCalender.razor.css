@@ -20,4 +20,12 @@
     .last-date {
         border-radius: 0 5px 0 0;
     }
+
+    .date-body {
+    cursor: pointer;
+    }
+
+.date-body.occupied {
+    cursor: not-allowed;
+}
 }
