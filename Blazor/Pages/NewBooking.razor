@@ -7,138 +7,150 @@
 @inject BookingStateService BookingState
 <div style="padding: 1rem;">
     <div class="card-body rounded border shadow-sm mb-2">
-    <div class="booking-container">
-    <!-- Date Selection Section -->
-    <div class="date-section">
-        <h4>Select Dates</h4>
-        <div class="date-inputs">
-            <div class="flex-fill">
-                <label>Check-in Date</label>
-                <InputDate TValue="DateOnly" @bind-Value="@startingDate" class="form-control" Placeholder="Enter Date"/>
-            </div>
-            <div class="flex-fill">
-                <label>Check-out Date</label>
-                <InputDate TValue="DateOnly" @bind-Value="@endingDate" class="form-control" Placeholder="Enter Date"/>
-            </div>
-        </div>
-        
-        <div class="mb-3">
-            <small class="text-muted">Check-in: @startingDate.ToString("MMM dd, yyyy")</small><br/>
-            <small class="text-muted">Check-out: @endingDate.ToString("MMM dd, yyyy")</small><br/>
-            <small class="text-muted">Nights: @_daysSpent</small>
-        </div>
-        
-        @if (_loadingRooms)
-        {
-            <Loading/>
-        }
-        else
-        {
-            <button @onclick="GetRoomsWithinTimeRange" class="btn btn-primary">Search Available Rooms</button>
-        }
-    </div>
+        <div class="booking-container">
+            <!-- Date Selection Section -->
+            <div class="date-section">
+                <h4>Select Dates</h4>
+                <div class="date-inputs">
+                    <div class="flex-fill">
+                        <label>Check-in Date</label>
+                        <InputDate TValue="DateOnly" @bind-Value="@startingDate" class="form-control"
+                                   Placeholder="Enter Date"/>
+                    </div>
+                    <div class="flex-fill">
+                        <label>Check-out Date</label>
+                        <InputDate TValue="DateOnly" @bind-Value="@endingDate" class="form-control"
+                                   Placeholder="Enter Date"/>
+                    </div>
+                </div>
 
-    <!-- Selected Rooms Section -->
-    @if (_currentRooms.Any())
-    {
-        <div class="selected-rooms-section">
-            <h5>Selected Rooms</h5>
-            <ul class="room-list">
-                @foreach (var r in _currentRooms)
+                <div class="mb-3">
+                    <small class="text-muted">Check-in: @startingDate.ToString("MMM dd, yyyy")</small><br/>
+                    <small class="text-muted">Check-out: @endingDate.ToString("MMM dd, yyyy")</small><br/>
+                    <small class="text-muted">Nights: @_daysSpent</small>
+                </div>
+
+                @if (_loadingRooms)
                 {
-                    <li class="room-item">
-                        Room @r.Id - @r.Price.ToString("C") per night
-                        <button class="btn btn-danger btn-sm ms-2" @onclick="() => RemoveRoom(r)">Remove</button>
-                    </li>
+                    <Loading/>
                 }
-            </ul>
-        </div>
-    }
+                else
+                {
+                    <button @onclick="GetRoomsWithinTimeRange" class="btn btn-primary">Search Available Rooms</button>
+                }
+            </div>
 
-    <!-- Total Price Section -->
-    <div class="price-section">
-        <h2>Total Price: 
+            <!-- Selected Rooms Section -->
             @if (_currentRooms.Any())
             {
-                <span>@CalcPrice().ToString("C")</span>
+                <div class="selected-rooms-section">
+                    <h5>Selected Rooms</h5>
+                    <ul class="room-list">
+                        @foreach (var r in _currentRooms)
+                        {
+                            <li class="room-item">
+                                Room @r.Id - @r.Price.ToString("C") per night
+                                <button class="btn btn-danger btn-sm ms-2" @onclick="() => RemoveRoom(r)">Remove
+                                </button>
+                            </li>
+                        }
+                    </ul>
+                </div>
             }
-            else
-            {
-                <span>0.00 kr.</span>
-            }
-        </h2>
-    </div>
 
-    <!-- Booking Options Section -->
-    <div class="booking-options-section">
-        <h5>Booking Details</h5>
-        <div class="options-row">
-            <div class="option-col">
-                <label class="form-label">
-                    Adults
-                    <InputNumber @bind-Value="_newBookingDto.Adults" class="form-control"/>
-                </label>
+            <!-- Total Price Section -->
+            <div class="price-section">
+                <h2>Total Price:
+                    @if (_currentRooms.Any())
+                    {
+                        <span>@CalcPrice().ToString("C")</span>
+                    }
+                    else
+                    {
+                        <span>0.00 kr.</span>
+                    }
+                </h2>
             </div>
-            <div class="option-col">
-                <label class="form-label">
-                    Children
-                    <InputNumber @bind-Value="_newBookingDto.Children" class="form-control"/>
-                </label>
-            </div>
-            <div class="option-col">
-                <div class="form-check">
-                    <InputCheckbox @bind-Value="_newBookingDto.RoomService" class="form-check-input" id="roomService"/>
-                    <label class="form-check-label" for="roomService">
-                        Room Service (@ROOM_SERVICE_PRICE.ToString("C"))
-                    </label>
-                </div>
-            </div>
-            <div class="option-col">
-                <div class="form-check">
-                    <InputCheckbox @bind-Value="_newBookingDto.Breakfast" class="form-check-input" id="breakfast"/>
-                    <label class="form-check-label" for="breakfast">
-                        Breakfast (@BREAKFAST_PRICE.ToString("C"))
-                    </label>
-                </div>
-            </div>
-            <div class="option-col">
-                <div class="form-check">
-                    <InputCheckbox @bind-Value="_newBookingDto.Dinner" class="form-check-input" id="dinner"/>
-                    <label class="form-check-label" for="dinner">
-                        Dinner (@DINNER_PRICE.ToString("C"))
-                    </label>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Create Booking Button -->
-    <div class="text-center mb-4">
-        <button @onclick="CreateBooking" class="btn btn-success btn-lg">Complete Booking</button>
-    </div>
-
-    <!-- Available Rooms Section -->
-    @if (_availableRooms != null)
-    {
-        <div class="available-rooms-section">
-            <h5>Available Rooms</h5>
-            <div class="rooms-grid">
-                @foreach (var r in _availableRooms)
-                {
-                    <div class="room-card-wrapper">
-                        <div class="card-body rounded border shadow-sm mb-2">
-                            <RoomCard room="r"></RoomCard>
-                            <div class="text-center mt-2">
-                                <button class="btn btn-primary" @onclick="() => AddRoomId(r)">Add Room</button>
+            <!-- Booking Options Section -->
+            <EditForm Model="_newBookingDto" OnValidSubmit="CreateBooking">
+                <DataAnnotationsValidator/>
+                <div class="fade-validation-summary">
+                    <ValidationSummary/>
+                </div>
+                <div class="booking-options-section">
+                    <h5>Booking Details</h5>
+                    <div class="options-row">
+                        <div class="option-col">
+                            <label class="form-label">
+                                Adults
+                                <InputNumber @bind-Value="_newBookingDto.Adults" class="form-control"/>
+                            </label>
+                        </div>
+                        <div class="option-col">
+                            <label class="form-label">
+                                Children
+                                <InputNumber @bind-Value="_newBookingDto.Children" class="form-control"/>
+                            </label>
+                        </div>
+                        <div class="option-col">
+                            <div class="form-check">
+                                <InputCheckbox @bind-Value="_newBookingDto.RoomService" class="form-check-input"
+                                               id="roomService"/>
+                                <label class="form-check-label" for="roomService">
+                                    Room Service (@ROOM_SERVICE_PRICE.ToString("C"))
+                                </label>
+                            </div>
+                        </div>
+                        <div class="option-col">
+                            <div class="form-check">
+                                <InputCheckbox @bind-Value="_newBookingDto.Breakfast" class="form-check-input"
+                                               id="breakfast"/>
+                                <label class="form-check-label" for="breakfast">
+                                    Breakfast (@BREAKFAST_PRICE.ToString("C"))
+                                </label>
+                            </div>
+                        </div>
+                        <div class="option-col">
+                            <div class="form-check">
+                                <InputCheckbox @bind-Value="_newBookingDto.Dinner" class="form-check-input"
+                                               id="dinner"/>
+                                <label class="form-check-label" for="dinner">
+                                    Dinner (@DINNER_PRICE.ToString("C"))
+                                </label>
                             </div>
                         </div>
                     </div>
-                }
-            </div>
+                </div>
+                <!-- Create Booking Button -->
+                <div class="text-center mb-4">
+                    <button class="btn btn-success btn-lg">Complete Booking</button>
+                </div>
+            </EditForm>
+
+
+            <!-- Available Rooms Section -->
+            @if (_availableRooms != null)
+            {
+                <div class="available-rooms-section">
+                    <h5>Available Rooms</h5>
+                    <div class="rooms-grid">
+                        @foreach (var r in _availableRooms)
+                        {
+                            <div class="room-card-wrapper">
+                                <div class="card-body rounded border shadow-sm mb-2">
+                                    <RoomCard room="r"></RoomCard>
+                                    <div class="text-center mt-2">
+                                        <button class="btn btn-primary" @onclick="() => AddRoomId(r)">Add Room</button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
         </div>
-    }
-</div>
-</div>
+    </div>
 </div>
 
 @code {
@@ -161,7 +173,7 @@
         {
             startingDate = BookingState.SelectedStartDate.Value; // Use .Value to get DateOnly from DateOnly?
             endingDate = startingDate.AddDays(1); // defaults to 1 night
-            
+
             // Auto-loads the specific room from page calendar
             if (!string.IsNullOrEmpty(BookingState.PreSelectedRoomId))
             {
@@ -178,7 +190,7 @@
                     Console.WriteLine($"Error loading pre-selected room: {ex.Message}");
                 }
             }
-            
+
             // Clear the booking state after using it
             BookingState.Clear();
         }
@@ -194,9 +206,9 @@
         if (_currentRooms.Any())
         {
             var price = _currentRooms.Sum(r => r.Price) * _daysSpent +
-                          (_newBookingDto.RoomService ? ROOM_SERVICE_PRICE : 0) +
-                          (_newBookingDto.Breakfast ? BREAKFAST_PRICE : 0) +
-                          (_newBookingDto.Dinner ? DINNER_PRICE : 0);
+                        (_newBookingDto.RoomService ? ROOM_SERVICE_PRICE : 0) +
+                        (_newBookingDto.Breakfast ? BREAKFAST_PRICE : 0) +
+                        (_newBookingDto.Dinner ? DINNER_PRICE : 0);
 
             _newBookingDto.TotalPrice = price;
             return price;
@@ -294,4 +306,5 @@
         var sessionToken = JsonSerializer.Deserialize<SessionTokenDto>(token, options)!;
         return sessionToken.Id;
     }
+
 }

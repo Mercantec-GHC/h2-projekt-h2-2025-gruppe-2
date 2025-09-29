@@ -86,21 +86,6 @@
     }
 </div>
 
-<style>
-    .fade-validation-summary {
-        opacity: 0;
-        max-height: 0;
-        overflow: hidden;
-        transition: opacity 0.4s ease, max-height 0.4s ease;
-    }
-
-    .fade-validation-summary:has(ul) {
-        opacity: 1;
-        max-height: 300px;
-        transform: translateY(0);
-    }
-</style>
-
 @code {
     private Message _message = new();
     private string _targetUserId = string.Empty; // For admin only
