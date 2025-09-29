@@ -19,7 +19,7 @@ public class ChatHub : Hub
         if (ConnectedUsers.TryGetValue(AdminUserId, out var adminConnId))
         {
             await Clients.Clients(adminConnId, Context.ConnectionId)
-                .SendAsync("ReceiveUserJoinedMessage", adminConnId, senderUserId, message);
+                .SendAsync("ReceiveUserJoinedMessage", senderUserId, senderUserId, message);
         }
         else
         {
@@ -33,7 +33,7 @@ public class ChatHub : Hub
         if (ConnectedUsers.TryGetValue(AdminUserId, out var adminConnId))
         {
             await Clients.Clients(adminConnId, Context.ConnectionId)
-                .SendAsync("ReceiveMessage", adminConnId, senderUserId, message);
+                .SendAsync("ReceiveMessage", AdminUserId, senderUserId, message);
         }
         else
         {

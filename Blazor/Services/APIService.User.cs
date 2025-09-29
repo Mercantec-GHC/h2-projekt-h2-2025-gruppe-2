@@ -191,7 +191,7 @@ public partial class APIService
             {
                 return (true, await response.Content.ReadAsStringAsync());
             }
-            
+
             return (false, $"Error resolving name from ID '{id}'");
         }
         catch (Exception ex)
@@ -201,7 +201,7 @@ public partial class APIService
         }
     }
 
-    public async Task<(string msg, List<string>? messages)> GetUserHistoryByUserId(string userId, string jwt)
+    public async Task<(string msg, List<Message>? messages)> GetUserHistoryByUserId(string userId, string jwt)
     {
         try
         {
@@ -212,10 +212,12 @@ public partial class APIService
 
             if (response.IsSuccessStatusCode)
             {
-                return ("Ok", await response.Content.ReadFromJsonAsync<List<string>>());
+                return ("Ok", await response.Content.ReadFromJsonAsync<List<Message>>());
             }
 
-            return ($"Error getting user '{userId}' history: " + response.ReasonPhrase + ": " +await response.Content.ReadAsStringAsync(),null);
+            return (
+                $"Error getting user '{userId}' history: " + response.ReasonPhrase + ": " +
+                await response.Content.ReadAsStringAsync(), null);
         }
         catch (Exception ex)
         {
@@ -224,17 +226,22 @@ public partial class APIService
         }
     }
 
-    public async Task<string?> PostHistoryAsync(string jwt, string msg)
+    public async Task<string?> PostHistoryAsync(string jwt, string msg, string destinationId, bool isAdmin)
     {
         try
         {
             var request = new HttpRequestMessage(HttpMethod.Post, "api/messages");
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
             request.Content = new StringContent(
-                JsonSerializer.Serialize(msg),
+                JsonSerializer.Serialize(new
+                {
+                    msg,
+                    destinationId,
+                    isAdmin
+                }),
                 System.Text.Encoding.UTF8,
                 "application/json");
-            
+
             var response = await _httpClient.SendAsync(request);
 
             if (response.IsSuccessStatusCode)

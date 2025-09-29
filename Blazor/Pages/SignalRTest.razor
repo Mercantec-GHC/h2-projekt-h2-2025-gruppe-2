@@ -26,12 +26,37 @@
                     </div>
                 </EditForm>
                 <div class="row">
-                    @foreach (var userGroup in _messages.GroupBy(m => m.UserDestinationId))
+                    @{
+                        var adminId = "4f8a2997-3e89-4e19-826b-062391224f58";
+
+                        var userIds = _messages
+                            .Where(m => !m.IsAdmin) // Exclude admin-only messages from ID gathering unless they're to a user
+                            .SelectMany(m => new[] { m.UserSenderId, m.UserDestinationId })
+                            .Distinct();
+
+                        // For each user ID, group messages where:
+                        // - The user is the sender or the destination
+                        // - OR they're the destination of an admin message
+                        var groupedMessages = userIds
+                            .Select(userId => new
+                            {
+                                UserId = userId,
+                                Messages = _messages
+                                    .Where(m =>
+                                            (m.UserSenderId == userId) ||
+                                            (m.UserDestinationId == userId)
+                                    )
+                                    .ToList()
+                            })
+                            .Where(g => g.Messages.Any())
+                            .Where(g => g.UserId != adminId);
+                    }
+                    @foreach (var userGroup in groupedMessages)
                     {
                         <div class="col-4">
                             <SignalRUserCard
-                                UserName="@userGroup.Key"
-                                Msgs="@userGroup.ToList()"
+                                UserName="@userGroup.UserId"
+                                Msgs="@userGroup.Messages"
                                 OnCopy="OnCopyUserId"/>
                         </div>
                     }
@@ -79,9 +104,10 @@
 @code {
     private Message _message = new();
     private string _targetUserId = string.Empty; // For admin only
-    private List<UserMsgs> _messages = new();
+    private List<Message> _messages = new();
     private SessionTokenDto? _userInfo;
     private bool _isAdmin;
+    private string? _jwtToken;
 
     protected override async Task OnInitializedAsync()
     {
@@ -91,8 +117,8 @@
 
     private async Task Setup()
     {
-        string? jwtToken = await Storage.GetItemFromLocalStorageAsync("authToken");
-        if (string.IsNullOrEmpty(jwtToken))
+        _jwtToken = await Storage.GetItemFromLocalStorageAsync("authToken");
+        if (string.IsNullOrEmpty(_jwtToken))
         {
             await JS.InvokeVoidAsync("alert", "No JWT, please login");
             _userInfo = null;
@@ -100,7 +126,7 @@
             return;
         }
 
-        _isAdmin = await ApiService.IsUserAdmin(jwtToken);
+        _isAdmin = await ApiService.IsUserAdmin(_jwtToken);
 
         string sessionToken = await Storage.GetItemFromSessionStorageAsync("user");
         if (string.IsNullOrEmpty(sessionToken))
@@ -113,39 +139,44 @@
 
         _userInfo = JsonSerializer.Deserialize<SessionTokenDto>(sessionToken, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-        hubConnection.On<string, string, string>("ReceiveMessage", async (senderUserId, destinationUserId, msg) =>
+        hubConnection.On<string, string, string>("ReceiveMessage", (senderUserId, destinationUserId, msg) =>
         {
-            _messages.Add(new UserMsgs
+            _messages.Add(new Message
             {
                 UserSenderId = senderUserId,
                 UserDestinationId = destinationUserId,
                 Msg = msg,
-                IsAdmin = false
+                IsAdmin = false,
+                CreatedAt = DateTime.UtcNow.AddHours(2),
+                UpdatedAt = DateTime.UtcNow.AddHours(2)
             });
-            await AddNewHistoryMsg(jwtToken, msg);
             StateHasChanged();
         });
 
         hubConnection.On<string, string, string>("ReceiveMessageAsAdmin", (senderUserId, destinationUserId, msg) =>
         {
-            _messages.Add(new UserMsgs
+            _messages.Add(new Message
             {
                 UserSenderId = senderUserId,
                 UserDestinationId = destinationUserId,
                 Msg = msg,
-                IsAdmin = true
+                IsAdmin = true,
+                CreatedAt = DateTime.UtcNow.AddHours(2),
+                UpdatedAt = DateTime.UtcNow.AddHours(2)
             });
             StateHasChanged();
         });
 
         hubConnection.On<string, string, string>("ReceiveUserJoinedMessage", (senderUserId, destinationUserId, msg) =>
         {
-            _messages.Add(new UserMsgs
+            _messages.Add(new Message
             {
                 UserSenderId = senderUserId,
                 UserDestinationId = destinationUserId,
                 Msg = msg,
-                IsAdmin = false
+                IsAdmin = false,
+                CreatedAt = DateTime.UtcNow.AddHours(2),
+                UpdatedAt = DateTime.UtcNow.AddHours(2)
             });
             StateHasChanged();
         });
@@ -156,7 +187,7 @@
             if (hubConnection.State == HubConnectionState.Connected)
             {
                 await JoinChat();
-                await GetHistory(_userInfo.Id, jwtToken);
+                await GetHistory(_userInfo.Id, _jwtToken);
             }
         }
         catch (Exception ex)
@@ -166,9 +197,9 @@
         }
     }
 
-    private async Task AddNewHistoryMsg(string jwt, string msg)
+    private async Task AddNewHistoryMsg(string jwt, string msg, string destinationId, bool isAdmin)
     {
-        string? result = await Api.PostHistoryAsync(jwt, msg);
+        string? result = await Api.PostHistoryAsync(jwt, msg, destinationId, isAdmin);
         if (result != null)
         {
             await JS.InvokeVoidAsync("alert", result);
@@ -192,16 +223,7 @@
             return;
         }
 
-        foreach (string message in history)
-        {
-            _messages.Add(new UserMsgs
-            {
-                UserSenderId = "System",
-                UserDestinationId = userId,
-                Msg = message,
-                IsAdmin = false
-            });
-        }
+        _messages = history;
 
         StateHasChanged();
     }
@@ -251,6 +273,7 @@
         if (hubConnection.State == HubConnectionState.Connected && _userInfo != null)
         {
             await hubConnection.SendAsync("SendMessageToAdmin", _userInfo.Id, _message.Msg);
+            await AddNewHistoryMsg(_jwtToken, _message.Msg, "4f8a2997-3e89-4e19-826b-062391224f58", false);
             _message.Msg = string.Empty;
         }
     }
@@ -260,39 +283,15 @@
         if (hubConnection.State == HubConnectionState.Connected && !string.IsNullOrWhiteSpace(_targetUserId))
         {
             await hubConnection.SendAsync("AdminReplyToUser", _targetUserId, _message.Msg);
+            await AddNewHistoryMsg(_jwtToken, _message.Msg, _targetUserId, true);
             _message.Msg = string.Empty;
         }
     }
-
-    private async Task PrintUsers()
-    {
-        await hubConnection.SendAsync("PrintUsers");
-    }
-
+    
     private void OnCopyUserId(string userId)
     {
         _targetUserId = userId;
         StateHasChanged();
-    }
-
-    private async Task<string> ResolveUserIdToName(string userId)
-    {
-        var result = await Api.ResolveUsernameFromUserId(userId);
-        return !result.status ? "N/A" : result.result;
-    }
-
-    public class UserMsgs
-    {
-        public string UserSenderId { get; set; }
-        public string UserDestinationId { get; set; }
-        public string Msg { get; set; }
-        public bool IsAdmin { get; set; }
-    }
-
-    private class Message
-    {
-        [MinLength(1, ErrorMessage = "Message cant be empty")]
-        public string Msg { get; set; } = String.Empty;
     }
 
 }

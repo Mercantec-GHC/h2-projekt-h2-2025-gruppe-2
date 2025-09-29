@@ -60,8 +60,7 @@ namespace API.Controllers
             if (jwtId != userId) return BadRequest($"'{jwtId}' cannot get the messages of '{userId}'");
 
             return Ok(await _context.Messages
-                .Where(m => m.UserId == userId)
-                .Select(m => m.Content)
+                .Where(m => m.UserSenderId == userId || m.UserDestinationId == userId)
                 .ToListAsync());
         }
 
@@ -103,7 +102,7 @@ namespace API.Controllers
         /// <returns></returns>
         [HttpPost]
         [Authorize(Roles = "User,Admin")]
-        public async Task<ActionResult> PostMessage([FromBody] string msg)
+        public async Task<ActionResult> PostMessage([FromBody] PostMessageRequestDto msg)
         {
             string? userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId)) return BadRequest("User ID not found in token");
@@ -115,8 +114,10 @@ namespace API.Controllers
             _context.Messages.Add(new Message
             {
                 Id = id,
-                UserId = userId,
-                Content = msg,
+                UserSenderId = userId,
+                UserDestinationId = msg.DestinationId,
+                Msg = msg.Msg,
+                IsAdmin = msg.IsAdmin,
                 CreatedAt = _timeService.GetCopenhagenTime(),
                 UpdatedAt = _timeService.GetCopenhagenTime()
             });
