@@ -12,6 +12,9 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
+    /// <summary>
+    /// Controls the messages for the signalR setup
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     public class MessagesController : ControllerBase
@@ -19,12 +22,21 @@ namespace API.Controllers
         private readonly AppDBContext _context;
         private TimeService _timeService = new();
 
+        /// <summary>
+        /// Constructs the message controller
+        /// </summary>
+        /// <param name="context">DB context</param>
         public MessagesController(AppDBContext context)
         {
             _context = context;
         }
 
         // GET: api/Messages
+        /// <summary>
+        /// Gets all messages
+        /// </summary>
+        /// <returns>A list of all the messages in as the Message class</returns>
+        /// <response code="200">A list of all the messages in as the Message class</response>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Message>>> GetMessages()
         {
@@ -32,6 +44,13 @@ namespace API.Controllers
         }
 
         // GET: api/Messages/5
+        /// <summary>
+        /// Gets a single message, by its ID
+        /// </summary>
+        /// <param name="id">ID of a message</param>
+        /// <returns>A message</returns>
+        /// <response code="200">A message corresponding to the given ID</response>
+        /// <response code="404">The message was not found</response>
         [HttpGet("{id}")]
         public async Task<ActionResult<Message>> GetMessage(string id)
         {
@@ -46,10 +65,14 @@ namespace API.Controllers
         }
 
         /// <summary>
-        /// Gets a users own messages.
+        /// Gets a users own messages, by comparing the users ID to either the sender or the destination ID. Returns
+        /// an empty list of no messages are found.
         /// </summary>
         /// <param name="userId">The user's ID</param>
-        /// <returns></returns>
+        /// <returns>A list of the users messages</returns>
+        /// <response code="200">A list of all the messages by or for one user, or an empty list</response>
+        /// <response code="400">The JWT ID does not equal the users ID</response>
+        /// <response code="404">User was not found</response>
         [HttpGet("by-user")]
         [Authorize(Roles = "User,Admin")]
         public async Task<IActionResult> GetMessagesByUserId(string userId)
@@ -66,6 +89,12 @@ namespace API.Controllers
 
         // PUT: api/Messages/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        /// <summary>
+        /// Updates an entire message
+        /// </summary>
+        /// <returns>No content, if everything went right</returns>
+        /// <param name="id">ID of a message</param>
+        /// <param name="message">The updated message</param>
         [HttpPut("{id}")]
         public async Task<IActionResult> PutMessage(string id, Message message)
         {
@@ -94,12 +123,16 @@ namespace API.Controllers
 
             return NoContent();
         }
-
+        
         /// <summary>
-        /// Add message
+        /// Adds message
         /// </summary>
-        /// <param name="msg">The message to be added</param>
-        /// <returns></returns>
+        /// <param name="msg">The message, destination user ID and IsAdmin bool in a single DTO</param>
+        /// <returns>String saying the message was added</returns>
+        /// <response code="200">Confirmation string</response>
+        /// <response code="400">No user ID in JWT, or user ID was not found in DB</response>
+        /// <response code="409">If the message ID already exists</response>
+        /// <response code="500">Unaccounted server side error</response>
         [HttpPost]
         [Authorize(Roles = "User,Admin")]
         public async Task<ActionResult> PostMessage([FromBody] PostMessageRequestDto msg)
@@ -146,6 +179,13 @@ namespace API.Controllers
         }
 
         // DELETE: api/Messages/5
+        /// <summary>
+        /// Deletes a message by its ID
+        /// </summary>
+        /// <param name="id">The message ID</param>
+        /// <returns>A response saying everything was cool</returns>
+        /// <response code="204">Everything went right</response>
+        /// <response code="404">Message does not exist</response>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMessage(string id)
         {

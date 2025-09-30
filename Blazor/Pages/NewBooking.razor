@@ -75,8 +75,10 @@
             <!-- Booking Options Section -->
             <EditForm Model="_newBookingDto" OnValidSubmit="CreateBooking">
                 <DataAnnotationsValidator/>
-                <div class="fade-validation-summary">
+                <div class="fade-validation-summary js-get-validation-content">
                     <ValidationSummary/>
+                    @* Has a dummy element, which gets its content from the validation summarys ul->li content *@
+                    <div class="dummy-validation-content js-dummy-validation"></div>
                 </div>
                 <div class="booking-options-section">
                     <h5>Booking Details</h5>
@@ -152,6 +154,39 @@
         </div>
     </div>
 </div>
+
+<button onclick="copyValidationSummaryAndActivateDum()">
+    Copy summary and activate
+</button>
+<button onclick="emptyValidationSummary()">
+    Deactivate
+</button>
+
+<script>
+    function copyValidationSummaryAndActivateDum() {
+        let validationSummary = document.querySelector(".js-get-validation-content ul li");
+        let dumValidator = document.querySelector(".js-dummy-validation");
+        dumValidator.innerHTML = validationSummary.innerHTML;
+        dumValidator.classList.add("active");
+    }
+    function emptyValidationSummary() {
+        document.querySelector(".js-dummy-validation").classList.remove("active");
+    }
+</script>
+
+<style>
+    .dummy-validation-content {
+        display: block;
+        opacity: 0;
+        height: 0;
+        transition: all 0.5s ease-in-out;
+    }
+    .dummy-validation-content.active {
+        opacity: 1;
+        height: 50px;
+        transition: all 0.5s ease-in-out;
+    }
+</style>
 
 @code {
 

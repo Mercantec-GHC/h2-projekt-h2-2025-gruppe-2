@@ -19,17 +19,14 @@ a, .btn-link {
 
 /* The opacity transition works for */
 .fade-validation-summary:empty {
-    opacity: 0;
-    height: 0;
-    transform: translateY(-10px);
-    transition: all 0.5s ease-in-out;
 }
 
-.fade-validation-summary {
-    opacity: 1;
-    height: 50px; /* We artificially set a height, to get the desired transition */
-    transform: translateY(0);
-    transition: all 0.5s ease-in-out;
+.fade-validation-summary ul li {
+    opacity: 0;
+    height: 0;
+}
+.fade-validation-summary ul {
+    margin: 0;
 }
 
 .btn-primary {
