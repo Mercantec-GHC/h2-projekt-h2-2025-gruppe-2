@@ -17,18 +17,6 @@ a, .btn-link {
     color: #fff;
 }
 
-/* The opacity transition works for */
-.fade-validation-summary:empty {
-}
-
-.fade-validation-summary ul li {
-    opacity: 0;
-    height: 0;
-}
-.fade-validation-summary ul {
-    margin: 0;
-}
-
 .btn-primary {
     color: #fff;
     background-color: #1b6ec2;

@@ -73,12 +73,16 @@
             </div>
 
             <!-- Booking Options Section -->
-            <EditForm Model="_newBookingDto" OnValidSubmit="CreateBooking">
+            <EditForm EditContext="_editContext" OnValidSubmit="CreateBooking">
                 <DataAnnotationsValidator/>
-                <div class="fade-validation-summary js-get-validation-content">
-                    <ValidationSummary/>
+                <div class="fade-validation-summary">
+                    <div style="display: none" class="js-get-validation-content">
+                        <ValidationSummary/>
+                    </div>
                     @* Has a dummy element, which gets its content from the validation summarys ul->li content *@
-                    <div class="dummy-validation-content js-dummy-validation"></div>
+                    <div class="dummy-validation-content js-dummy-validation">
+
+                    </div>
                 </div>
                 <div class="booking-options-section">
                     <h5>Booking Details</h5>
@@ -164,11 +168,20 @@
 
 <script>
     function copyValidationSummaryAndActivateDum() {
-        let validationSummary = document.querySelector(".js-get-validation-content ul li");
+        let validationSummary = document.querySelectorAll(".js-get-validation-content ul li");
         let dumValidator = document.querySelector(".js-dummy-validation");
-        dumValidator.innerHTML = validationSummary.innerHTML;
+        let liTags = "";
+
+        validationSummary.forEach(element => {
+            liTags += "<li>" + element.innerHTML + "</li>";
+        });
+        console.log(liTags);
+
+        dumValidator.innerHTML = "<ul>" + liTags + "</ul>";
         dumValidator.classList.add("active");
+
     }
+
     function emptyValidationSummary() {
         document.querySelector(".js-dummy-validation").classList.remove("active");
     }
@@ -179,8 +192,11 @@
         display: block;
         opacity: 0;
         height: 0;
+        color: red;
+        overflow: hidden;
         transition: all 0.5s ease-in-out;
     }
+
     .dummy-validation-content.active {
         opacity: 1;
         height: 50px;
@@ -189,6 +205,9 @@
 </style>
 
 @code {
+
+    private EditContext? _editContext;
+    private bool _setDummyValidationMsg;
 
     private DateOnly startingDate = DateOnly.FromDateTime(DateTime.Now);
     private DateOnly endingDate = DateOnly.FromDateTime(DateTime.Now.AddDays(1));
@@ -201,8 +220,34 @@
     List<Room> _currentRooms = [];
     NewBookingDto _newBookingDto = new();
 
+    private void HandleValidationStateChanged(object? sender, ValidationStateChangedEventArgs args)
+    {
+        _setDummyValidationMsg = true;
+        InvokeAsync(StateHasChanged);
+    }
+
+    // We HAVE to do it this way, otherwise the DOM is not ready and we just copy nothing to the errors list.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_setDummyValidationMsg)
+        {
+            _setDummyValidationMsg = false;
+            if (_editContext.GetValidationMessages().Any())
+            {
+                await JS.InvokeVoidAsync("copyValidationSummaryAndActivateDum");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("emptyValidationSummary");
+            }
+        }
+    }
+
+
     protected override async Task OnInitializedAsync()
     {
+        _editContext = new EditContext(_newBookingDto);
+        _editContext.OnValidationStateChanged += HandleValidationStateChanged;
         // Check if we have pre-selected data from room page calendar
         if (BookingState.SelectedStartDate.HasValue)
         {
