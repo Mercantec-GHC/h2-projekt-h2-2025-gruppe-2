@@ -27,6 +27,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="context">The database context to use for data access.</param>
         /// <param name="logger">Logger context for logging to a file</param>
+        /// <param name="mailService">Mail context for sending mails</param>
         public BookingsController(AppDBContext context, ILogger<BookingsController> logger, MailService mailService)
         {
             _context = context;
@@ -74,6 +75,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="id">The ID of the booking to retrieve.</param>
         /// <returns>The booking with the specified ID, or 404 if not found.</returns>
+        /// <response code="404">Booking was not found</response>
         [HttpGet("{id}")]
         public async Task<ActionResult<Booking>> GetBooking(string id)
         {
@@ -90,7 +92,9 @@ namespace API.Controllers
         /// <summary>
         /// Gets all the details about bookings
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A list of all relevant booking stats</returns>
+        /// <response code="200">A list of all relevant booking stats</response>
+        /// <response code="500">Unaccounted server side error</response>
         [HttpGet]
         [Route("details")]
         [Authorize(Roles = "Admin")]

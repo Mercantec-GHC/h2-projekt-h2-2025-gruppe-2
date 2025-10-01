@@ -3,14 +3,22 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace API.Service;
 
+/// <summary>
+/// The hub for our ticketing system
+/// </summary>
 public class ChatHub : Hub
 {
     private static readonly ConcurrentDictionary<string, string> ConnectedUsers = new();
     private const string AdminUserId = "4f8a2997-3e89-4e19-826b-062391224f58";
 
+    /// <summary>
+    /// Adds a user to the ConnectedUsers and creates a value pair userId -> ConnectionId. Also sends a welcome message,
+    /// which will not be logged in the DB.
+    /// </summary>
+    /// <param name="userId">A users ID</param>
     public async Task JoinUserChat(string userId)
     {
-        ConnectedUsers.AddOrUpdate(userId, Context.ConnectionId, (k, v) => Context.ConnectionId);
+        ConnectedUsers.AddOrUpdate(userId, Context.ConnectionId, (_, _) => Context.ConnectionId);
         await SendWelcomeMessage("System", $"{userId} has joined the chat");
     }
 
@@ -28,6 +36,12 @@ public class ChatHub : Hub
         }
     }
     
+    /// <summary>
+    /// A user sends a message to the hardcoded Admin and themselves. If the admin is not found in the ConnectedUsers,
+    /// so not logged on, the user will instead be given a message saying the admin is not connected.
+    /// </summary>
+    /// <param name="senderUserId">The user ID of the user that wants to send a message</param>
+    /// <param name="message">The message</param>
     public async Task SendMessageToAdmin(string senderUserId, string message)
     {
         if (ConnectedUsers.TryGetValue(AdminUserId, out var adminConnId))
@@ -42,6 +56,12 @@ public class ChatHub : Hub
         }
     }
 
+    /// <summary>
+    /// An admin replies to a user and sens it to the targeted user ID and admin. If the user us not found in
+    /// ConnectedUser, we instead send a message to the admin saying that the targeted user was not found
+    /// </summary>
+    /// <param name="targetUserId"></param>
+    /// <param name="message"></param>
     public async Task AdminReplyToUser(string targetUserId, string message)
     {
         if (Context.UserIdentifier == AdminUserId || Context.ConnectionId == ConnectedUsers[AdminUserId])
@@ -60,14 +80,10 @@ public class ChatHub : Hub
         }
     }
 
-    public void PrintUsers()
-    {
-        foreach (var user in ConnectedUsers)
-        {
-            Console.WriteLine($"User: {user.Key}, ConnectionId: {user.Value}");
-        }
-    }
-
+    /// <summary>
+    /// Removes the user from the ConnectedUsers pool
+    /// </summary>
+    /// <param name="exception">I dont know what the hell this is for</param>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var user = ConnectedUsers.FirstOrDefault(x => x.Value == Context.ConnectionId);

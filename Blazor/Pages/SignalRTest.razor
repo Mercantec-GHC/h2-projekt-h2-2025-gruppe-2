@@ -22,7 +22,8 @@
                     <input @bind="_targetUserId" placeholder="Target user ID..."/>
                     <button class="btn btn-primary">Send to user</button>
                     <div class="fade-validation-summary">
-                        <ValidationSummary/>
+                        <ValidationSummary />
+                        <span class="dummy-validation" aria-hidden="true"></span>
                     </div>
                 </EditForm>
                 <div class="row">
@@ -85,21 +86,6 @@
         <p>Please login to continue</p>
     }
 </div>
-
-<style>
-    .fade-validation-summary {
-        opacity: 0;
-        max-height: 0;
-        overflow: hidden;
-        transition: opacity 0.4s ease, max-height 0.4s ease;
-    }
-
-    .fade-validation-summary:has(ul) {
-        opacity: 1;
-        max-height: 300px;
-        transform: translateY(0);
-    }
-</style>
 
 @code {
     private Message _message = new();

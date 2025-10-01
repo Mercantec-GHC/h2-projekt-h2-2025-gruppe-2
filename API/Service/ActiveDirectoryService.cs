@@ -28,7 +28,6 @@ public class ADUser
 /// <summary>
 /// Config for an Active Directory server
 /// </summary>
-/// <param name="Server"></param>
 public class ADConfig
 {
     public string Server { get; set; } = "10.133.71.102";
@@ -41,14 +40,33 @@ public partial class ActiveDirectoryService
 {
     private ADConfig _config;
     
+    /// <summary>
+    /// Dependency injection for ADService
+    /// </summary>
+    /// <param name="config">A login user</param>
     public ActiveDirectoryService(ADConfig config)
     {
         _config = config;
     }
     
     // Public properties for at få adgang til konfiguration
+    /// <summary>
+    /// Sets the config
+    /// </summary>
     public ADConfig Config => _config;
+    
+    /// <summary>
+    /// Sets the server of the config
+    /// </summary>
     public string Server => _config.Server;
+    
+    /// <summary>
+    /// Sets the configs username
+    /// </summary>
     public string Username => _config.Username;
+    
+    /// <summary>
+    /// Sets configs domain
+    /// </summary>
     public string Domain => _config.Domain;
 }

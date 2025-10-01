@@ -1,4 +1,3 @@
-using System.DirectoryServices.Protocols;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -766,6 +765,13 @@ public class UsersController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Gets username from a users ID
+    /// </summary>
+    /// <param name="id">User ID</param>
+    /// <returns></returns>
+    /// <response code="200">The username corresponding to the user ID</response>
+    /// <response code="404">Username was not found</response>
     [HttpGet]
     [Route("username/{id}")]
     public async Task<IActionResult> GetUsernameFromUserIdAsync(string id)

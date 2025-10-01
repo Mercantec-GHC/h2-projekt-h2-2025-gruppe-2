@@ -26,6 +26,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="context">The database context to use for data access.</param>
         /// <param name="logger">Logger configuration</param>
+        /// <param name="mailService">The context for mailing</param>
         public RoomsController(AppDBContext context, ILogger<RoomsController> logger, MailService mailService)
         {
             _context = context;
@@ -44,6 +45,13 @@ namespace API.Controllers
             return await _context.Rooms.ToListAsync();
         }
 
+        /// <summary>
+        /// Returns all the dates where the given room is occupied.
+        /// </summary>
+        /// <param name="id">ID of the room</param>
+        /// <returns>The occupied dates of the room</returns>
+        /// <response code="200">The occupied dates of the room</response>
+        /// <response code="404">Room was not found</response>
         [HttpGet]
         [Route("occupied/{id}")]
         public async Task<ActionResult> GetRoomOccupations(string id)
