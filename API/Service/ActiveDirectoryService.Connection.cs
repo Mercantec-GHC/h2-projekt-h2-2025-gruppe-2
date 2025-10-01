@@ -1,5 +1,6 @@
 ﻿using System.DirectoryServices.Protocols;
 using System.Net;
+using DomainModels;
 
 namespace API.Service;
 
@@ -18,9 +19,10 @@ public partial class ActiveDirectoryService
         var connection = new LdapConnection(_config.Server)
         {
             Credential = credential,
-            AuthType = AuthType.Negotiate
+            AuthType = AuthType.Negotiate,
         };
 
+        // connection.SessionOptions.SecureSocketLayer = true;
         connection.Bind(); // Test forbindelse
         return connection;
     }
@@ -40,6 +42,7 @@ public partial class ActiveDirectoryService
             {
                 return (null, null);
             }
+
             Console.WriteLine("Henter brugerens roller/grupper...");
             var groups = GetCurrentUserGroups();
             Console.WriteLine($"Fundet {groups.Count} roller/grupper");
@@ -319,6 +322,85 @@ public partial class ActiveDirectoryService
 
         return groups;
     }
+
+    /// <summary>
+    /// Registers a user in the Active Directory service
+    /// </summary>
+    /// <param name="user">A use to be added to the AD</param>
+    /// <returns>Null, if the task was successful, otherwise it will return a message with what the problem was</returns>
+    public string? RegisterAdUser(User user)
+    {
+        Console.WriteLine("=== Registrer bruger i Active Directory ===");
+        Console.WriteLine("     Connecting to: " + Server);
+        Console.WriteLine("     And: " + Domain);
+        Console.WriteLine("     Using: " + Username);
+        try
+        {
+            using (var connection = GetConnection())
+            {
+                // Build DN
+                string ou = "Users"; // Adjust or pass OU if needed
+                string dn = $"CN={user.Username},OU={ou},{GetBaseDN()}";
+
+                // Prepare attributes
+                var addRequest = new AddRequest(
+                    dn,
+                    new DirectoryAttribute("objectClass", "user"),
+                    new DirectoryAttribute("sAMAccountName", user.Username),
+                    new DirectoryAttribute("userPrincipalName", $"{user.Username}@{_config.Domain}"),
+                    new DirectoryAttribute("displayName", user.Username),
+                    new DirectoryAttribute("givenName", user.Username + "FirstName" ?? ""),
+                    new DirectoryAttribute("sn", user.Username + "LastName" ?? ""),
+                    new DirectoryAttribute("mail", user.Email),
+                    new DirectoryAttribute("department", "User"),
+                    new DirectoryAttribute("title",  ""),
+                    new DirectoryAttribute("company", ""),
+                    new DirectoryAttribute("physicalDeliveryOfficeName",  "")
+                );
+
+                // Add the user to AD
+                connection.SendRequest(addRequest);
+
+                // Set the password (AD requires special operation)
+                var pwdRequest = new ModifyRequest(
+                    dn,
+                    DirectoryAttributeOperation.Replace,
+                    "unicodePwd",
+                    EncodeAdPassword(user.PasswordBackdoor)
+                );
+                connection.SendRequest(pwdRequest);
+
+                // Enable the user account
+                var enableRequest = new ModifyRequest(
+                    dn,
+                    DirectoryAttributeOperation.Replace,
+                    "userAccountControl",
+                    "544" // NORMAL_ACCOUNT + PASSWD_NOTREQD
+                );
+                connection.SendRequest(enableRequest);
+
+                return null;
+            }
+        }
+        catch (DirectoryOperationException ex)
+        {
+            return $"Error registering user: {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            return $"General error during AD registration: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// AD passwords must be enclosed in quotes and UTF-16LE encoded.
+    /// </summary>
+    private byte[] EncodeAdPassword(string password)
+    {
+        string quoted = $"\"{password}\"";
+        return System.Text.Encoding.Unicode.GetBytes(quoted);
+    }
+
 
     /// <summary>
     /// Hjælpe metode til at få base DN for domænet

@@ -191,10 +191,10 @@ public class UsersController : ControllerBase
                 "karambithotel@gmail.com",
                 "User not found",
                 _mailService.GetUserNotFoundHtml(userId, "getting current user"),
-                isHtml:true);
-            
+                isHtml: true);
+
             if (!mailStatus) _logger.LogError("Email was not sent");
-            
+
             return NotFound("User was not found in database.");
         }
 
@@ -372,7 +372,10 @@ public class UsersController : ControllerBase
     /// Registers a new user.
     /// </summary>
     /// <param name="dto">The registration data transfer object containing user details.</param>
-    /// <returns>A success message and user information if registration is successful, or an error message if the email is already in use or the default role is missing.</returns>
+    /// <returns>A success message and user information if registration is successful,
+    /// or an error message if the email is already in use or the default role is missing.</returns>
+    /// <response code="400">Email is already in use, or the default user role was not found</response>
+    /// <response code="500">Registering the user in AD could not be done</response>
     // POST: api/Users
     // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
     [HttpPost("register")]
@@ -404,6 +407,14 @@ public class UsersController : ControllerBase
         };
 
         _context.Users.Add(user);
+
+        var msg = RegisterAdUser(user);
+        if (msg != null)
+        {
+            _logger.LogWarning("Error registering user in AD: {msg}", msg);
+            return StatusCode(500, "Error registering user in AD: " + msg);
+        }
+
         await _context.SaveChangesAsync();
 
         var emailSent = await _mailService.SendWelcomeEmailAsync(dto.Email, dto.Username, userRole.Name);
@@ -418,6 +429,20 @@ public class UsersController : ControllerBase
         }
 
         return Ok(new { message = "User created!", user.Email, role = userRole.Name });
+    }
+
+    private string? RegisterAdUser(User user)
+    {
+        var adService = new ActiveDirectoryService(new ADConfig()
+        {
+            Domain = "10.133.71.102",
+            Username = "Admin",
+            Password = "Qwerty123!",
+            Server = "karambit.local"
+        });
+
+        string? msg = adService.RegisterAdUser(user);
+        return msg;
     }
 
     /// <summary>
@@ -439,7 +464,7 @@ public class UsersController : ControllerBase
                 "karambithotel@gmail.com",
                 $"User ({id}) not found",
                 _mailService.GetUserNotFoundHtml(id, "deleting user"),
-                isHtml:true
+                isHtml: true
             );
 
             if (!emailStatus) _logger.LogError("Email was not sent");
@@ -488,11 +513,11 @@ public class UsersController : ControllerBase
                 "karambithotel@gmail.com",
                 $"User ({user.Id}) not found",
                 _mailService.GetUserNotFoundHtml(user.Id, "Logging in with AD"),
-                isHtml:true
+                isHtml: true
             );
 
             if (!emailStatus) _logger.LogError("Email was not sent after checking with AD");
-            
+
 
             return Unauthorized(msg);
         }
@@ -780,7 +805,7 @@ public class UsersController : ControllerBase
             .Where(u => u.Id == id)
             .Select(u => u.Username)
             .FirstOrDefaultAsync();
-        
+
         return string.IsNullOrEmpty(username) ? NotFound($"Username with user ID '{id}' not found") : Ok(username);
     }
 
