@@ -1,5 +1,6 @@
 ﻿using System.DirectoryServices.Protocols;
 using System.Net;
+using System.Reflection.PortableExecutable;
 using DomainModels;
 
 namespace API.Service;
@@ -334,6 +335,7 @@ public partial class ActiveDirectoryService
         Console.WriteLine("     Connecting to: " + Server);
         Console.WriteLine("     And: " + Domain);
         Console.WriteLine("     Using: " + Username);
+        
         try
         {
             using (var connection = GetConnection())
