@@ -1,0 +1,140 @@
+﻿@inject APIService Api
+@inject IJSRuntime JS
+@inject BookingStateService BookingState
+@inject NavigationManager Navigation
+
+<div class="container">
+    @if (_roomOccupation != null)
+    {
+        <div class="justify-content-between d-flex my-2">
+            <button class="btn btn-primary" @onclick="PrevWeek">&lt; Previous week</button>
+            <button class="btn btn-primary" @onclick="NextWeek">Next week &gt;</button>
+        </div>
+        <div class="d-flex">
+            @for (int i = 0; i < _maxDates; i++)
+            {
+                var currentDate = DateOnly.FromDateTime(_baseDate.AddDays(i));
+                bool isOccupied = false;
+
+                foreach (var occ in _roomOccupation.OccupiedDates)
+                {
+                    var occStart = DateOnly.FromDateTime(occ.Key);
+                    var occEnd = DateOnly.FromDateTime(occ.Value);
+                    if (currentDate >= occStart && currentDate <= occEnd)
+                    {
+                        isOccupied = true;
+                        break;
+                    }
+                }
+
+                var bgColor = isOccupied ? "red" : "#48c774";
+                <div class="date">
+                    <div class="date-header p-2 @(i == 0 ? "first-date" : string.Empty) @(i == _maxDates - 1 ? "last-date" : string.Empty)">
+                        <span>@_timeService.MakeDateReadableShort(currentDate)</span>
+                    </div>
+                    <div class="date-body" style="background-color: @bgColor;" @onclick="() => SelectDate(currentDate, isOccupied)">
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <Loading/>
+    }
+</div>
+
+<script>
+    window.getScreenWidth = () => {
+        return window.innerWidth;
+    };
+</script>
+
+
+@code {
+
+    [Parameter] public string Id { get; set; }
+
+    private DateTime _baseDate = DateTime.UtcNow.Date;
+    private int _maxDates = 14;
+    private int _weekIntervals = 7;
+
+    private TimeService _timeService = new();
+
+    private RoomOccupation? _roomOccupation;
+    private string _pendingMsg = string.Empty;
+    private bool _alertRequest;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var (msg, roomOccupation) = await Api.GetRoomOccupationsAsync(Id);
+        if (roomOccupation == null)
+        {
+            _pendingMsg = msg;
+            _alertRequest = true;
+            return;
+        }
+
+        _roomOccupation = roomOccupation;
+        foreach (var date in _roomOccupation.OccupiedDates)
+        {
+            Console.WriteLine($"From: {date.Key}, Till: {date.Value}");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_alertRequest && !string.IsNullOrEmpty(_pendingMsg))
+        {
+            _alertRequest = false;
+            await JS.InvokeVoidAsync("alert", _pendingMsg);
+        }
+
+        if (firstRender)
+        {
+            var screenWidth = await JS.InvokeAsync<int>("getScreenWidth");
+            Console.WriteLine("Screen width: " + screenWidth);
+
+            if (screenWidth > 1340)
+            {
+                _maxDates = 14;
+            }
+            else if (screenWidth > 1140)
+            {
+                _maxDates = 10;
+            }
+            else if (screenWidth > 980)
+            {
+                _maxDates = 8;
+            }
+            else if (screenWidth > 768)
+            {
+                _maxDates = 5;
+            }
+            else
+            {
+                _maxDates = 3;
+            }
+
+            _weekIntervals = _maxDates / 2;
+            StateHasChanged();
+        }
+    }
+
+    private void PrevWeek() => _baseDate = _baseDate.AddDays(-_weekIntervals);
+    private void NextWeek() => _baseDate = _baseDate.AddDays(_weekIntervals);
+
+    private void SelectDate(DateOnly selectedDate, bool isOccupied)
+    {
+        if (!isOccupied) 
+        {
+            BookingState.SetBookingData(selectedDate, Id);
+            Navigation.NavigateTo("/new-booking");
+        }
+        else
+        {
+            
+            Console.WriteLine("Date is occupied, not ok :(");
+        }
+    }
+}

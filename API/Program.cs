@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reflection;
 using System.Text;
 using API.Data;
@@ -8,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using Serilog;
+using Microsoft.AspNetCore.SignalR;
 
 namespace API;
 
@@ -32,7 +34,9 @@ public class Program
             .CreateLogger();
 
         builder.Host.UseSerilog();
-
+        
+        builder.Services.AddScoped<MailService>();
+        
         // The JwtService will magically get added to the controller.
         builder.Services.AddScoped<JwtService>();
         string jwtSecretKey = (Configuration["Jwt:SecretKey"]
@@ -143,15 +147,18 @@ public class Program
                         )
                         .AllowAnyMethod()
                         .AllowAnyHeader()
+                        .AllowCredentials() // For SignalR
                         .WithExposedHeaders("Content-Disposition");
                 }
             );
         });
-
+        
         // Tilføj basic health checks
         builder.Services.AddHealthChecks()
             .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(),
                 ["live"]);
+
+        builder.Services.AddSignalR();
 
         var app = builder.Build();
 
@@ -185,6 +192,10 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
+        app.MapHub<ChatHub>("/signalrhub");
+        var culture = new CultureInfo("da-DK");
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
 
         app.Run();
     }

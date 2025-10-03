@@ -44,6 +44,11 @@ public class AppDBContext : DbContext
     public DbSet<BookingsRooms> BookingsRooms { get; set; } = null!;
 
     /// <summary>
+    /// History for users, when they write a message in SignalR
+    /// </summary>
+    public DbSet<Message> Messages { get; set; }
+
+    /// <summary>
     /// Configures the entity relationships and seeds initial data for roles and rooms.
     /// </summary>
     /// <param name="modelBuilder">The builder used to construct the model for the context.</param>
@@ -90,6 +95,11 @@ public class AppDBContext : DbContext
             .HasOne(br => br.Room)
             .WithMany(br => br.BookingRooms)
             .HasForeignKey(br => br.RoomId);
+
+        modelBuilder.Entity<Message>()
+            .HasOne(m => m.User) // Navigation property on Message
+            .WithMany() // If you want to ignore a collection on User, use parameterless WithMany()
+            .HasForeignKey(m => m.UserSenderId);
 
         // Seed roles and test rooms (for development only)
         SeedRoles(modelBuilder);

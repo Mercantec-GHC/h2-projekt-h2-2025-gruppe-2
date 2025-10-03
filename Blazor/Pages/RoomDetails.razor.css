@@ -1,0 +1,19 @@
+.room-img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    border-radius: 10px !important;
+    object-fit: cover !important;
+/*     aspect-ratio: 4/3 !important; */
+}
+.rounded {
+    border-radius: 10px !important;
+}
+.card-title {
+    font-family: 'MyCustomFont', Arial, sans-serif !important;
+    font-weight: bold !important;
+    margin-bottom: 2rem !important;
+}
+.card-body {
+    padding: 1rem !important;
+}

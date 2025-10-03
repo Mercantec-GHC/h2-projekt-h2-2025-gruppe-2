@@ -1,0 +1,54 @@
+23-09-25:
+SignalR Clients.Client uses the Context.ConnectionId thing, while the Client.User uses a different identifier, like the
+identity name of a user.
+
+25-09-25:
+request.Content = new StringContent(
+	JsonSerializer.Serialize(new
+	{
+		msg
+	}),
+	System.Text.Encoding.UTF8,
+	"application/json");
+Result: {"msg": "Message as this"}
+
+request.Content = new StringContent(
+	JsonSerializer.Serialize(msg),
+	System.Text.Encoding.UTF8,
+	"application/json");
+Result: "Message as is"
+
+29-09-25:
+PERHAPS, rewrite the DB messaging structure to look more like the UserMsgs.
+
+The history is then added to the individual user, based on if the user ID comes up either as the sender or destination.
+
+I think you can just copy it directly to the DB, and add them purly based if the users id appears in either the sender
+or destination.
+
+Add also the timestamps for the classes.
+
+Could maybe make it so that it doesn't send any admin group messages from the api call instead of the frontend.
+	var adminId = "4f8a2997-3e89-4e19-826b-062391224f58";
+	
+	var userIds = _messages
+		.Where(m => !m.IsAdmin) // Exclude admin-only messages from ID gathering unless they're to a user
+		.SelectMany(m => new[] { m.UserSenderId, m.UserDestinationId })
+		.Distinct();
+	
+	// For each user ID, group messages where:
+	// - The user is the sender or the destination
+	// - OR they're the destination of an admin message
+	var groupedMessages = userIds
+		.Select(userId => new
+		{
+			UserId = userId,
+			Messages = _messages
+				.Where(m =>
+						(m.UserSenderId == userId && !m.IsAdmin) ||
+						(m.UserDestinationId == userId) // includes admins messaging the user or user sending messages to self
+				)
+				.ToList()
+		})
+		.Where(g => g.Messages.Any())
+		.Where(g => g.UserId != adminId);

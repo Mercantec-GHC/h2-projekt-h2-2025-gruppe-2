@@ -1,114 +1,46 @@
 ﻿@page "/admin"
-@layout Blazor.Layout.MainLayout
+@inject StorageService Storage
+@inject IJSRuntime JS
+@inject APIService Api
+@inject NavigationManager NavigationManager;
+@inject AuthService AuthService
 
-<HeadContent>
-	<!-- TailwindCSS (CDN for demo) -->
-	<script src="https://cdn.tailwindcss.com"></script>
-	<!-- AOS animations -->
-	<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-	<!-- Removed AOS / Feather / Chart.js scripts since JS file deleted -->
-	<!-- (Charts removed – no JS version in use) -->
-</HeadContent>
+@if (_isAdmin)
+{
+    <h2 class="delete-title">Delete</h2>
+    <div class="row">
+        <div class="col-4">
+            <label>
+                Delete User
+            </label>
+            <div class="row">
+                <div class="col-8">
+                    <InputText @bind-Value="_userId" class="form-control"></InputText>
+                </div>
+                <div class="col-4">
+                    <button class="btn btn-danger">Delete User</button>
+                </div>
+            </div>
+        </div>
+        <div class="col-4">
+            <label>
+                Delete User
+            </label>
+            <InputText @bind-Value="_userId" class="form-control"></InputText>
+        </div>
+        <div class="col-4">
+            <label>
+                Delete User
+            </label>
+            <InputText @bind-Value="_userId" class="form-control"></InputText>
+        </div>
+    </div>
 
-<div class="bg-gray-100 font-sans">
-
-			<!-- Main Content -->
-			<main class="p-6">
-				<div class="mb-6	">
-					<h1 class="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
-				</div>
-
-				<!-- Reformatted Stat Tiles (Requested) -->
-				<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-3">
-					<!-- 1. Rooms booked / total -->
-					<div class="bg-white rounded border border-gray-200 shadow-sm p-3 flex flex-col justify-between h-32">
-						<div>
-							<p class="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">Rooms (Booked / Total)</p>
-							<div class="mt-1 text-xl font-bold text-gray-800">@ActiveRoomsUnique / @TotalRooms</div>
-							<p class="mt-1 text-[11px] text-gray-500">Avail: @AvailableRooms</p>
-						</div>
-						<span class="text-xs text-indigo-600 hover:underline cursor-pointer" @onclick="ShowActiveRooms">View rooms</span>
-					</div>
-					<!-- 2. Booked rooms (number) -->
-					<div class="bg-white rounded border border-gray-200 shadow-sm p-3 flex flex-col justify-between h-32">
-						<div>
-							<p class="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">Booked Rooms</p>
-							<div class="mt-1 text-2xl font-bold text-gray-800">@ActiveRoomsUnique</div>
-							<p class="mt-1 text-[11px] text-gray-500">Currently occupied</p>
-						</div>
-						<span class="text-xs text-indigo-600 hover:underline cursor-pointer" @onclick="ShowActiveBookings">View active</span>
-					</div>
-					<!-- 3. Revenue -->
-					<div class="bg-white rounded border border-gray-200 shadow-sm p-3 flex flex-col justify-between h-32">
-						<div>
-							<p class="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">Revenue</p>
-							<div class="mt-1 text-xl font-bold text-gray-800">@FormatCurrency(RevenueToday)</div>
-							<p class="mt-1 text-[11px] text-gray-500">Month: @FormatCurrency(RevenueThisMonth)</p>
-						</div>
-						<span class="text-xs text-gray-400">&nbsp;</span>
-					</div>
-					<!-- 4. Rooms needing cleaning -->
-					<div class="bg-white rounded border border-gray-200 shadow-sm p-3 flex flex-col justify-between h-32 @(CleaningAlertCount>0?"border-l-4 border-orange-400":"")">
-						<div>
-							<p class="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">Rooms Needing Cleaning</p>
-							<div class="mt-1 text-2xl font-bold @(CleaningAlertCount>0?"text-orange-600":"text-green-600")">@CleaningAlertCount</div>
-							@if (UncleanRoomsMismatch)
-							{
-								<p class="mt-1 text-[10px] text-orange-600">Mismatch detected</p>
-							}
-						</div>
-						<span class="text-xs text-indigo-600 hover:underline cursor-pointer" @onclick="ShowUncleanRooms">View list</span>
-					</div>
-					<!-- 5. Accounts (total) -->
-					<div class="bg-white rounded border border-gray-200 shadow-sm p-3 flex flex-col justify-between h-32">
-						<div>
-							<p class="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">Accounts</p>
-							<div class="mt-1 text-2xl font-bold text-gray-800">@(_userDetails?.TotalAccounts ?? 0)</div>
-							<p class="mt-1 text-[11px] text-gray-500">Admins: @(_userDetails?.TotalAdmin ?? 0)</p>
-						</div>
-						<span class="text-xs text-indigo-600 hover:underline cursor-pointer" @onclick="ShowAccounts">View accounts</span>
-					</div>
-					<!-- 6. Extra metric (Occupancy) -->
-					<div class="bg-white rounded border border-gray-200 shadow-sm p-3 flex flex-col justify-between h-32">
-						<div>
-							<p class="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">Occupancy</p>
-							<div class="mt-1 text-2xl font-bold text-gray-800">@OccupancyPercent%</div>
-							<p class="mt-1 text-[11px] text-gray-500">@ActiveRoomsUnique of @TotalRooms</p>
-						</div>
-						<span class="text-xs text-gray-400">&nbsp;</span>
-					</div>
-				</div>
-
-				<!-- (Chart section removed) -->
-
-				<!-- Filters (Bookings view only) -->
-				@if (!_showUncleanPanel && !_showActiveRoomsPanel && !_showAccountsPanel)
-				{
-					<div class="bg-white rounded border border-gray-200 shadow-sm p-3 mb-3 -mt-1">
-						<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-							<div>
-								<label class="block text-xs text-gray-500 mb-1">Status</label>
-								<select class="w-full border rounded px-2 py-1" value="@_statusFilter" @onchange="OnStatusChange">
-									<option value="all">All</option>
-									<option value="active">Booked</option>
-									<option value="ended">Available</option>
-								</select>
-							</div>
-							<div>
-								<label class="block text-xs text-gray-500 mb-1">Guest/User ID</label>
-								<input class="w-full border rounded px-2 py-1" placeholder="Search by user id" @bind="_filterUser" />
-							</div>
-							<div>
-								<label class="block text-xs text-gray-500 mb-1">From</label>
-								<input type="date" class="w-full border rounded px-2 py-1" @bind-value="_filterFrom" />
-							</div>
-							<div>
-								<label class="block text-xs text-gray-500 mb-1">To</label>
-								<input type="date" class="w-full border rounded px-2 py-1" @bind-value="_filterTo" />
-							</div>
-						</div>
-					</div>
-				}
+    <h2 class="get-title">Get</h2>
+    <h2 class="post-title">Post</h2>
+    <h2 class="put-title">Put</h2>
+    <SignalRAdmin/>
+}
 
 				@if (_showUncleanPanel)
 				{
