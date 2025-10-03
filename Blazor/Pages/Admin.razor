@@ -7,214 +7,336 @@
 	<!-- AOS animations -->
 	<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 	<!-- Removed AOS / Feather / Chart.js scripts since JS file deleted -->
-	<style>
-		.chart-placeholder {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			height: 12rem; /* h-48 */
-			font-size: 0.875rem; /* text-sm */
-			color: #9ca3af; /* text-gray-400 */
-			background-color: #f9fafb; /* bg-gray-50 */
-			border: 1px dashed #d1d5db; /* border + border-gray-300 + dashed */
-			border-radius: 0.5rem; /* rounded */
-		}
-	</style>
+	<!-- (Charts removed – no JS version in use) -->
 </HeadContent>
 
 <div class="bg-gray-100 font-sans">
-	<div class="flex flex-col h-screen overflow-hidden">
-		<div class="flex-1 overflow-y-auto">
 
 			<!-- Main Content -->
 			<main class="p-6">
-				<div class="mb-6">
+				<div class="mb-6	">
 					<h1 class="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
-					<p class="text-gray-600">Welcome back! Here's what's happening with your hotel today.</p>
 				</div>
 
-				<!-- Top Metrics (Snapshot + KPIs unified) -->
-				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4 mb-6">
-					<div class="bg-white shadow rounded-lg p-5 flex flex-col justify-between">
-						<div class="flex items-start justify-between mb-2">
-							<p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Bookings Today</p>
-							<i data-feather="clipboard" class="text-indigo-500"></i>
+				<!-- Reformatted Stat Tiles (Requested) -->
+				<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-3">
+					<!-- 1. Rooms booked / total -->
+					<div class="bg-white rounded border border-gray-200 shadow-sm p-3 flex flex-col justify-between h-32">
+						<div>
+							<p class="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">Rooms (Booked / Total)</p>
+							<div class="mt-1 text-xl font-bold text-gray-800">@ActiveRoomsUnique / @TotalRooms</div>
+							<p class="mt-1 text-[11px] text-gray-500">Avail: @AvailableRooms</p>
 						</div>
-						<h3 class="text-3xl font-bold text-gray-800">@BookingsToday</h3>
-						<p class="text-xs text-gray-400">New bookings created today</p>
+						<span class="text-xs text-indigo-600 hover:underline cursor-pointer" @onclick="ShowActiveRooms">View rooms</span>
 					</div>
-					<div class="bg-white shadow rounded-lg p-5 flex flex-col justify-between">
-						<div class="flex items-start justify-between mb-2">
-							<p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Active Guests</p>
-							<i data-feather="users" class="text-blue-500"></i>
+					<!-- 2. Booked rooms (number) -->
+					<div class="bg-white rounded border border-gray-200 shadow-sm p-3 flex flex-col justify-between h-32">
+						<div>
+							<p class="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">Booked Rooms</p>
+							<div class="mt-1 text-2xl font-bold text-gray-800">@ActiveRoomsUnique</div>
+							<p class="mt-1 text-[11px] text-gray-500">Currently occupied</p>
 						</div>
-						<h3 class="text-3xl font-bold text-gray-800">@ActiveGuests</h3>
-						<p class="text-xs text-gray-400">Adults + children in active bookings</p>
+						<span class="text-xs text-indigo-600 hover:underline cursor-pointer" @onclick="ShowActiveBookings">View active</span>
 					</div>
-					<div class="bg-white shadow rounded-lg p-5 flex flex-col justify-between">
-						<div class="flex items-start justify-between mb-2">
-							<p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Revenue</p>
-							<i data-feather="dollar-sign" class="text-green-500"></i>
+					<!-- 3. Revenue -->
+					<div class="bg-white rounded border border-gray-200 shadow-sm p-3 flex flex-col justify-between h-32">
+						<div>
+							<p class="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">Revenue</p>
+							<div class="mt-1 text-xl font-bold text-gray-800">@FormatCurrency(RevenueToday)</div>
+							<p class="mt-1 text-[11px] text-gray-500">Month: @FormatCurrency(RevenueThisMonth)</p>
 						</div>
-						<h3 class="text-2xl font-bold text-gray-800">@FormatCurrency(RevenueToday)</h3>
-						<p class="text-xs text-gray-400">Today • <span class="font-semibold">@FormatCurrency(RevenueThisMonth)</span> this month</p>
+						<span class="text-xs text-gray-400">&nbsp;</span>
 					</div>
-					<div class="bg-white shadow rounded-lg p-5 flex flex-col justify-between">
-						<div class="flex items-start justify-between mb-2">
-							<p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Rooms</p>
-							<i data-feather="home" class="text-purple-500"></i>
-						</div>
-						<h3 class="text-2xl font-bold text-gray-800">@RoomsOccupied / @RoomsAvailable</h3>
-						<p class="text-xs text-gray-400">Occupied / Available</p>
-					</div>
-					<div class="bg-white shadow rounded-lg p-5 flex flex-col justify-between border-l-4 @(CleaningAlertCount > 0 ? "border-orange-400" : "border-green-400")">
-						<div class="flex items-start justify-between mb-2">
-							<p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Cleaning Alerts</p>
-							<i data-feather="alert-triangle" class="@(CleaningAlertCount > 0 ? "text-orange-500" : "text-green-500")"></i>
-						</div>
-						<h3 class="text-3xl font-bold @(CleaningAlertCount > 0 ? "text-orange-600" : "text-green-600")">@CleaningAlertCount</h3>
-						<p class="text-xs text-gray-400">Rooms needing cleaning</p>
-					</div>
-				</div>
-
-				<!-- Secondary KPIs -->
-				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4 mb-6">
-					<button class="bg-white rounded-lg shadow p-6 text-left hover:ring-2 hover:ring-indigo-200" data-aos="fade-up" @onclick="SetFilterAll">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-gray-500">Total Bookings</p>
-								<h3 class="text-2xl font-bold">@(_bookingDetails?.TotalBookings ?? 0)</h3>
-								<p class="text-gray-400 text-sm">Total active: @(_bookingDetails?.TotalActiveBookings ?? 0)</p>
-							</div>
-							<div class="bg-indigo-100 p-3 rounded-full">
-								<i data-feather="calendar" class="text-indigo-600"></i>
-							</div>
-						</div>
-					</button>
-					<button class="bg-white rounded-lg shadow p-6 text-left hover:ring-2 hover:ring-indigo-200" data-aos="fade-up" data-aos-delay="50" @onclick="SetFilterActive">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-gray-500">Booked Rooms</p>
-								<h3 class="text-2xl font-bold">@(_bookingDetails?.TotalBookedRooms ?? 0)</h3>
-								<p class="text-gray-400 text-sm">Active rooms: @(_bookingDetails?.TotalActiveBookedRooms ?? 0)</p>
-							</div>
-							<div class="bg-blue-100 p-3 rounded-full">
-								<i data-feather="home" class="text-blue-600"></i>
-							</div>
-						</div>
-					</button>
-					<div class="bg-white rounded-lg shadow p-6" data-aos="fade-up" data-aos-delay="100">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-gray-500">Revenue (sum)</p>
-								<h3 class="text-2xl font-bold">@String.Format("{0:C}", _bookingDetails?.TotalBookingsPrice ?? 0)</h3>
-								<p class="text-gray-400 text-sm">Avg: @String.Format("{0:C}", _bookingDetails?.AvgPrice ?? 0)</p>
-							</div>
-							<div class="bg-green-100 p-3 rounded-full">
-								<i data-feather="dollar-sign" class="text-green-600"></i>
-							</div>
-						</div>
-					</div>
-					<button class="bg-white rounded-lg shadow p-6 text-left hover:ring-2 hover:ring-orange-200" data-aos="fade-up" data-aos-delay="150" @onclick="ShowUncleanRooms">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-gray-500">Rooms (total)</p>
-								<h3 class="text-2xl font-bold">@(_roomsDetails?.TotalRooms ?? 0)</h3>
-								<p class="text-gray-400 text-sm">
-									Clean: <span class="text-green-600 font-semibold">@(_roomsDetails?.TotalCleanRooms ?? 0)</span>
-									<span class="mx-1">/</span>
-									Unclean: <span class="text-orange-600 font-semibold">@((_roomsDetails?.TotalRooms ?? 0) - (_roomsDetails?.TotalCleanRooms ?? 0))</span>
-								</p>
-							</div>
-							@if (_uncleanRooms?.Count > 0)
+					<!-- 4. Rooms needing cleaning -->
+					<div class="bg-white rounded border border-gray-200 shadow-sm p-3 flex flex-col justify-between h-32 @(CleaningAlertCount>0?"border-l-4 border-orange-400":"")">
+						<div>
+							<p class="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">Rooms Needing Cleaning</p>
+							<div class="mt-1 text-2xl font-bold @(CleaningAlertCount>0?"text-orange-600":"text-green-600")">@CleaningAlertCount</div>
+							@if (UncleanRoomsMismatch)
 							{
-								<div class="mb-4 p-4 rounded border bg-yellow-50 text-yellow-800">
-									<span class="font-semibold">⚠ @_uncleanRooms.Count rooms need cleaning.</span>
-									<button class="ml-2 text-sm underline" @onclick="ShowUncleanRooms">View list</button>
+								<p class="mt-1 text-[10px] text-orange-600">Mismatch detected</p>
+							}
+						</div>
+						<span class="text-xs text-indigo-600 hover:underline cursor-pointer" @onclick="ShowUncleanRooms">View list</span>
+					</div>
+					<!-- 5. Accounts (total) -->
+					<div class="bg-white rounded border border-gray-200 shadow-sm p-3 flex flex-col justify-between h-32">
+						<div>
+							<p class="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">Accounts</p>
+							<div class="mt-1 text-2xl font-bold text-gray-800">@(_userDetails?.TotalAccounts ?? 0)</div>
+							<p class="mt-1 text-[11px] text-gray-500">Admins: @(_userDetails?.TotalAdmin ?? 0)</p>
+						</div>
+						<span class="text-xs text-indigo-600 hover:underline cursor-pointer" @onclick="ShowAccounts">View accounts</span>
+					</div>
+					<!-- 6. Extra metric (Occupancy) -->
+					<div class="bg-white rounded border border-gray-200 shadow-sm p-3 flex flex-col justify-between h-32">
+						<div>
+							<p class="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">Occupancy</p>
+							<div class="mt-1 text-2xl font-bold text-gray-800">@OccupancyPercent%</div>
+							<p class="mt-1 text-[11px] text-gray-500">@ActiveRoomsUnique of @TotalRooms</p>
+						</div>
+						<span class="text-xs text-gray-400">&nbsp;</span>
+					</div>
+				</div>
+
+				<!-- (Chart section removed) -->
+
+				<!-- Filters (Bookings view only) -->
+				@if (!_showUncleanPanel && !_showActiveRoomsPanel && !_showAccountsPanel)
+				{
+					<div class="bg-white rounded border border-gray-200 shadow-sm p-3 mb-3 -mt-1">
+						<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+							<div>
+								<label class="block text-xs text-gray-500 mb-1">Status</label>
+								<select class="w-full border rounded px-2 py-1" value="@_statusFilter" @onchange="OnStatusChange">
+									<option value="all">All</option>
+									<option value="active">Booked</option>
+									<option value="ended">Available</option>
+								</select>
+							</div>
+							<div>
+								<label class="block text-xs text-gray-500 mb-1">Guest/User ID</label>
+								<input class="w-full border rounded px-2 py-1" placeholder="Search by user id" @bind="_filterUser" />
+							</div>
+							<div>
+								<label class="block text-xs text-gray-500 mb-1">From</label>
+								<input type="date" class="w-full border rounded px-2 py-1" @bind-value="_filterFrom" />
+							</div>
+							<div>
+								<label class="block text-xs text-gray-500 mb-1">To</label>
+								<input type="date" class="w-full border rounded px-2 py-1" @bind-value="_filterTo" />
+							</div>
+						</div>
+					</div>
+				}
+
+				@if (_showUncleanPanel)
+				{
+					<div class="bg-white rounded-lg shadow overflow-hidden mb-4">
+						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+							<h3 class="font-semibold text-gray-800">Unclean Rooms (@CleaningAlertCount)</h3>
+							<button class="text-xs text-indigo-600 hover:underline inline-flex items-center" @onclick="ToggleUncleanPanel" aria-label="Back to bookings">
+								<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="32" height="32">
+									<path d="M3 10.5L12 3l9 7.5" />
+									<path d="M5 9.5V21h14V9.5" />
+									<path d="M9 21v-6h6v6" />
+								</svg>
+								<span class="sr-only">Back to bookings</span>
+							</button>
+						</div>
+						<!-- Unclean Rooms: Room ID search only -->
+						<div class="px-6 py-3 border-b bg-gray-50">
+							<div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+								<div>
+									<label class="block text-xs text-gray-500 mb-1">Search by Room ID</label>
+									<input class="w-full border rounded px-2 py-1" placeholder="e.g. 101" @bind="_uncleanSearchId" />
+								</div>
+							</div>
+						</div>
+						<div class="p-4">
+							@if (_uncleanRooms is null || _uncleanRooms.Count == 0)
+							{
+								<p class="text-sm text-gray-500">No unclean rooms 🎉</p>
+							}
+							else
+							{
+								@if (!FilteredUncleanRooms.Any())
+								{
+									<p class="text-sm text-gray-500">No rooms match your search.</p>
+								}
+								else
+								{
+									<div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+										@foreach (var r in FilteredUncleanRooms)
+										{
+											<div class="border border-gray-200 rounded-md bg-orange-50 p-3 flex flex-col justify-between">
+												<div class="text-sm font-semibold text-gray-700 mb-1">Room #@r.Id</div>
+												<div class="flex items-center justify-between text-[11px] text-gray-600 mb-2">
+													<span>Price: @r.Price.ToString("C0")</span>
+													<span class="uppercase tracking-wide text-orange-600 font-medium">Unclean</span>
+												</div>
+												<a class="text-xs text-indigo-600 hover:underline" href="/room/@r.Id">View room</a>
+											</div>
+										}
+									</div>
+								}
+							}
+						</div>
+					</div>
+				}
+				else if (_showActiveRoomsPanel)
+				{
+					<div class="bg-white rounded-lg shadow overflow-hidden mb-4">
+						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+							<h3 class="font-semibold text-gray-800">Rooms</h3>
+							<div class="flex gap-3">
+								<button class="text-xs text-indigo-600 hover:underline inline-flex items-center" @onclick="(()=> { _showActiveRoomsPanel=false; })" aria-label="Back to bookings">
+									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="32" height="32">
+										<path d="M3 10.5L12 3l9 7.5" />
+										<path d="M5 9.5V21h14V9.5" />
+										<path d="M9 21v-6h6v6" />
+									</svg>
+									<span class="sr-only">Back to bookings</span>
+								</button>
+								@if (ActiveRoomsUnique > 0 && !ActiveRoomEntries.Any())
+								{
+									<button class="text-xs text-indigo-600 hover:underline" @onclick="ReloadBookings">Reload</button>
+								}
+							</div>
+						</div>
+
+						<!-- Rooms search bar (Room ID + dates + availability) -->
+						<div class="px-6 py-3 border-b bg-gray-50">
+							<div class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+								<div>
+									<label class="block text-xs text-gray-500 mb-1">Room ID</label>
+									<input class="w-full border rounded px-2 py-1" placeholder="e.g. 1, 101, GUID" @bind="_roomsSearchId" />
+								</div>
+								<div>
+									<label class="block text-xs text-gray-500 mb-1">From</label>
+									<input type="date" class="w-full border rounded px-2 py-1" @bind-value="_roomsSearchFrom" />
+								</div>
+								<div>
+									<label class="block text-xs text-gray-500 mb-1">To</label>
+									<input type="date" class="w-full border rounded px-2 py-1" @bind-value="_roomsSearchTo" />
+								</div>
+								<div>
+									<label class="block text-xs text-gray-500 mb-1">Show</label>
+									<select class="w-full border rounded px-2 py-1" @bind="_roomsSearchAvailableStr">
+										<option value="false">Booked</option>
+										<option value="true">Available</option>
+									</select>
+								</div>
+								<div class="flex gap-2">
+									<button class="px-3 py-1 rounded-md bg-indigo-600 text-white text-sm disabled:opacity-50" @onclick="SearchRoomsAsync" disabled="@_roomsSearchBusy">Search</button>
+									<button class="px-3 py-1 rounded-md bg-gray-100 text-gray-700 text-sm" @onclick="ClearRoomsSearch">Clear</button>
+								</div>
+							</div>
+							@if (!string.IsNullOrWhiteSpace(_roomsSearchError))
+							{
+								<p class="mt-2 text-xs text-red-600">@_roomsSearchError</p>
+							}
+							else if (_roomsSearchBusy)
+							{
+								<p class="mt-2 text-xs text-gray-500">Searching…</p>
+							}
+							else if (_roomsAvailabilityIds.Any())
+							{
+								<p class="mt-2 text-xs text-gray-500">Results: @_roomsAvailabilityIds.Count (@(_roomsSearchAvailable ? "Available" : "Booked"))</p>
+							}
+						</div>
+						<div class="p-4">
+							@if (FilteredRoomsPanel.Any())
+							{
+								<div class="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+									@foreach (var r in FilteredRoomsPanel)
+									{
+										var showBookedBadge = (_roomsAvailabilityIds.Any() || _roomsSearchFrom.HasValue || _roomsSearchTo.HasValue) ? !_roomsSearchAvailable : _activeRoomIdsNow.Contains(r.Id);
+										<div class="border border-gray-200 rounded-md p-3 bg-indigo-50/40 flex flex-col justify-between">
+											<div>
+												<p class="text-sm font-semibold text-gray-800 mb-1">Room #@r.Id</p>
+												@if (_roomsAvailabilityIds.Any() || _roomsSearchFrom.HasValue || _roomsSearchTo.HasValue)
+												{
+													<p class="text-[11px] text-gray-600 mb-1">Window: @((_roomsSearchFrom ?? DateTime.UtcNow.Date).ToString("yyyy-MM-dd")) – @((_roomsSearchTo ?? (_roomsSearchFrom ?? DateTime.UtcNow.Date)).ToString("yyyy-MM-dd"))</p>
+												}
+												<span class="inline-block px-2 py-0.5 rounded-full text-[11px] @(showBookedBadge ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-700")">
+													@(showBookedBadge ? "Booked" : "Available")
+												</span>
+											</div>
+											<a class="mt-2 text-xs text-indigo-600 hover:underline" href="/room/@r.Id">View room</a>
+										</div>
+									}
 								</div>
 							}
-							<div class="bg-yellow-100 p-3 rounded-full">
-								<i data-feather="archive" class="text-yellow-600"></i>
-							</div>
-						</div>
-					</button>
-					<div class="bg-white rounded-lg shadow p-6" data-aos="fade-up" data-aos-delay="200">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-gray-500">Occupancy</p>
-								<h3 class="text-2xl font-bold">@OccupancyPercent%</h3>
-								<p class="text-gray-400 text-sm">@(_bookingDetails?.TotalActiveBookedRooms ?? 0) active rooms</p>
-							</div>
-							<div class="bg-indigo-100 p-3 rounded-full">
-								<i data-feather="trending-up" class="text-indigo-600"></i>
-							</div>
+							else
+							{
+								<p class="text-sm text-gray-500">No rooms found.</p>
+							}
 						</div>
 					</div>
-					<div class="bg-white rounded-lg shadow p-6" data-aos="fade-up" data-aos-delay="250">
-						<div class="flex items-center justify-between">
-							<div>
-								<p class="text-gray-500">Active Accounts</p>
-								<h3 class="text-2xl font-bold">@(_userDetails?.TotalAccounts ?? 0)</h3>
-								<p class="text-gray-400 text-sm">Admins: @(_userDetails?.TotalAdmin ?? 0) • Staff: @((_userDetails?.TotalCleaningStaff ?? 0) + (_userDetails?.TotalReception ?? 0))</p>
+				}
+				else if (_showAccountsPanel)
+				{
+					<div class="bg-white rounded-lg shadow overflow-hidden mb-4">
+						<div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+							<h3 class="font-semibold text-gray-800">Accounts (@(_userDetails?.TotalAccounts ?? 0))</h3>
+							<div class="flex gap-3">
+								<button class="text-xs text-indigo-600 hover:underline inline-flex items-center" @onclick="(()=> { _showAccountsPanel=false; })" aria-label="Back to bookings">
+									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="32" height="32">
+										<path d="M3 10.5L12 3l9 7.5" />
+										<path d="M5 9.5V21h14V9.5" />
+										<path d="M9 21v-6h6v6" />
+									</svg>
+									<span class="sr-only">Back to bookings</span>
+								</button>
 							</div>
-							<div class="bg-blue-100 p-3 rounded-full">
-								<i data-feather="users" class="text-blue-600"></i>
+						</div>
+						<!-- Accounts: User ID search only -->
+						<div class="px-6 py-3 border-b bg-gray-50">
+							<div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+								<div>
+									<label class="block text-xs text-gray-500 mb-1">Search by User ID</label>
+									<input class="w-full border rounded px-2 py-1" placeholder="e.g. user id" @bind="_accountsSearchId" />
+								</div>
 							</div>
 						</div>
+						<div class="p-4">
+							@if (_usersLoading)
+							{
+								<p class="text-sm text-gray-500">Loading accounts...</p>
+							}
+							else if (_usersError is not null)
+							{
+								<p class="text-sm text-red-600">@_usersError</p>
+							}
+							else if (!_users.Any())
+							{
+								<p class="text-sm text-gray-500">No accounts found.</p>
+							}
+							else
+							{
+								@if (!FilteredUsers.Any())
+								{
+									<p class="text-sm text-gray-500">No users match your search.</p>
+								}
+								else
+								{
+									<div class="overflow-x-auto">
+										<table class="min-w-full divide-y divide-gray-200">
+											<thead class="bg-gray-50">
+												<tr>
+													<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User ID</th>
+													<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+													<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+													<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+													<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login (UTC)</th>
+												</tr>
+											</thead>
+											<tbody class="bg-white divide-y divide-gray-200">
+												@foreach (var u in FilteredUsers.OrderByDescending(u => u.LastLogin))
+												{
+													<tr>
+														<td class="px-4 py-2 whitespace-nowrap text-xs font-mono text-gray-700">@u.Id</td>
+														<td class="px-4 py-2 whitespace-nowrap text-sm text-gray-800">@u.Username</td>
+														<td class="px-4 py-2 whitespace-nowrap text-sm text-gray-600">@u.Email</td>
+														<td class="px-4 py-2 whitespace-nowrap text-xs"><span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700">@u.Roles?.Name</span></td>
+														<td class="px-4 py-2 whitespace-nowrap text-xs text-gray-500">@u.LastLogin.ToString("yyyy-MM-dd HH:mm")</td>
+													</tr>
+												}
+											</tbody>
+										</table>
+									</div>
+								}
+							}
+						</div>
 					</div>
-				</div>
-
-				<!-- Charts and Recent Bookings -->
-				<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-					<!-- Revenue Chart Placeholder -->
-					<div class="bg-white rounded-lg shadow p-6 lg:col-span-2">
-						<div class="flex items-center justify-between mb-4">
-							<h3 class="font-semibold text-gray-800">Revenue Overview</h3>
-							<span class="text-xs text-gray-400">(charts disabled)</span>
-						</div>
-						<div class="chart-placeholder">Chart removed (no JS). Add Blazor chart component later.</div>
-					</div>
-
-					<!-- Occupancy Rate Placeholder -->
-					<div class="bg-white rounded-lg shadow p-6">
-						<div class="flex items-center justify-between mb-4">
-							<h3 class="font-semibold text-gray-800">Occupancy Rate</h3>
-							<span class="text-xs text-gray-400">(charts disabled)</span>
-						</div>
-						<div class="chart-placeholder">Chart removed (no JS). Add Blazor chart component later.</div>
-					</div>
-				</div>
-
-				<!-- Filters -->
-				<div class="bg-white rounded-lg shadow p-4 mb-4">
-					<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-						<div>
-							<label class="block text-xs text-gray-500 mb-1">Status</label>
-							<select class="w-full border rounded px-2 py-1" @onchange="OnStatusChange">
-								<option value="all">All</option>
-								<option value="active">Booked</option>
-								<option value="ended">Available</option>
-							</select>
-						</div>
-						<div>
-							<label class="block text-xs text-gray-500 mb-1">Guest/User ID</label>
-							<input class="w-full border rounded px-2 py-1" placeholder="Search by user id" @bind="_filterUser" />
-						</div>
-						<div>
-							<label class="block text-xs text-gray-500 mb-1">From</label>
-							<input type="date" class="w-full border rounded px-2 py-1" @bind-value="_filterFrom" />
-						</div>
-						<div>
-							<label class="block text-xs text-gray-500 mb-1">To</label>
-							<input type="date" class="w-full border rounded px-2 py-1" @bind-value="_filterTo" />
-						</div>
-					</div>
-				</div>
-
-				<!-- Active Bookings -->
-				<div class="bg-white rounded-lg shadow overflow-hidden">
+				}
+				else
+				{
+					<!-- Active Bookings -->
+					<div id="bookings" class="bg-white rounded-lg shadow overflow-hidden">
 					<div class="px-6 py-4 border-b border-gray-200">
-						<h3 class="font-semibold text-gray-800">Active Bookings</h3>
+						<h3 class="font-semibold text-gray-800">Latest Bookings</h3>
 					</div>
 					<div class="overflow-x-auto">
 						<table class="min-w-full divide-y divide-gray-200">
@@ -222,11 +344,11 @@
 								<tr>
 									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Booking ID</th>
 									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guest</th>
-									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rooms</th>
 									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-In</th>
 									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check-Out</th>
 									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+									<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
 								</tr>
 							</thead>
 							<tbody class="bg-white divide-y divide-gray-200">
@@ -250,7 +372,7 @@
 								}
 								else
 								{
-									@foreach (var b in FilteredBookings)
+									@foreach (var b in PagedBookings)
 									{
 										<tr>
 											<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">@b.Id</td>
@@ -261,7 +383,35 @@
 													</div>
 												</div>
 											</td>
-											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@b.BookingRooms?.Count</td>
+											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+												@if (b.BookingRooms is not null && b.BookingRooms.Count > 0)
+												{
+													<div class="flex flex-col">
+														@foreach (var br in b.BookingRooms)
+														{
+															<a href="/room/@br.RoomId" class="text-sm font-semibold text-indigo-600 hover:underline mb-1">Room #@br.RoomId</a>
+														}
+													</div>
+												}
+												else
+												{
+													var now = DateTime.UtcNow;
+													bool isActiveNow = b.OccupiedFrom <= now && b.OccupiedTill > now;
+													if (isActiveNow && _activeRoomIdsNow.Any())
+													{
+														<div class="flex flex-col" title="From Rooms API (fallback)">
+															@foreach (var rid in _activeRoomIdsNow.Take(3))
+															{
+																<p class="text-sm font-semibold text-gray-800 mb-1">Room #@rid</p>
+															}
+														</div>
+													}
+													else
+													{
+														<span class="text-gray-400">—</span>
+													}
+												}
+											</td>
 											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@b.OccupiedFrom.ToString("yyyy-MM-dd")</td>
 											<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@b.OccupiedTill.ToString("yyyy-MM-dd")</td>
 											<td class="px-6 py-4 whitespace-nowrap">
@@ -275,7 +425,28 @@
 												}
 											</td>
 											<td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-												<a href="#" class="text-indigo-600 hover:text-indigo-900">View</a>
+												@if (b.BookingRooms is not null && b.BookingRooms.Count == 1)
+												{
+													<a href="/room/@b.BookingRooms.First().RoomId" class="text-indigo-600 hover:text-indigo-900">View</a>
+												}
+												else if (b.BookingRooms is not null && b.BookingRooms.Count > 1)
+												{
+													var firstRoomId = b.BookingRooms.First().RoomId;
+													<a href="/room/@firstRoomId" class="text-indigo-600 hover:text-indigo-900">View</a>
+												}
+												else
+												{
+													var rid = _activeRoomIdsNow.FirstOrDefault();
+													var anyRid = !string.IsNullOrWhiteSpace(rid) ? rid : _allRooms.FirstOrDefault()?.Id;
+													if (!string.IsNullOrWhiteSpace(anyRid))
+													{
+														<a class="text-xs text-indigo-600 hover:underline" href="/room/@anyRid">View room</a>
+													}
+													else
+													{
+														<a class="text-xs text-indigo-600 hover:underline" href="/all-rooms">View rooms</a>
+													}
+												}
 											</td>
 										</tr>
 									}
@@ -285,25 +456,33 @@
 					</div>
 					<div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
 						<div class="text-sm text-gray-500">
-							Showing <span class="font-medium">1</span> to <span class="font-medium">4</span> of <span class="font-medium">24</span> results
+							@if (TotalFiltered == 0)
+							{
+								<span>Showing 0 results</span>
+							}
+							else
+							{
+								<span>Showing <span class="font-medium">@RangeStart</span> to <span class="font-medium">@RangeEnd</span> of <span class="font-medium">@TotalFiltered</span> results</span>
+							}
 						</div>
-						<div class="flex space-x-2">
-							<button class="px-3 py-1 rounded-md bg-gray-100 text-gray-700">Previous</button>
-							<button class="px-3 py-1 rounded-md bg-indigo-600 text-white">1</button>
-							<button class="px-3 py-1 rounded-md bg-gray-100 text-gray-700">2</button>
-							<button class="px-3 py-1 rounded-md bg-gray-100 text-gray-700">3</button>
-							<button class="px-3 py-1 rounded-md bg-gray-100 text-gray-700">Next</button>
+						<div class="flex items-center space-x-1">
+							<button class="px-3 py-1 rounded-md text-sm @(IsFirstPage ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-gray-100 text-gray-700 hover:bg-gray-200")" @onclick="PrevPage" disabled="@IsFirstPage">Previous</button>
+							@foreach (var p in VisiblePages)
+							{
+								<button class="w-8 h-8 rounded-md text-sm font-medium @(p==_currentPage?"bg-indigo-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200")" @onclick="(()=>SetPage(p))">@p</button>
+							}
+							<button class="px-3 py-1 rounded-md text-sm @(IsLastPage ? "bg-gray-50 text-gray-400 cursor-not-allowed" : "bg-gray-100 text-gray-700 hover:bg-gray-200")" @onclick="NextPage" disabled="@IsLastPage">Next</button>
 						</div>
 					</div>
-				</div>
+					</div>
+				}
 			</main>
-		</div>
-	</div>
 </div>
 
 @code {
 	[Inject] private APIService Api { get; set; } = default!;
 	[Inject] private StorageService Storage { get; set; } = default!;
+	[Inject] private NavigationManager Nav { get; set; } = default!;
 
 	private bool _isLoading = true;
 	private string? _loadError;
@@ -312,13 +491,74 @@
 	private DomainModels.TotalRoomsDetails? _roomsDetails;
 	private DomainModels.UserDetails? _userDetails;
 	private List<DomainModels.Room>? _uncleanRooms = new();
+	// Unclean Rooms search state
+	private string _uncleanSearchId = string.Empty;
+	private List<DomainModels.Room> _allRooms = new();
+	private List<string> _activeRoomIdsNow = new();
+	private Dictionary<string, string> _roomDisplayNames = new(StringComparer.OrdinalIgnoreCase);
 	private bool _showUncleanPanel = false;
+	private bool _showActiveRoomsPanel = false;
+	private bool _showAccountsPanel = false;
+
+	// Accounts panel state
+	private List<DomainModels.User> _users = new();
+	private bool _usersLoading = false;
+	private string? _usersError;
+	private string _accountsSearchId = string.Empty;
+	private IEnumerable<DomainModels.User> FilteredUsers
+		=> (_users ?? new())
+			.Where(u => string.IsNullOrWhiteSpace(_accountsSearchId)
+				|| (u.Id?.Contains(_accountsSearchId, StringComparison.OrdinalIgnoreCase) ?? false));
 
 	// Filters
 	private string _statusFilter = "all"; // all | active | ended
 	private string _filterUser = string.Empty;
 	private DateTime? _filterFrom = null;
 	private DateTime? _filterTo = null;
+
+	// Pagination
+	private int _currentPage = 1;
+	private int _pageSize = 10; // adjustable
+	private IEnumerable<DomainModels.Booking> PagedBookings => FilteredBookings
+		.Skip((_currentPage - 1) * _pageSize)
+		.Take(_pageSize);
+
+	private int TotalFiltered => FilteredBookings.Count();
+	private int TotalPages => TotalFiltered == 0 ? 1 : (int)Math.Ceiling(TotalFiltered / (double)_pageSize);
+	private bool IsFirstPage => _currentPage <= 1;
+	private bool IsLastPage => _currentPage >= TotalPages;
+	private int RangeStart => TotalFiltered == 0 ? 0 : ((_currentPage - 1) * _pageSize) + 1;
+	private int RangeEnd => Math.Min(_currentPage * _pageSize, TotalFiltered);
+
+	private IEnumerable<int> VisiblePages
+	{
+		get
+		{
+			const int maxButtons = 5;
+			if (TotalPages <= maxButtons) return Enumerable.Range(1, TotalPages);
+			int half = maxButtons / 2;
+			int start = Math.Max(1, _currentPage - half);
+			int end = Math.Min(TotalPages, start + maxButtons - 1);
+			if (end - start + 1 < maxButtons) start = Math.Max(1, end - maxButtons + 1);
+			return Enumerable.Range(start, end - start + 1);
+		}
+	}
+
+	private void SetPage(int page)
+	{
+		if (page < 1 || page > TotalPages) return;
+		_currentPage = page;
+	}
+
+	private void NextPage()
+	{
+		if (!IsLastPage) { _currentPage++; }
+	}
+
+	private void PrevPage()
+	{
+		if (!IsFirstPage) { _currentPage--; }
+	}
 
 	private IEnumerable<DomainModels.Booking> FilteredBookings => (_bookings ?? new())
 		.Where(b => _statusFilter == "all" || (_statusFilter == "active" ? b.OccupiedTill > DateTime.UtcNow : b.OccupiedTill <= DateTime.UtcNow))
@@ -351,7 +591,12 @@
 		.Where(b => b.CreatedAt.Year == DateTime.UtcNow.Year && b.CreatedAt.Month == DateTime.UtcNow.Month)
 		.Sum(b => b.TotalPrice);
 	private int RoomsOccupied => _bookingDetails?.TotalActiveBookedRooms ?? 0;
-	private int RoomsAvailable => (_roomsDetails?.TotalRooms ?? 0) - RoomsOccupied;
+	// Derived room metrics for clearer tile display
+	private int TotalRooms => _roomsDetails?.TotalRooms ?? 0;
+	private int CleanRooms => _roomsDetails?.TotalCleanRooms ?? 0;
+	private int UncleanRoomsDerived => TotalRooms - CleanRooms;
+	private int AvailableRooms => TotalRooms - RoomsOccupied;
+	private bool UncleanRoomsMismatch => CleaningAlertCount != UncleanRoomsDerived && CleaningAlertCount != 0;
 	private int CleaningAlertCount => _uncleanRooms?.Count ?? 0;
 
 	private static bool SameDay(DateTime a, DateTime b) => a.Date == b.Date;
@@ -366,7 +611,7 @@
 			var jwt = await Storage.GetItemFromLocalStorageAsync("authToken");
 
 			// Parallel fetch
-			var bookingsTask = Api.GetAllBookingsAsync();
+			var bookingsTask = Api.GetAllBookingsWithRoomsAsync();
 			Task<DomainModels.BookingDetails?> bookingDetailsTask = jwt is null
 				? Task.FromResult<DomainModels.BookingDetails?>(null)
 				: Api.GetBookingDetailsAsync(jwt);
@@ -380,12 +625,27 @@
 				? Task.FromResult(new List<DomainModels.Room>())
 				: Api.GetUncleanRoomsAsync(jwt);
 
-			await Task.WhenAll(bookingsTask, bookingDetailsTask, roomsDetailsTask, userDetailsTask, uncleanRoomsTask);
+			// Also fetch all rooms and compute currently unavailable (active) by availability endpoint
+			var allRoomsTask = Api.GetRooms();
+			var today = DateTime.UtcNow.Date;
+			var now = DateTime.UtcNow;
+			var activeRoomsNowTask = Api.GetRoomsByAvailabilityAsync(now.AddMinutes(-1), now.AddMinutes(1), available: false);
+
+			await Task.WhenAll(bookingsTask, bookingDetailsTask, roomsDetailsTask, userDetailsTask, uncleanRoomsTask, allRoomsTask, activeRoomsNowTask);
 			_bookings = bookingsTask.Result;
 			_bookingDetails = bookingDetailsTask.Result;
 			_roomsDetails = roomsDetailsTask.Result;
 			_userDetails = userDetailsTask.Result;
 			_uncleanRooms = uncleanRoomsTask.Result;
+			_allRooms = allRoomsTask.Result ?? new();
+			_roomDisplayNames = _allRooms
+				.Where(r => r is not null && !string.IsNullOrWhiteSpace(r.Id))
+				.ToDictionary(
+					keySelector: r => r.Id,
+					elementSelector: r => string.IsNullOrWhiteSpace(r.Description) ? $"Room #{r.Id}" : r.Description,
+					comparer: StringComparer.OrdinalIgnoreCase
+				);
+			_activeRoomIdsNow = (activeRoomsNowTask.Result ?? new()).Select(r => r.Id).Distinct().ToList();
 		}
 		catch (Exception ex)
 		{
@@ -397,25 +657,215 @@
 		}
 	}
 
+	private async Task LoadUsersIfNeededAsync()
+	{
+		if (_usersLoading || _users.Any()) return;
+		_usersLoading = true;
+		_usersError = null;
+		try
+		{
+			var jwt = await Storage.GetItemFromLocalStorageAsync("authToken");
+			if (string.IsNullOrWhiteSpace(jwt))
+			{
+				_usersError = "No auth token.";
+				return;
+			}
+			_users = await Api.GetUsersAsync(jwt);
+		}
+		catch (Exception ex)
+		{
+			_usersError = ex.Message;
+		}
+		finally
+		{
+			_usersLoading = false;
+			StateHasChanged();
+		}
+	}
+
 
 	private void OnStatusChange(ChangeEventArgs e)
 	{
 		_statusFilter = e.Value?.ToString() ?? "all";
+		_currentPage = 1; // reset page after filter change
 	}
 
 	private void SetFilterAll()
 	{
 		_statusFilter = "all";
+		_currentPage = 1;
 	}
 
 	private void SetFilterActive()
 	{
 		_statusFilter = "active";
+		_currentPage = 1;
+	}
+
+	private void ShowActiveBookings()
+	{
+		// Close any alternate panels and focus on bookings
+		_showUncleanPanel = false;
+		_showActiveRoomsPanel = false;
+		_showAccountsPanel = false;
+
+		// Filter to active and reset pagination
+		_statusFilter = "active";
+		_currentPage = 1;
+
+		// Update UI and jump to the bookings card
+		StateHasChanged();
+		Nav.NavigateTo("/admin#bookings", forceLoad: false);
 	}
 
 	private void ShowUncleanRooms()
 	{
+		_showActiveRoomsPanel = false;
 		_showUncleanPanel = true;
+	}
+	private void ToggleUncleanPanel() => _showUncleanPanel = !_showUncleanPanel;
+
+	private void ShowActiveRooms()
+	{
+		_showUncleanPanel = false;
+		_showActiveRoomsPanel = true;
+		_showAccountsPanel = false;
+	}
+
+	private async void ShowAccounts()
+	{
+		_showUncleanPanel = false;
+		_showActiveRoomsPanel = false;
+		_showAccountsPanel = true;
+		await LoadUsersIfNeededAsync();
+	}
+
+	private int ActiveRoomsUnique => _activeRoomIdsNow.Count;
+
+	private IEnumerable<ActiveRoomEntry> ActiveRoomEntries =>
+		_allRooms.Select(r => new ActiveRoomEntry(
+			RoomId: r.Id,
+			LatestTill: DateTime.UtcNow,
+			BookingIds: new List<string>(),
+			UserIds: new List<string>(),
+			IsActive: _activeRoomIdsNow.Contains(r.Id)
+		));
+
+	private IEnumerable<DomainModels.Room> FilteredUncleanRooms
+		=> (_uncleanRooms ?? new())
+			.Where(r => string.IsNullOrWhiteSpace(_uncleanSearchId)
+				|| (r.Id?.Contains(_uncleanSearchId, StringComparison.OrdinalIgnoreCase) ?? false))
+			.OrderBy(r => r.Id);
+
+	private async void ReloadBookings()
+	{
+		try
+		{
+			var newList = await Api.GetAllBookingsWithRoomsAsync();
+			if (newList is not null && newList.Any())
+			{
+				_bookings = newList;
+				StateHasChanged();
+			}
+		}
+		catch { }
+	}
+
+	private string GetRoomDisplay(string? roomId)
+	{
+		if (string.IsNullOrWhiteSpace(roomId)) return "#—";
+		if (_roomDisplayNames.TryGetValue(roomId, out var name)) return name;
+		return $"Room #{roomId}";
+	}
+
+	private record ActiveRoomEntry(string RoomId, DateTime LatestTill, List<string> BookingIds, List<string> UserIds, bool IsActive);
+
+	// Rooms panel search state
+	private string _roomsSearchId = string.Empty;
+	private DateTime? _roomsSearchFrom = null;
+	private DateTime? _roomsSearchTo = null;
+	private bool _roomsSearchAvailable = false; // false = Booked, true = Available
+	private string _roomsSearchAvailableStr
+	{
+		get => _roomsSearchAvailable ? "true" : "false";
+		set
+		{
+			bool newVal = string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
+			if (_roomsSearchAvailable == newVal) return;
+			_roomsSearchAvailable = newVal;
+			// Auto-run search on user change when Rooms panel is open
+			if (_showActiveRoomsPanel && !_roomsSearchBusy)
+			{
+				_ = SearchRoomsAsync();
+			}
+		}
+	}
+	private bool _roomsSearchBusy = false;
+	private string? _roomsSearchError;
+	private List<string> _roomsAvailabilityIds = new();
+	private bool _roomsSearchPerformed = false;
+
+	private IEnumerable<DomainModels.Room> FilteredRoomsPanel
+	{
+		get
+		{
+			IEnumerable<DomainModels.Room> src;
+			if (_roomsSearchPerformed)
+			{
+				var ids = new HashSet<string>(_roomsAvailabilityIds, StringComparer.OrdinalIgnoreCase);
+				src = _allRooms.Where(r => ids.Contains(r.Id));
+			}
+			else
+			{
+				src = _allRooms;
+			}
+
+			if (!string.IsNullOrWhiteSpace(_roomsSearchId))
+				src = src.Where(r => r.Id?.Contains(_roomsSearchId, StringComparison.OrdinalIgnoreCase) == true);
+
+			return src.OrderBy(r => r.Id);
+		}
+	}
+
+	private async Task SearchRoomsAsync()
+	{
+		_roomsSearchBusy = true;
+		_roomsSearchError = null;
+		try
+		{
+			var from = _roomsSearchFrom ?? DateTime.UtcNow.Date;
+			var to = _roomsSearchTo ?? from.AddDays(1);
+			if (to <= from) to = from.AddDays(1);
+
+			// Persist the effective window so the UI knows a search has been performed
+			_roomsSearchFrom = from;
+			_roomsSearchTo = to;
+
+			var result = await Api.GetRoomsByAvailabilityAsync(from, to, _roomsSearchAvailable);
+			_roomsAvailabilityIds = (result ?? new()).Select(r => r.Id).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+			_roomsSearchPerformed = true;
+		}
+		catch (Exception ex)
+		{
+			_roomsSearchError = ex.Message;
+			_roomsAvailabilityIds.Clear();
+		}
+		finally
+		{
+			_roomsSearchBusy = false;
+			StateHasChanged();
+		}
+	}
+
+	private void ClearRoomsSearch()
+	{
+		_roomsSearchId = string.Empty;
+		_roomsSearchFrom = null;
+		_roomsSearchTo = null;
+		_roomsSearchAvailable = false;
+		_roomsSearchError = null;
+		_roomsAvailabilityIds.Clear();
+		_roomsSearchPerformed = false;
 	}
 }
 

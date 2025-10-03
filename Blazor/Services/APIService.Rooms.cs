@@ -18,6 +18,49 @@ public partial class APIService
         return res ?? new();
     }
 
+    /// <summary>
+    /// Gets rooms by availability between start and end with explicit availability flag.
+    /// This matches API: GET api/Rooms/availability?startDate=...&endDate=...&available=true|false
+    /// Note: The server sometimes returns a plain string when no rooms match; we normalize that to an empty list.
+    /// </summary>
+    public async Task<List<Room>> GetRoomsByAvailabilityAsync(DateTime startDate, DateTime endDate, bool available = true, CancellationToken ct = default)
+    {
+        try
+        {
+            // Ensure UTC and ISO 8601 formatting
+            var startUtc = DateTime.SpecifyKind(startDate.ToUniversalTime(), DateTimeKind.Utc);
+            var endUtc = DateTime.SpecifyKind(endDate.ToUniversalTime(), DateTimeKind.Utc);
+
+            var url = $"api/Rooms/availability?startDate={Uri.EscapeDataString(startUtc.ToString("o"))}&endDate={Uri.EscapeDataString(endUtc.ToString("o"))}&available={(available ? "true" : "false")}";
+            var response = await _httpClient.GetAsync(url, ct);
+
+            if (!response.IsSuccessStatusCode)
+                return new List<Room>();
+
+            var raw = await response.Content.ReadAsStringAsync(ct);
+            if (string.IsNullOrWhiteSpace(raw)) return new List<Room>();
+
+            try
+            {
+                var rooms = JsonSerializer.Deserialize<List<Room>>(raw, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+                return rooms ?? new List<Room>();
+            }
+            catch
+            {
+                // Body was likely a plain string message like "All rooms are available..."
+                return new List<Room>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Exception caught getting rooms by availability: " + ex.Message);
+            return new List<Room>();
+        }
+    }
+
     // GET: api/Rooms/userId?userId={id}
     public async Task<List<Room>> GetUserRoomsAsync(string userId, CancellationToken ct = default)
     {

@@ -20,6 +20,20 @@ public partial class APIService
         }
     }
 
+    public async Task<List<Booking>> GetAllBookingsWithRoomsAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var list = await _httpClient.GetFromJsonAsync<List<Booking>>("api/Bookings/with-rooms", ct);
+            return list ?? new List<Booking>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error fetching bookings with rooms: " + ex.Message);
+            return new List<Booking>();
+        }
+    }
+
     public async Task<BookingDetails?> GetBookingDetailsAsync(string jwtToken, CancellationToken ct = default)
     {
         try
