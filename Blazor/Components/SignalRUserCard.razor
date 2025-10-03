@@ -60,7 +60,7 @@
 @code {
 
     [Parameter] public required string UserName { get; set; }
-    [Parameter] public required List<SignalRTest.UserMsgs> Msgs { get; set; }
+    [Parameter] public required List<Message> Msgs { get; set; }
     [Parameter] public EventCallback<string> OnCopy { get; set; }
     [Parameter] public bool IsUser { get; set; } = false;
     private bool copied = false;

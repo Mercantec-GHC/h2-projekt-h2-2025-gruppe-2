@@ -5,6 +5,9 @@ using DomainModels;
 
 namespace API.Service;
 
+/// <summary>
+/// Mail service
+/// </summary>
 public class MailService
 {
     // SMTP konfiguration fra appsettings.json
@@ -17,6 +20,11 @@ public class MailService
     private readonly string _fromEmail;
     private readonly string _fromName;
 
+    /// <summary>
+    /// Dependency injection
+    /// </summary>
+    /// <param name="configuration">Configuration context</param>
+    /// <param name="logger">Logging context</param>
     public MailService(IConfiguration configuration, ILogger<MailService> logger)
     {
         _configuration = configuration;

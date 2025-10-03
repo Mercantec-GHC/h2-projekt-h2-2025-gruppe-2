@@ -1,7 +1,6 @@
 using System.DirectoryServices.Protocols;
 using API.Service;
 using Microsoft.AspNetCore.Mvc;
-using DomainModels;
 
 namespace API.Controllers
 {
@@ -45,7 +44,6 @@ namespace API.Controllers
             {
                 return Ok(new { status = "Error", message = "Database connection error: " + ex.Message });
             }
-            return Ok(new { status = "OK", message = "Database is running!" });
         }
 
         /// <summary>

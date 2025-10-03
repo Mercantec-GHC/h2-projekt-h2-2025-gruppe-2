@@ -62,9 +62,9 @@ public class BookingPostDto
     public DateTime OccupiedTill { get; set; }
 }
 
-public class BookingRoomsDto()
+public class BookingRoomsDto
 {
-    public string BookingId { get; set; }
+    public string BookingId { get; set; } = string.Empty;
     public int Adults { get; set; }
     public int Children { get; set; }
     public bool RoomService { get; set; }
@@ -72,7 +72,7 @@ public class BookingRoomsDto()
     public bool Dinner { get; set; }
     public DateTime OccupiedFrom { get; set; }
     public DateTime OccupiedTill { get; set; }
-    public List<string> RoomIds { get; set; }
+    public List<string> RoomIds { get; set; } = new();
 }
 
 public class NewBookingDto
@@ -107,4 +107,6 @@ public class BookingDetails
     public double AvgPrice { get; set; }
     public double HighestPrice { get; set; }
     public double LowestPrice { get; set; }
+    // Distinct active room IDs (for drill-down fallback when bookings list lacks room relations)
+    public List<string> ActiveRoomIds { get; set; } = new();
 }

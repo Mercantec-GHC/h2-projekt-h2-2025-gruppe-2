@@ -101,23 +101,30 @@ namespace API.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsAdmin")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Msg")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("UserId")
+                    b.Property<string>("UserDestinationId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserSenderId")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserSenderId");
 
                     b.ToTable("Messages");
                 });
@@ -418,7 +425,7 @@ namespace API.Migrations
                 {
                     b.HasOne("DomainModels.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("UserSenderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

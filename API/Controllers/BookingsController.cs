@@ -27,6 +27,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="context">The database context to use for data access.</param>
         /// <param name="logger">Logger context for logging to a file</param>
+        /// <param name="mailService">Mail context for sending mails</param>
         public BookingsController(AppDBContext context, ILogger<BookingsController> logger, MailService mailService)
         {
             _context = context;
@@ -42,6 +43,45 @@ namespace API.Controllers
         public async Task<ActionResult<IEnumerable<Booking>>> GetBookings()
         {
             return await _context.Bookings.ToListAsync();
+        }
+
+        /// <summary>
+        /// Gets all bookings including linked room IDs (no navigation loops).
+        /// </summary>
+        /// <returns>List of bookings where BookingRooms contain only scalar fields like RoomId.</returns>
+        [HttpGet("with-rooms")]
+        public async Task<ActionResult<IEnumerable<Booking>>> GetBookingsWithRooms()
+        {
+            var list = await _context.Bookings
+                .AsNoTracking()
+                .Select(b => new Booking
+                {
+                    Id = b.Id,
+                    Adults = b.Adults,
+                    Children = b.Children,
+                    RoomService = b.RoomService,
+                    Breakfast = b.Breakfast,
+                    Dinner = b.Dinner,
+                    TotalPrice = b.TotalPrice,
+                    OccupiedFrom = b.OccupiedFrom,
+                    OccupiedTill = b.OccupiedTill,
+                    UserId = b.UserId,
+                    CreatedAt = b.CreatedAt,
+                    UpdatedAt = b.UpdatedAt,
+                    BookingRooms = b.BookingRooms
+                        .Select(br => new BookingsRooms
+                        {
+                            Id = br.Id,
+                            BookingId = br.BookingId,
+                            RoomId = br.RoomId,
+                            CreatedAt = br.CreatedAt,
+                            UpdatedAt = br.UpdatedAt
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
+
+            return list;
         }
 
         /// <summary>
@@ -74,6 +114,7 @@ namespace API.Controllers
         /// </summary>
         /// <param name="id">The ID of the booking to retrieve.</param>
         /// <returns>The booking with the specified ID, or 404 if not found.</returns>
+        /// <response code="404">Booking was not found</response>
         [HttpGet("{id}")]
         public async Task<ActionResult<Booking>> GetBooking(string id)
         {
@@ -90,7 +131,9 @@ namespace API.Controllers
         /// <summary>
         /// Gets all the details about bookings
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A list of all relevant booking stats</returns>
+        /// <response code="200">A list of all relevant booking stats</response>
+        /// <response code="500">Unaccounted server side error</response>
         [HttpGet]
         [Route("details")]
         [Authorize(Roles = "Admin")]

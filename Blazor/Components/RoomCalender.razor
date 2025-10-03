@@ -1,5 +1,7 @@
 ﻿@inject APIService Api
 @inject IJSRuntime JS
+@inject BookingStateService BookingState
+@inject NavigationManager Navigation
 
 <div class="container">
     @if (_roomOccupation != null)
@@ -30,7 +32,7 @@
                     <div class="date-header p-2 @(i == 0 ? "first-date" : string.Empty) @(i == _maxDates - 1 ? "last-date" : string.Empty)">
                         <span>@_timeService.MakeDateReadableShort(currentDate)</span>
                     </div>
-                    <div class="date-body" style="background-color: @bgColor;">
+                    <div class="date-body" style="background-color: @bgColor;" @onclick="() => SelectDate(currentDate, isOccupied)">
                     </div>
                 </div>
             }
@@ -122,4 +124,17 @@
     private void PrevWeek() => _baseDate = _baseDate.AddDays(-_weekIntervals);
     private void NextWeek() => _baseDate = _baseDate.AddDays(_weekIntervals);
 
+    private void SelectDate(DateOnly selectedDate, bool isOccupied)
+    {
+        if (!isOccupied) 
+        {
+            BookingState.SetBookingData(selectedDate, Id);
+            Navigation.NavigateTo("/new-booking");
+        }
+        else
+        {
+            
+            Console.WriteLine("Date is occupied, not ok :(");
+        }
+    }
 }

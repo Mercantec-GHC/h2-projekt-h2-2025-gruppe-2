@@ -99,7 +99,7 @@ public class AppDBContext : DbContext
         modelBuilder.Entity<Message>()
             .HasOne(m => m.User) // Navigation property on Message
             .WithMany() // If you want to ignore a collection on User, use parameterless WithMany()
-            .HasForeignKey(m => m.UserId);
+            .HasForeignKey(m => m.UserSenderId);
 
         // Seed roles and test rooms (for development only)
         SeedRoles(modelBuilder);
