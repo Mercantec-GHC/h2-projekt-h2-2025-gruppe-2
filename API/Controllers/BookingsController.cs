@@ -46,6 +46,45 @@ namespace API.Controllers
         }
 
         /// <summary>
+        /// Gets all bookings including linked room IDs (no navigation loops).
+        /// </summary>
+        /// <returns>List of bookings where BookingRooms contain only scalar fields like RoomId.</returns>
+        [HttpGet("with-rooms")]
+        public async Task<ActionResult<IEnumerable<Booking>>> GetBookingsWithRooms()
+        {
+            var list = await _context.Bookings
+                .AsNoTracking()
+                .Select(b => new Booking
+                {
+                    Id = b.Id,
+                    Adults = b.Adults,
+                    Children = b.Children,
+                    RoomService = b.RoomService,
+                    Breakfast = b.Breakfast,
+                    Dinner = b.Dinner,
+                    TotalPrice = b.TotalPrice,
+                    OccupiedFrom = b.OccupiedFrom,
+                    OccupiedTill = b.OccupiedTill,
+                    UserId = b.UserId,
+                    CreatedAt = b.CreatedAt,
+                    UpdatedAt = b.UpdatedAt,
+                    BookingRooms = b.BookingRooms
+                        .Select(br => new BookingsRooms
+                        {
+                            Id = br.Id,
+                            BookingId = br.BookingId,
+                            RoomId = br.RoomId,
+                            CreatedAt = br.CreatedAt,
+                            UpdatedAt = br.UpdatedAt
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
+
+            return list;
+        }
+
+        /// <summary>
         /// Gets all the bookings of a user and the rooms associated with the bookings
         /// </summary>
         /// <param name="id">User ID</param>
