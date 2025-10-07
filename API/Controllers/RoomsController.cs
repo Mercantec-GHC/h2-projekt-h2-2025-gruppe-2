@@ -328,6 +328,7 @@ namespace API.Controllers
         /// <param name="id">The ID of the room to delete.</param>
         /// <returns>No content if successful, or 404 if not found.</returns>
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteRoom(string id)
         {
             var room = await _context.Rooms.FindAsync(id);
@@ -349,6 +350,7 @@ namespace API.Controllers
         /// <param name="endDate">Ending date</param>
         /// <returns>No content if successful, or 404 if not found.</returns>
         [HttpDelete("date")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteRoomsByDate(DateTime startDate, DateTime endDate)
         {
             DateTime utcStartDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);

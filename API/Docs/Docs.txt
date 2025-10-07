@@ -58,3 +58,6 @@ Delete all unused branches.
 
 11/09:
 Generel error handling: A message is sent, as well as a response. If the response is empty/null, an error has happened.
+
+07-10:
+There are two bookings that occ
